@@ -14,10 +14,11 @@ ClassMethod ExportClasses() As %Status
         Set elements = json."elements"
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set sc = ##class(PackageManager.Utility.WebApplication).DirExists($$$tmpFilePath,1,.exists)
+        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$tmpFilePath)
+        Set sc = ##class(PackageManager.Utility.Utils).DirExists(path,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
-            Set sc = $$$ERROR($$$GeneralError,"The directory "_$$$tmpFilePath_" does not exist.")
+            Set sc = $$$ERROR($$$GeneralError,"The directory "_path_" does not exist.")
             Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
         }
 
@@ -26,7 +27,7 @@ ClassMethod ExportClasses() As %Status
         Set format = ".xml"
         Set datetime = $TRANSLATE($ZDATE(now,3),"-","")_"_"_$TRANSLATE($ZTIME(now,1),":","")
         Set fileName = "classes_"_datetime_format
-        Set filePath = $$$tmpFilePath_fileName
+        Set filePath = path_fileName
 
         Set iter = elements.%GetIterator()
         While iter.%GetNext(.key, .value) { 

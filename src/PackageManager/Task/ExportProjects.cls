@@ -59,8 +59,9 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         }
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set prjFilePath = $$$exportTaskFilePath_ProjectId_"\"
-        Set sc = ##class(PackageManager.Utility.WebApplication).DirExists(prjFilePath,1,.exists)
+        Set prjFilePath = ##class(PackageManager.Utility.WebApplication).GetTempFilePath($$$exportTaskFilePath_ProjectId, .osSeparator)
+        Set prjFilePath = prjFilePath_osSeparator
+        Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
             Set sc = $$$ERROR($$$GeneralError,"The directory "_prjFilePath_" does not exist.")

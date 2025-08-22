@@ -95,38 +95,4 @@ ClassMethod WebApplicationExists(pNameSpace As %String, pName As %String, Output
     Return ret
 }
 
-/// Verify if a directory exists at the provided path, create it if not and requested by the user <br>
-/// parameters:<br>
-/// path -> the path to the directory<br>
-/// create -> if true, the directory will be created if it does not exist<br>
-/// exists -> the output parameter that will be set to true if the directory exists<br>
-/// returns: status code<br>
-ClassMethod DirExists(path As %String, create As %Boolean = 0, Output exists As %Boolean) As %Status
-{
-    Set sc = $$$OK
-    Set exists = ##class(%File).DirectoryExists(path) 
-    If 'exists {
-        If create {
-            #; Set ret = ##class(%File).CreateDirectory(path, .returnCode)
-            Set ret = ##class(%File).CreateDirectoryChain(path, .returnCode)
-            If ret = 0 {
-                Set sc = ($$$ERROR($$$GeneralError, "Unable to create directory "_path_". Return code: "_returnCode))
-            }
-            Set exists = 1
-        }
-    }
-    Return sc
-}
-
-ClassMethod GetInstanceDetails() As %Status
-{
-    // Get current IRIS instance URL and port
-    Set sc=##class(%RoutineMgr).GetWebServerPort(.Port,.Server,.URLPrefix,.URL)
-    w !,"URL: "_URL
-    w !,"Port: "_Port
-    w !,"Server: "_Server
-    w !,"URLPrefix: "_URLPrefix
-    Return sc
-}
-
 }

@@ -55,10 +55,10 @@ Parameter CHARSET = "utf-8";
 
 ClassMethod GetInfo() As %Status
 {
-  SET info = {
+    Set info = {
     "version": ($$$PackageManagerVersion)
-  }
-  RETURN ..%ProcessResult($$$OK, info)
+    }
+    Return ..WriteResponse(.info,$$$OK)
 }
 
 ClassMethod Ping() As %Status
@@ -66,12 +66,27 @@ ClassMethod Ping() As %Status
     Set sc = $$$OK
     Set %response.IgnoreRESTOutput=1
     Set res = {
-        "timestamp":($ZDATETIME($H,3)),
+        "timestamp":($ZDATETIME($HOROLOG,3)),
         "message":"Package Manager API is correctly installed and working properly"
     }
     Set %response.ContentType = "application/json" 
     Do ..WriteResponse(.res,sc)
     Return sc
+}
+
+/// This method returns the url to be called to access this page
+ClassMethod GetAPIEndpoint() As %Status
+{
+    Set namespace = $NAMESPACE
+    Set className = $THIS
+    // Build URL dynamically
+    Set sc=##class(%RoutineMgr).GetWebServerPort(.Port,.Server,.URLPrefix,.URL)
+    Set URL = URL_$$$PackageManagerAPI
+    If URL [ "//" {
+        Set URL = $REPLACE(URL,"//","/")
+    }
+    //Write URL,!
+    Return URL
 }
 
 /// ////// METODI DA SPOSTARE IN UTILITY
@@ -131,21 +146,6 @@ ClassMethod CreateNestedObject(item As %String, type As %String, currProject As 
         Set sc = ex.AsStatus()
     }
     Quit sc
-}
-
-/// This method returns the url to be called to access this page
-ClassMethod GetAPIEndpoint() As %Status
-{
-    Set namespace = $NAMESPACE
-    Set className = $THIS
-    // Build URL dynamically
-    Set sc=##class(%RoutineMgr).GetWebServerPort(.Port,.Server,.URLPrefix,.URL)
-    Set URL = URL_$$$PackageManagerAPI
-    If URL [ "//" {
-        Set URL = $REPLACE(URL,"//","/")
-    }
-    //Write URL,!
-    Return URL
 }
 
 /// Creates a nested JSON structure of all files and subdirectories under a given installation-relative directory.
@@ -449,7 +449,7 @@ ClassMethod SwaggerSpec() As %Status
   Do ##class(%REST.API).GetWebRESTApplication($NAMESPACE, %request.Application, .swagger)
   Do swagger.info.%Remove("x-ISC_Namespace")
   Set swagger.basePath = $$$PackageManagerAPI
-  Set swagger.info.title = "Package Manager API"
+  Set swagger.info.title = $$$ProjectName
   Set swagger.info.version = $$$PackageManagerVersion
   Set swagger.host = "localhost:52773"
   Return ..%ProcessResult($$$OK, swagger)
@@ -458,41 +458,41 @@ ClassMethod SwaggerSpec() As %Status
 ClassMethod %ProcessResult(pStatus As %Status = {$$$OK}, pResult As %DynamicObject = "") As %Status [ Internal ]
 {
   #dim %response As %CSP.Response
-  SET tSC = $$$OK
-  IF $$$ISERR(pStatus) {
-    SET %response.Status = 500
-    SET tSC = ..StatusToJSON(pStatus, .tJSON)
-    IF $isobject(tJSON) {
-      SET pResult = tJSON
-    } ELSE {
-      SET pResult = { "errors": [ { "error": "Unknown error parsing status code" } ] }
+  Set tSC = $$$OK
+  If $$$ISERR(pStatus) {
+    Set %response.Status = 500
+    Set tSC = ..StatusToJSON(pStatus, .tJSON)
+    If $ISOBJECT(tJSON) {
+      Set pResult = tJSON
+    } Else {
+      Set pResult = { "errors": [ { "error": "Unknown error parsing status code" } ] }
     }
   } 
-  ELSEIF pStatus=1 {
-    IF '$isobject(pResult){
-      SET pResult = {
+  ElseIf pStatus=1 {
+    If '$ISOBJECT(pResult){
+      Set pResult = {
       }
     }
   }
-  ELSE {
-    SET %response.Status = pStatus
-    SET error = $PIECE(pStatus, " ", 2, *)
-    SET pResult = {
+  Else {
+    Set %response.Status = pStatus
+    Set error = $PIECE(pStatus, " ", 2, *)
+    Set pResult = {
       "error": (error)
     }
   }
   
-  IF pResult.%Extends("%Library.DynamicAbstractObject") {
-    WRITE pResult.%ToJSON()
+  If pResult.%Extends("%Library.DynamicAbstractObject") {
+    Write pResult.%ToJSON()
   }
-  ELSEIF pResult.%Extends("%JSON.Adaptor") {
-    DO pResult.%JSONExport()
+  ElseIf pResult.%Extends("%JSON.Adaptor") {
+    Do pResult.%JSONExport()
   }
-  ELSEIF pResult.%Extends("%Stream.Object") {
-    DO pResult.OutputToDevice()
+  ElseIf pResult.%Extends("%Stream.Object") {
+    Do pResult.OutputToDevice()
   }
   
-  QUIT tSC
+  Quit tSC
 }
 
 ClassMethod ReportHttpStatusCode(pHttpStatus, pSC As %Status = {$$$OK}) As %Status

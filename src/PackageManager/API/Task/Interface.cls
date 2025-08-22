@@ -567,7 +567,7 @@ ClassMethod GetExportedReleases(ByRef result As %DynamicObject = "", verbose As 
 
         // Define base path and initialize stack for directories
         Kill FILES
-        Set basePath = $$$exportTaskFilePath
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath)
         // if the directory contains both slashes and backslashes, replace them with the separator
         If basePath [ "/" {
             Set directory = $REPLACE(basePath, "/", separator) 

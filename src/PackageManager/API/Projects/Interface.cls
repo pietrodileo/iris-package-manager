@@ -73,10 +73,11 @@ ClassMethod ExportProject(ProjectId As %String) As %Status
         #; Set out = {}
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set sc = ##class(PackageManager.Utility.WebApplication).DirExists($$$tmpFilePath,1,.exists)
+        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$tmpFilePath)
+        Set sc = ##class(PackageManager.Utility.Utils).DirExists(path,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
-            Set sc = $$$ERROR($$$GeneralError,"The directory "_$$$tmpFilePath_" does not exist.")
+            Set sc = $$$ERROR($$$GeneralError,"The directory "_path_" does not exist.")
             Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
         }
 
@@ -86,7 +87,7 @@ ClassMethod ExportProject(ProjectId As %String) As %Status
         Set format = ".xml"
         Set datetime = $TRANSLATE($ZDATE(now,3),"-","")_"_"_$TRANSLATE($ZTIME(now,1),":","")
         Set fileName = ProjectId_"_"_release_"_"_datetime_format
-        Set filePath = $$$tmpFilePath_fileName
+        Set filePath = path_fileName
 
         Set project = ##class(%Studio.Project).%OpenId(ProjectId)
         If '$ISOBJECT(project) {
