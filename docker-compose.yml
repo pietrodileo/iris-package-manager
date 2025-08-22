@@ -1,0 +1,25 @@
+# docker-compose.yml     
+services:
+  iris:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iris-packagemanager
+    image: intersystems/iris-community:latest-cd
+    init: true
+    restart: unless-stopped
+    ports:
+      - "9092:52773"  # Management Portal / REST APIs
+      - "9091:1972"   # SuperServer port
+    environment:
+      - ISC_DATA_DIRECTORY=/durable/iris
+    volumes:
+      # Use forward slashes even on Windows for Docker
+      - ./storage:/durable
+    # # Health check to ensure IRIS is running properly
+    # healthcheck:
+    #   test: ["CMD", "/usr/irissys/bin/iris", "qlist"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 60s
