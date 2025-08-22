@@ -335,6 +335,24 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             //}
         }
         
+        // Handle purge toggle
+        function handlePurgeToggle(modal = 'create') {
+            let purgeEnabled_id = 'purge_enabled'; // For create modal
+            let purgeOptions_id = 'purge_options'; // For create modal
+            if (modal === 'edit') {
+                purgeEnabled_id = 'edit-purge_enabled'; // for edit modal
+                purgeOptions_id = 'edit-purge_options'; // for edit modal
+            }
+            const purgeEnabled = document.getElementById(purgeEnabled_id).checked;
+            const purgeOptions = document.getElementById(purgeOptions_id);
+            
+            if (purgeEnabled) {
+                purgeOptions.classList.remove('hidden');
+            } else {
+                purgeOptions.classList.add('hidden');
+            }
+        }
+
         // Email management functions
         let emailNotifications = {
             completion: [],
@@ -405,10 +423,16 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             // Set default values
             document.getElementById('schedule_type').value = 'daily';
             document.getElementById('frequency_type').value = 'once';
-            
+                    
+            // Set purge defaults
+            document.getElementById('purge_enabled').checked = false;
+            document.getElementById('retention_days').value = 60;
+            document.getElementById('min_files_keep').value = 5;
+
             // Handle initial state
             handleScheduleTypeChange();
             handleFrequencyTypeChange();
+            handlePurgeToggle(); 
         }
 
         // Submit new task
@@ -454,6 +478,31 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                         alert('Invalid value for ' + id_to_verify + '. Max value is ' + max_value);
                         return;
                     }
+                }
+
+                // Collect purge configuration
+                const purgeEnabled = document.getElementById('purge_enabled').checked;
+                let purgeConfig = {
+                    enabled: purgeEnabled
+                };
+                
+                if (purgeEnabled) {
+                    const retentionDays = parseInt(document.getElementById('retention_days').value);
+                    const minFilesKeep = parseInt(document.getElementById('min_files_keep').value);
+                    
+                    // Validate purge settings
+                    if (!retentionDays || retentionDays < 1) {
+                        alert('Retention days must be at least 1');
+                        return;
+                    }
+                    
+                    if (!minFilesKeep || minFilesKeep < 1) {
+                        alert('Minimum files to keep must be at least 1');
+                        return;
+                    }
+                    
+                    purgeConfig.retentionDays = retentionDays;
+                    purgeConfig.minFilesKeep = minFilesKeep;
                 }
 
                 // Collect schedule data
@@ -520,6 +569,7 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                     task_name: taskName,
                     task_desc: taskDesc,
                     schedule: scheduleData,
+                    purge_config: purgeConfig,
                     email_notifications: emailNotifications
                 };
                 
@@ -920,9 +970,12 @@ ClassMethod EditTaskModalJavaScript() As %Status
                             handleFrequencyTypeChange('edit');
                         }
                     }
-                                        
-                    console.log('Task data populated successfully');
-                    
+
+                    // Trigger change event on purge checkbox
+                    if (typeof handlePurgeToggle === 'function') {
+                        handlePurgeToggle('edit');
+                    }
+
                 }, 50); // Small delay to ensure form elements are rendered
                 
             } catch (error) {
@@ -980,6 +1033,31 @@ ClassMethod EditTaskModalJavaScript() As %Status
                         alert('Invalid value for ' + id_to_verify + '. Max value is ' + max_value);
                         return;
                     }
+                }
+
+                // Collect purge configuration
+                const purgeEnabled = document.getElementById('purge_enabled').checked;
+                let purgeConfig = {
+                    enabled: purgeEnabled
+                };
+                
+                if (purgeEnabled) {
+                    const retentionDays = parseInt(document.getElementById('retention_days').value);
+                    const minFilesKeep = parseInt(document.getElementById('min_files_keep').value);
+                    
+                    // Validate purge settings
+                    if (!retentionDays || retentionDays < 1) {
+                        alert('Retention days must be at least 1');
+                        return;
+                    }
+                    
+                    if (!minFilesKeep || minFilesKeep < 1) {
+                        alert('Minimum files to keep must be at least 1');
+                        return;
+                    }
+                    
+                    purgeConfig.retentionDays = retentionDays;
+                    purgeConfig.minFilesKeep = minFilesKeep;
                 }
 
                 // Collect schedule data
@@ -1051,6 +1129,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                     task_desc: taskDesc,
                     task_suspended: taskSuspended,
                     schedule: scheduleData,
+                    purge_config: purgeConfig,
                     email_notifications: emailNotificationsEdit
                 };
                 

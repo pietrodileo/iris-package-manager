@@ -8,7 +8,6 @@ Password1234
 
 docker compose down -v
 
-
 🔹 `docker-compose up -d --build`
 
 * **Cosa fa** : ricostruisce l’immagine *se necessario* e subito dopo avvia il container.
@@ -29,3 +28,20 @@ To do that:
 - Click on: View -> Command Palette -> ObjectScript: Connect Folder to Server Namespace... -> Select the container namespace
 - Start working on files into the local src/ folder. Any change will be reflected to the container as well since now the folder base are synchronised and the local src folder has become the source of truth.
 - This can be used with git source control as well. Just create a repository and do git init into the main project local folder, then connect it to the repo. Any local change will be synch both with git and iris container.
+
+
+Si deve creare una cartella .vscode per il client side editing, contenente un settings.json così fatto:
+
+{
+
+    "objectscript.conn": {
+
+    "server": "docker_pkg_manager",
+
+    "ns": "USER",
+
+    "active": true
+
+    }
+
+}

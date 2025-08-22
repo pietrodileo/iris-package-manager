@@ -402,6 +402,83 @@ ClassMethod CreateTaskModalStyles() As %Status
             border-top: 1px solid #eee;
         }
 
+        /* Purge Section Styles */
+        .purge-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .purge-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .create-task-purge-checkbox {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 8px;
+        }
+
+        .create-task-purge-checkbox input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .create-task-purge-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 12px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            margin-top: 16px;
+        }
+        
+        .warning-icon {
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+
+        .warning-text {
+            font-size: 13px;
+            color: #856404;
+            line-height: 1.4;
+        }
+
+        /* Schedule Section Styles */
+        .schedule-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .schedule-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         @keyframes CreateTask {
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -419,6 +496,18 @@ ClassMethod CreateTaskModalStyles() As %Status
 
             .create-task-modal-content {
                 padding: 20px;
+            }
+
+            .purge-section {
+                padding: 16px;
+            }
+            
+            .create-task-purge-warning {
+                padding: 10px;
+            }
+            
+            .warning-text {
+                font-size: 12px;
             }
         }
     </style>>

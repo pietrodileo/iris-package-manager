@@ -191,6 +191,41 @@ ClassMethod renderCreateTaskModal() As %Status
                                     </div>
                                 </div>
 
+                                <!-- Purge Configuration Section -->
+                                <div class="purge-section">
+                                    <h4>🗑️ File Purge Configuration</h4>
+                                    <div class="create-task-form-group">
+                                        <label class="create-task-purge-checkbox">
+                                            <input type="checkbox" id="purge_enabled" onchange="handlePurgeToggle()"> 
+                                            Enable automatic file purging
+                                        </label>
+                                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                                            Automatically delete old backup files to manage disk space
+                                        </small>
+                                    </div>
+                                    
+                                    <div id="purge_options" class="hidden">
+                                        <div class="create-task-form-row">
+                                            <div class="create-task-form-group">
+                                                <label class="create-task-form-label">Retention Time (days)</label>
+                                                <input type="number" id="retention_days" class="create-task-form-input" value="60" min="1" max="365">
+                                                <small style="color: #666; font-size: 12px;">Files older than this will be deleted</small>
+                                            </div>
+                                            <div class="create-task-form-group">
+                                                <label class="create-task-form-label">Minimum Files to Keep</label>
+                                                <input type="number" id="min_files_keep" class="create-task-form-input" value="5" min="1" max="100">
+                                                <small style="color: #666; font-size: 12px;">Always keep at least this many newest files</small>
+                                            </div>
+                                        </div>
+                                        <div class="create-task-purge-warning">
+                                            <span class="warning-icon">⚠️</span>
+                                            <span class="warning-text">
+                                                Files will be permanently deleted. The newest files will always be preserved up to the minimum count specified.
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Email Notifications Section -->
                                 <div class="create-task-email-section">
                                     <h4>📧 Email Notifications (Available Soon...)</h4>
@@ -374,6 +409,41 @@ ClassMethod renderEditTaskModal() As %Status
                                             <option value="0">Normal</option>
                                             <option value="2">High</option>
                                         </select>
+                                    </div>
+                                </div>
+
+                                <!-- Purge Configuration Section -->
+                                <div class="purge-section">
+                                    <h4>🗑️ File Purge Configuration</h4>
+                                    <div class="create-task-form-group">
+                                        <label class="create-task-purge-checkbox">
+                                            <input type="checkbox" id="edit-purge_enabled" onchange="handlePurgeToggle('edit')"> 
+                                            Enable automatic file purging
+                                        </label>
+                                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                                            Automatically delete old backup files to manage disk space
+                                        </small>
+                                    </div>
+                                    
+                                    <div id="edit-purge_options" class="hidden">
+                                        <div class="create-task-form-row">
+                                            <div class="create-task-form-group">
+                                                <label class="create-task-form-label">Retention Time (days)</label>
+                                                <input type="number" id="edit-retention_days" class="create-task-form-input" value="60" min="1" max="365">
+                                                <small style="color: #666; font-size: 12px;">Files older than this will be deleted</small>
+                                            </div>
+                                            <div class="create-task-form-group">
+                                                <label class="create-task-form-label">Minimum Files to Keep</label>
+                                                <input type="number" id="edit-min_files_keep" class="create-task-form-input" value="5" min="1" max="100">
+                                                <small style="color: #666; font-size: 12px;">Always keep at least this many newest files</small>
+                                            </div>
+                                        </div>
+                                        <div class="create-task-purge-warning">
+                                            <span class="warning-icon">⚠️</span>
+                                            <span class="warning-text">
+                                                Files will be permanently deleted. The newest files will always be preserved up to the minimum count specified.
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 

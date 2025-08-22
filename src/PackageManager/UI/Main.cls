@@ -103,22 +103,6 @@ ClassMethod SectionsJS() As %Status
                 sidebar.appendChild(el);
             }
         }
-
-        // Enhanced message display function
-        function showMessage(text, type = 'success', elementId = 'msg') {
-            const msg = document.getElementById(elementId);
-            if (msg) {
-                msg.textContent = text;
-                msg.className = `message ${type}`;
-                msg.style.display = 'block';
-                
-                if (type === 'success') {
-                    setTimeout(() => {
-                        msg.style.display = 'none';
-                    }, 5000);
-                }
-            }
-        }
     </script>>
     Return sc
 }
