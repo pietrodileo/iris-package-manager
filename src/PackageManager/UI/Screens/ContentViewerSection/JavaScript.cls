@@ -244,13 +244,18 @@ ClassMethod ProjectList() As %Status
             try {
                 const res = await fetch("/csp/user/rest/packagemanager/projects", { method: "GET" });
                 if (!res.ok) {
-                    alert("Failed to load projects");
-                    return;
+                    throw new Error(`Failed to load project content: ${res.status} ${res.statusText}`);
                 }
                 allProjects = await res.json();
                 renderProjects(allProjects);
             } catch (err) {
-                alert("Error loading projects: " + err.message);
+                const table_body = document.getElementById('projectTableBody');
+                table_body.innerHTML = `
+                    <div class="loading">
+                        <p>❌ Error loading projects from database</p>
+                        <p style="font-size: 14px; color: #64748b; margin-top: 8px;">${err.message}</p>
+                    </div>
+                `;
             }
         }
 
@@ -261,6 +266,16 @@ ClassMethod ProjectList() As %Status
                 return;
             }
             table.innerHTML = "";
+            // Table header
+            table.innerHTML += `
+                <tr>
+                    <th>Select</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Last Modified</th>
+                    <th>Actions</th>
+                </tr>
+            `;
             projects.forEach((project, index) => {
                 const row = `<tr>
                     <td><input type="checkbox" name="projCheckbox" value="${project.name}" onclick="selectOnlyOne(this)"></td>
@@ -322,7 +337,9 @@ ClassMethod ContentViewer() As %Status
                 const res = await fetch(url, { method: "GET" });
                 if (!res.ok) {
                     const text = await res.text();
-                    alert("Failed to load project content. Details: " + text);
+                    const now = new Date();
+                    const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    alert(`${formatted_date_time} - Network error: Failed to load project content: ${res.status} ${res.statusText}.`);
                     return;
                 }
                 const json = await res.json();
@@ -1828,13 +1845,12 @@ ClassMethod NewProjectModal() As %Status
                 } else {
                     const errorData = await response.text();
                     // Handle error - Fixed template literal
-                    alert(`${formatted_date_time} - Failed to create project: ${errorData}`);
+                    alert(`${formatted_date_time} - Failed to create project: ${response.status} ${response.statusText} - ${errorData}`);
                 }
             } catch (error) {
-                console.error('Error creating project:', error);
                 const now = new Date();
                 const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                alert(`${formatted_date_time} - Network error: Failed to create project. Please try again.`);
+                alert(`${formatted_date_time} - Network error: Failed to create project: ${errorData}. Please try again.`);
             }
             
             // Restore button state

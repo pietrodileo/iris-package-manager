@@ -24,7 +24,7 @@ ClassMethod renderContentViewer() As %Status
                 <h2>📋 Projects List</h2>
                 <p>This shows the current list of all projects in the system. You can show their content and export them. </p>
                 <p>You can create new projects and associate them with classes or files on the current namespace. </p>
-                <div class='project-container'>
+                <div class='project-container' id ='projectContainer'>
                     <div class='project-header'>
                         <div class='project-title'>
                         <h3>🗂️ Projects List</h3>
@@ -42,13 +42,6 @@ ClassMethod renderContentViewer() As %Status
                     <div class='project-content'>
                         <div class='project-table-wrapper'>
                             <table class='project-table'><thead>
-                                <tr>
-                                    <th>Select</th>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Last Modified</th>
-                                    <th>Actions</th>
-                                </tr>
                             </thead><tbody id='projectTableBody'></tbody></table>
                         </div>
                         <div id='msg' class='message'></div>

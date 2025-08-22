@@ -25,7 +25,7 @@ ClassMethod RenderStyles() As %Status
             margin-bottom: 20px;
             margin-top: 10px;
             max-width: 1000px;
-            margin-left: auto;
+            margin-left: 0;  /* Changed from auto to 0 */
             margin-right: auto;
         }
 
@@ -69,7 +69,6 @@ ClassMethod RenderStyles() As %Status
             margin-bottom: 30px;
         }
 
-        /* Status Box Styles - Enhanced with better spacing */
         .api-mgr-status-box {
             overflow-x: auto;
             border: 1px solid #e0e4e8;
@@ -78,6 +77,9 @@ ClassMethod RenderStyles() As %Status
             margin-top: 20px;
             background: white;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            /* Remove any horizontal margins */
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .api-mgr-status-content {

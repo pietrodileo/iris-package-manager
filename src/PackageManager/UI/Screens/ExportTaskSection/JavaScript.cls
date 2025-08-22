@@ -92,7 +92,6 @@ ClassMethod TaskTableJavaScript() As %Status
                 }
                 
             } catch (error) {
-                //console.error('Error loading tasks from database:', error);
                 const container = document.getElementById('taskTableContainer');
                 container.innerHTML = `
                     <div class="loading">
@@ -533,12 +532,14 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                     loadExportTasks();
                 } else {
                     const error = await response.text();
-                    alert(`Error creating task: ${error}`);
+                    const now = new Date();
+                    const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    alert(`${formatted_date_time} - Error creating task: ${response.status} ${response.statusText} - ${error}.`);
                 }
-                
             } catch (error) {
-                console.error('Error creating task:', error.message);
-                alert(`Error creating task: ${error}`);
+                const now = new Date();
+                const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                alert(`${formatted_date_time} - Error creating task: ${error.message}.`);
             }
         }
 
