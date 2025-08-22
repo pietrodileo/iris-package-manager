@@ -23,7 +23,14 @@ ClassMethod RenderJavaScript() As %Status
                 //showMessageExportedRelease('Loading exported releases...', 'info');
                 
                 // Replace this with actual API call:
-                const response = await fetch('/csp/user/rest/packagemanager/task/releases/', { method: 'GET' });
+                const response = await fetch('/csp/user/rest/packagemanager/task/releases/', { 
+                    method: "GET",
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
                 if (!response.ok) {
                     throw new Error('Failed to load exported releases');
                 }

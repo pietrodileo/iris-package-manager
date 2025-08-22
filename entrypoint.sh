@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 # Start IRIS in the background
 iris start IRIS quietly
 

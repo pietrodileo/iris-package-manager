@@ -78,7 +78,14 @@ ClassMethod TaskTableJavaScript() As %Status
                 container.innerHTML = '<div class="loading">Loading tasks from database...</div>';
                 
                 // Make API call to get tasks from database
-                const response = await fetch("/csp/user/rest/packagemanager/task/existing", { method: "GET" });
+                const response = await fetch("/csp/user/rest/packagemanager/task/existing", { 
+                    method: "GET",
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
                 if (!response.ok) {
                     throw new Error('Failed to fetch tasks');
                 }
@@ -520,8 +527,11 @@ ClassMethod CreateTaskModalJavaScript() As %Status
 
                 const response = await fetch('/csp/user/rest/packagemanager/task/create', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+                    headers: { 
+                        "Content-Type": "application/json",
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     },
                     body: JSON.stringify(formData)
                 });
@@ -595,7 +605,12 @@ ClassMethod TaskTableActionsJavaScript() As %Status
             
             try {
                 const response = await fetch(`/csp/user/rest/packagemanager/task/run/${encodeURIComponent(taskId)}`, {
-                    method: 'GET'
+                    method: "GET",
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
                 });
                 
                 if (response.ok) {
@@ -650,7 +665,12 @@ ClassMethod EditTaskModalJavaScript() As %Status
 
             // Call API 
             const response = await fetch('/csp/user/rest/packagemanager/task/' + encodeURIComponent(task.ID), {
-                method: 'GET',
+                method: "GET",
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
             });
             
             if (response.ok) {
@@ -1038,8 +1058,11 @@ ClassMethod EditTaskModalJavaScript() As %Status
 
                 const response = await fetch('/csp/user/rest/packagemanager/task/update/' + encodeURIComponent(currentEditingTaskId), {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+                    headers: { 
+                        "Content-Type": "application/json",
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     },
                     body: JSON.stringify(formData)
                 });
@@ -1141,7 +1164,14 @@ ClassMethod AddProjectModalJavaScript() As %Status
             setTimeout(async () => {
 
                 try {
-                    const res = await fetch("/csp/user/rest/packagemanager/projects", { method: "GET" });
+                    const res = await fetch("/csp/user/rest/packagemanager/projects", { 
+                        method: "GET",
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
                     if (!res.ok) {
                         alert("Failed to load projects");
                         return;

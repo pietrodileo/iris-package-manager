@@ -18,39 +18,23 @@ ClassMethod OnPage() As %Status
     Do ##class(PackageManager.UI.CSS).Styles()
     Do ..SectionsJS()
     Do ..WindowOnLoad()
-    &html<<body>>
-        &html<<div class="sidebar">>
-            &html<
+    &html<
+        <body>
+            <div class="sidebar">
                 <div class="sidebar-header" title="Toggle Sidebar"> 
                     <span class='sidebar-header-icon'>📦</span>
                     <span class="label">Package Manager</span>
                 </div>
-            >
-            &html<<div id="sidebarList"></div>>
-        &html<</div>>
-        &html<<div class="main-content" id="mainContent"></div>>
-    &html<</body></html>>
+                <div id="sidebarList"></div>
+                <!-- Version indicator at the bottom of sidebar -->
+                <div class="sidebar-version" title="Package Manager Version">
+                    <span class="version-text">ℹ️ v#($$$PackageManagerVersion)#</span>
+                </div>
+            </div>
+            <div class="main-content" id="mainContent"></div>
+        </body>
+    </html>>
     Quit $$$OK
-}
-
-/// Description
-ClassMethod PrefetchProjectData() As %Status
-{
-    Set sc = $$$OK
-    &html<<script language="javascript"> 
-        let allProjects = [];
-        async function loadProjects() {
-            const res = await fetch("/csp/user/rest/packagemanager/projects", { method: "GET" });
-            if (!res.ok) {
-                alert("Failed to load projects");
-                return;
-            }
-            allProjects = await res.json();
-            renderProjects(allProjects);
-        }
-    </script>>
-
-    Return sc
 }
 
 /// Initialize sidebar content on page load

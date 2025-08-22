@@ -242,7 +242,14 @@ ClassMethod ProjectList() As %Status
 
         async function loadProjects() {
             try {
-                const res = await fetch("/csp/user/rest/packagemanager/projects", { method: "GET" });
+                const res = await fetch("/csp/user/rest/packagemanager/projects", { 
+                    method: "GET",
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
                 if (!res.ok) {
                     throw new Error(`Failed to load project content: ${res.status} ${res.statusText}`);
                 }
@@ -348,7 +355,14 @@ ClassMethod ContentViewer() As %Status
                 }
             }
             try {
-                const res = await fetch(url, { method: "GET" });
+                const res = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
                 if (!res.ok) {
                     const text = await res.text();
                     const now = new Date();
@@ -1165,8 +1179,14 @@ ClassMethod AddClassesModal() As %Status
                     url += (url.includes('?') ? '&' : '?') + (lookIntoKey+'='+lookInto); 
                 }
 
-                const response = await fetch(url, { method: 'GET' });
-                
+                const response = await fetch(url, { 
+                    method: "GET",
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }                    
+                });
                 if (!response.ok) {
                     throw new Error(`Failed to load content: ${response.status} ${response.statusText}`);
                 }
@@ -1833,8 +1853,11 @@ ClassMethod NewProjectModal() As %Status
             try {
                 const response = await fetch("/csp/user/rest/packagemanager/project/create", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
+                    headers: { 
+                        "Content-Type": "application/json",
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     },
                     body: JSON.stringify({
                         'name': projectData.name,

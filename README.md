@@ -7,10 +7,21 @@ http://localhost:9092/csp/sys/UtilHome.csp
 Password1234
 
 docker compose down -v
-docker compose up --build
 
 
-After this, when container is running, you should activate client side mode from vscode. 
+🔹 `docker-compose up -d --build`
+
+* **Cosa fa** : ricostruisce l’immagine *se necessario* e subito dopo avvia il container.
+* **Quando builda** : ricostruisce solo se rileva cambiamenti nel Dockerfile o nei file copiati (ma usa la cache di Docker).
+
+oppure
+
+🔹 `docker-compose build --no-cache iris`
+
+* **Cosa fa** : forza la ricostruzione dell’immagine del servizio `iris`, **senza cache** (quindi ogni `COPY`, `RUN`, ecc. viene rieseguito da zero).
+* **Quando builda** : sempre, anche se non è cambiato nulla.
+
+After this, when container is running, you should activate client side mode from vscode.
 
 To do that:
 

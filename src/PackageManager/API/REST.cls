@@ -6,6 +6,7 @@ Class PackageManager.API.REST Extends %CSP.REST
 XData UrlMap
 {
 <Routes>
+    <!-- Project related calls -->
     <Route Url="/project/create" Method="POST" Call="PackageManager.API.Projects.Interface:CreateProject"/>
     <Route Url="/projects" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjects"/>
     <Route Url="/projects/" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjects"/>
@@ -17,11 +18,14 @@ XData UrlMap
     <Route Url="/project/delete/:projectId" Method="DELETE" Call="PackageManager.API.Projects.Interface:DeleteProject"/>
     <Route Url="/project/add/:projectId" Method="POST" Call="PackageManager.API.Projects.Interface:AddClassesToProject"/>
     <Route Url="/project/remove/:projectId" Method="PUT" Call="PackageManager.API.Projects.Interface:RemoveClassesToProject"/>
+    <!-- Export classes calls -->
     <Route Url="/classes/export/" Method="POST" Call="PackageManager.API.Classes.Interface:ExportClasses"/>
     <Route Url="/classes/export" Method="POST" Call="PackageManager.API.Classes.Interface:ExportClasses"/>
+    <!-- Namespace content calls -->
     <Route Url="/namespace/content/:type" Method="GET" Call="PackageManager.API.Namespace.Interface:GetAllNamespaceFiles"/>
     <Route Url="/namespace/content/" Method="GET" Call="PackageManager.API.Namespace.Interface:GetAllNamespaceFiles"/>
     <Route Url="/namespace/content" Method="GET" Call="PackageManager.API.Namespace.Interface:GetAllNamespaceFiles"/>
+    <!-- Tasks related calls -->
     <Route Url="/task/create" Method="POST" Call="PackageManager.API.Task.Interface:CreateTask"/>
     <Route Url="/task/create/" Method="POST" Call="PackageManager.API.Task.Interface:CreateTask"/>
     <Route Url="/task/existing" Method="GET" Call="PackageManager.API.Task.Interface:CheckExistingTasks"/>
@@ -35,6 +39,7 @@ XData UrlMap
     <Route Url="/task/releases/" Method="GET" Call="PackageManager.API.Task.Interface:GetReleases"/>
     <Route Url="/task/release/download" Method="POST" Call="PackageManager.API.Task.Interface:DownloadRelease"/>
     <Route Url="/task/release/download/" Method="POST" Call="PackageManager.API.Task.Interface:DownloadRelease"/>
+    <!-- Ping to test API reachability -->
     <Route Url="/api/ping" Method="GET" Call="Ping"/>
     <Route Url="/api/ping/" Method="GET" Call="Ping"/>
     <!-- Swagger specs -->
@@ -48,14 +53,10 @@ Parameter HandleCorsRequest = 1;
 
 Parameter CHARSET = "utf-8";
 
-Parameter Version = 0.1;
-
 ClassMethod GetInfo() As %Status
 {
-  SET version = ..#Version
   SET info = {
-    "version": (version),
-    "organization": (%request.GetCgiEnv("HTTP_ORGANIZATION"))
+    "version": ($$$PackageManagerVersion)
   }
   RETURN ..%ProcessResult($$$OK, info)
 }
@@ -449,7 +450,7 @@ ClassMethod SwaggerSpec() As %Status
   Do swagger.info.%Remove("x-ISC_Namespace")
   Set swagger.basePath = $$$PackageManagerAPI
   Set swagger.info.title = "Package Manager API"
-  Set swagger.info.version = ..#Version
+  Set swagger.info.version = $$$PackageManagerVersion
   Set swagger.host = "localhost:52773"
   Return ..%ProcessResult($$$OK, swagger)
 }
