@@ -265,6 +265,20 @@ ClassMethod ProjectList() As %Status
                 alert("Table does not exist")   
                 return;
             }
+
+            if (projects.length === 0) {
+                table.innerHTML = `
+                    <div class="loading">
+                        <p>📂 No projects found</p>
+                        <p style="font-size: 14px; color: #64748b; margin-top: 8px;">Create a new project to start managing your code.</p>
+                        <button class="btn-primary" onclick="openNewProjectModal()" style="margin-top: 12px;">
+                            ➕ Create New Project
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
             table.innerHTML = "";
             // Table header
             table.innerHTML += `
