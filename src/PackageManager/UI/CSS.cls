@@ -1,3 +1,4 @@
+/// This class provides the main and generic CSS classes for the Package Manager UI. 
 Class PackageManager.UI.CSS Extends PackageManager.UI.Screens.Abstract
 {
 

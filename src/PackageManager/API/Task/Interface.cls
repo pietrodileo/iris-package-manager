@@ -1,4 +1,4 @@
-Class PackageManager.API.Task.Interface Extends PackageManager.API.REST
+Class PackageManager.API.Task.Interface Extends PackageManager.API.REST [Final]
 {
 
 /// This method creates a new record for the export task within the task manager

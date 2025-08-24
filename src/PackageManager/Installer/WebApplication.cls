@@ -1,6 +1,6 @@
 Include PackageManager.PackageManager
 
-Class PackageManager.Installer.WebApplication Extends %RegisteredObject
+Class PackageManager.Installer.WebApplication
 {
 
 /// This is the installer class for the PackageManager application.

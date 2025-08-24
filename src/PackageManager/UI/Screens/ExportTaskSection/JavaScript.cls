@@ -24,7 +24,7 @@ ClassMethod RenderJavaScript() As %Status
     Do ..TaskTableJavaScript()
     
     &html<<script type="text/javascript">                       
-        // Utility function to escape HTML
+        // Utility function to escape HTML characters in a string
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
@@ -67,7 +67,12 @@ ClassMethod TaskTableJavaScript() As %Status
         // Global variables
         let currentTasks = [];
             
-        // Load tasks from API
+        /**
+        * Loads tasks from the API and renders the task table.
+        *
+        * @async
+        * @returns {Promise<void>}
+        */
         async function loadExportTasks() {
             try {
                 //console.log('Making API call to fetch tasks from database...');
@@ -112,7 +117,12 @@ ClassMethod TaskTableJavaScript() As %Status
             }
         }
         
-        // Render tasks table
+        /**
+        * Renders the task table based on the loaded tasks.
+        *
+        * @param {Array<Object>} tasks - The tasks to render.
+        * @returns {void}
+        */
         function renderTasksTable(tasks) {
             const container = document.getElementById('taskTableContainer');
             
@@ -264,7 +274,11 @@ ClassMethod CreateTaskModalJavaScript() As %Status
     Set sc = $$$OK
     &html<<script type="text/javascript">
 
-        // Show create task modal        
+        /**
+        * Opens the create task modal and resets the form.
+        *
+        * @returns {void}
+        */
         function openCreateTaskModal() {
             const modal = document.getElementById('createTaskModal');
             modal.style.display = 'flex';  // Force flex display
@@ -279,7 +293,12 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             modal.style.display = 'none';  // Hide it
         }        
         
-        // Handle schedule type changes
+        /**
+        * Handles changes to the schedule type dropdown.
+        *
+        * @param {string} [modal='create'] - The modal type (create or edit).
+        * @returns {void}
+        */
         function handleScheduleTypeChange(modal = 'create') {
             let schedule_type_id = 'schedule_type'; // For create modal
             let daily_options_id = 'daily_options';
@@ -319,7 +338,12 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             }
         }
         
-        // Handle frequency type changes (once vs multiple times)
+        /**
+        * Handles changes to the frequency type dropdown.
+        *
+        * @param {string} [modal='create'] - The modal type (create or edit).
+        * @returns {void}
+        */
         function handleFrequencyTypeChange(modal = 'create') {
             let freq_type_id = 'frequency_type'; // For create modal
             if (modal === 'edit') {
@@ -335,7 +359,12 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             //}
         }
         
-        // Handle purge toggle
+        /**
+        * Handles changes to the purge toggle checkbox.
+        *
+        * @param {string} [modal='create'] - The modal type (create or edit).
+        * @returns {void}
+        */
         function handlePurgeToggle(modal = 'create') {
             let purgeEnabled_id = 'purge_enabled'; // For create modal
             let purgeOptions_id = 'purge_options'; // For create modal
@@ -359,7 +388,13 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             error: [],
             expiration: []
         };
-        
+                
+        /**
+        * Adds an email address to the email notifications list.
+        *
+        * @param {string} type - The type of email notification (completion, error, or expiration).
+        * @returns {void}
+        */
         function addEmail(type) {
             const inputId = `${type}_email_input`;
             const email = document.getElementById(inputId).value.trim();
@@ -383,6 +418,13 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             updateEmailDisplay(type);
         }
         
+        /**
+        * Removes an email address from the email notifications list.
+        *
+        * @param {string} type - The type of email notification (completion, error, or expiration).
+        * @param {string} email - The email address to remove.
+        * @returns {void}
+        */
         function removeEmail(type, email) {
             const index = emailNotifications[type].indexOf(email);
             if (index > -1) {
@@ -390,7 +432,13 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                 updateEmailDisplay(type);
             }
         }
-        
+
+        /**
+        * Updates the email notifications display.
+        *
+        * @param {string} type - The type of email notification (completion, error, or expiration).
+        * @returns {void}
+        */ 
         function updateEmailDisplay(type) {
             const container = document.getElementById(`${type}_email_list`);
             container.innerHTML = emailNotifications[type].map(email => 
@@ -401,7 +449,11 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             ).join('');
         }
 
-        // Initialize form
+        /**
+        * Initializes the create task form with default values.
+        *
+        * @returns {void}
+        */
         function initializeCreateTaskForm() {
             // Reset email lists
             emailNotifications = { completion: [] };
@@ -435,7 +487,12 @@ ClassMethod CreateTaskModalJavaScript() As %Status
             handlePurgeToggle(); 
         }
 
-        // Submit new task
+        /**
+        * Submits the new task form data to the API.
+        *
+        * @async
+        * @returns {Promise<void>}
+        */
         async function submitNewTask() {
             try {
                 // Collect basic task data
@@ -612,7 +669,13 @@ ClassMethod TaskTableActionsJavaScript() As %Status
     Set sc = $$$OK
     &html<<script type="text/javascript">
 
-        // Delete task
+        /**
+        * Deletes a task by ID.
+        *
+        * @param {string} taskId - The ID of the task to delete.
+        * @async
+        * @returns {Promise<void>}
+        */
         async function deleteTask(taskId) {
             const task = currentTasks.find(t => t.ID === taskId.toString());
             if (!task) {
@@ -642,7 +705,13 @@ ClassMethod TaskTableActionsJavaScript() As %Status
             }
         }
         
-        // Run task
+        /**
+        * Runs a task by ID.
+        *
+        * @param {string} taskId - The ID of the task to run.
+        * @async
+        * @returns {Promise<void>}
+        */
         async function runTask(taskId) {
             const task = currentTasks.find(t => t.ID === taskId.toString());
             if (!task) {
@@ -690,7 +759,12 @@ ClassMethod EditTaskModalJavaScript() As %Status
         let originalTaskData = null;
         let currentEditingTaskId = null;
 
-        // Edit task
+        /**
+        * Edits a task by ID.
+        *
+        * @param {string} taskId - The ID of the task to edit.
+        * @returns {void}
+        */
         function editTask(taskId) {
             const task = currentTasks.find(t => t.ID === taskId);
             if (!task) {
@@ -700,7 +774,11 @@ ClassMethod EditTaskModalJavaScript() As %Status
             openEditTaskModal(task);                  
         }
         
-        // Call API to get task information and show edit task modal        
+        /**
+        * Opens the edit task modal and populates the form with task data.
+        *
+        * @param {Object} task - The task data to populate the form with.
+        */      
         async function openEditTaskModal(task) {
             const modal = document.getElementById('renderEditTaskModal');
             if (!modal) {

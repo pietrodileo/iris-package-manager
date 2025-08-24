@@ -1,4 +1,4 @@
-Class PackageManager.API.Projects.Interface Extends PackageManager.API.REST
+Class PackageManager.API.Projects.Interface Extends PackageManager.API.REST [Final]
 {
 
 ClassMethod CreateProject() As %Status
@@ -177,7 +177,7 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
                             Set childType = "CLS"
                         }
                     }
-                    Set sc = ..CreateNestedObject(childName, childType, currProject, .result)
+                    Set sc = ##class(PackageManager.Utility.Utils).CreateNestedObject(childName, childType, currProject, .result)
                 }
             } ElseIf type = "MAC" {
                 Set extension = $EXTRACT(item, *-3, *)
@@ -187,15 +187,15 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
                     Set childType = "INC"
                 }
                 Set childName = $PIECE(item, "."_childType, 1)
-                Set sc = ..CreateNestedObject(childName, childType, currProject, .result)
+                Set sc = ##class(PackageManager.Utility.Utils).CreateNestedObject(childName, childType, currProject, .result)
             } ElseIf type = "DIR" {
                 Set childName = item, childType = type
-                Set sc = ..JSONFolderTree(item,currProject,.result)
+                Set sc = ##class(PackageManager.Utility.Utils).JSONFolderTree(item,currProject,.result)
             } ElseIf type = "CLS" {
                 Set extension = $EXTRACT(item, *-3, *)
                 Set childType = type
                 Set childName = $PIECE(item, "."_childType, 1)
-                Set sc = ..CreateNestedObject(childName, childType, currProject, .result)
+                Set sc = ##class(PackageManager.Utility.Utils).CreateNestedObject(childName, childType, currProject, .result)
             } ElseIf type = "CSP" {
                 Set extension = $PIECE(item, ".", 2)
                 Set childType = type
@@ -203,12 +203,12 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
                 If $ZCONVERT(extension,"L") '= "csp" {
                     Set childName = $PIECE(item, "."_extension, 1)
                 }
-                Set sc = ..CreateNestedObject(childName, childType, currProject, .result, "/", extension)
+                Set sc = ##class(PackageManager.Utility.Utils).CreateNestedObject(childName, childType, currProject, .result, "/", extension)
             } Else {
                 Set extension = $EXTRACT(item, *-3, *)
                 Set childType = type
                 Set childName = $PIECE(item, "."_childType, 1)
-                Set sc = ..CreateNestedObject(childName, childType, currProject, .result)
+                Set sc = ##class(PackageManager.Utility.Utils).CreateNestedObject(childName, childType, currProject, .result)
             }
         }
 

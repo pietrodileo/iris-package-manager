@@ -6,6 +6,12 @@ ROUTINE PackageManager.PackageManager [Type=INC]
 #define PackageManagerRESTClass			 "PackageManager.API.REST"
 #define APIDIR             "DIR"
 #define APIPKG            "PKG"
+#define ExportProjectTaskSectionTitle			 "Export Project Task"
+#define ProjectContentViewerSectionTitle			 "Projects Content Viewer"
+#define ExportedReleaseSectionTitle			 "Exported Release"
+#define InstallationSectionTitle			 "Install Package Manager"
+#define defaultTaskDescription			 "Export projects utility task"
+
 #; --> For standard usage you can use these paths: 
 #; #define tmpFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/"
 #; #define exportTaskFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/task/export/
@@ -13,8 +19,3 @@ ROUTINE PackageManager.PackageManager [Type=INC]
 #; --> For container usage you can use these paths: 
 #define tmpFilePath			"opt/irisapp/packagemanager/"
 #define exportTaskFilePath			 "opt/irisapp/packagemanager/task/export/"
-#define ExportProjectTaskSectionTitle			 "Export Project Task"
-#define ProjectContentViewerSectionTitle			 "Projects Content Viewer"
-#define ExportedReleaseSectionTitle			 "Exported Release"
-#define InstallationSectionTitle			 "Install Package Manager"
-#define defaultTaskDescription			 "Export projects utility task"

@@ -1,3 +1,6 @@
+/// This class provides the main functionality for the Package Manager UI. 
+/// It provides methods for rendering the main page, initializing the sidebar content, and handling window load events.  
+/// The class is responsible for setting up the UI components and providing the necessary functionality for the Package Manager UI.
 Class PackageManager.UI.Main Extends PackageManager.UI.Screens.Abstract
 {
 
@@ -39,6 +42,7 @@ ClassMethod OnPage() As %Status
 
 /// Initialize sidebar content on page load
 /// This code is executed when the window finishes loading, and is used to initialize the page's content.
+/// The loadSection function is called to fetch data from the server and dynamically generate the content for the selected section, and then inject it into the main content area. 
 /// This code executes the populateSidebar function when the window finishes loading, which is responsible for populating the sidebar with its content.
 /// The populateSidebar function is expected to generate the necessary HTML and populate the sidebar element with it, making it visible and interactive for the user.
 ClassMethod SectionsJS() As %Status
@@ -61,13 +65,13 @@ ClassMethod SectionsJS() As %Status
             '#($$$ExportedReleaseSectionTitle)#': renderExportedRelease
         };
 
-        // Function to load section content
+        // Function to load section content dynamically based on the title of the section
         async function loadSection(title) {
             const renderFn = sections[title];
             const contentDiv = document.getElementById("mainContent");
             if (typeof renderFn === "function") {
                 contentDiv.innerHTML = renderFn();
-                // After injecting Project List UI, fetch projects to populate the table
+                // After injecting Project List UI, fetch data to populate the UI
                 if (title === '#($$$ProjectContentViewerSectionTitle)#') {
                     loadProjects();
                 }

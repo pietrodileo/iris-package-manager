@@ -22,6 +22,12 @@ ClassMethod RenderJavaScript() As %Status
         
         let apiMgrApiInstalled = false;
 
+        /**
+        * Shows a message notification on the page.
+        * 
+        * @param {string} text - The text of the message.
+        * @param {string} type - The type of the message (e.g. "success", "error").
+        */
         function apiMgrShowMessage(text, type = 'success') {
             const messagesDiv = document.getElementById('api-mgr-messages');
             messagesDiv.innerHTML = `<div class="api-mgr-message api-mgr-message--${type}" style="display: block;">${text}</div>`;
@@ -31,6 +37,12 @@ ClassMethod RenderJavaScript() As %Status
             }, 5000);
         }
 
+        /**
+        * Shows or hides a spinner on the page.
+        * 
+        * @param {string} spinnerId - The ID of the spinner element.
+        * @param {boolean} show - Whether to show or hide the spinner.
+        */
         function apiMgrShowSpinner(spinnerId, show = true) {
             const spinner = document.getElementById(spinnerId);
             if (spinner) {
@@ -38,6 +50,12 @@ ClassMethod RenderJavaScript() As %Status
             }
         }
 
+        /**
+        * Checks the status of the API and updates the page accordingly.
+        * 
+        * This function checks if the API is installed and running, and updates the page
+        * with the status information.
+        */
         async function apiMgrCheckAPIStatus() {
             apiMgrShowSpinner('api-mgr-api-spinner', true);
             
@@ -116,6 +134,11 @@ ClassMethod RenderJavaScript() As %Status
             }
         }
 
+        /**
+        * Toggles the installation of the API.
+        * 
+        * This function installs or uninstalls the API, depending on its current status.
+        */
         async function apiMgrToggleAPI() {
             let apiMgrApiInstalled;
             // Check if the web app exists calling an ObjectScript method (it's not possible to fetch the API since if it does not exist, it won't return a response) 
@@ -165,7 +188,14 @@ ClassMethod RenderJavaScript() As %Status
             }
         }
 
-        // Call another CSP page to execute ObjectScript code async
+        /**
+        * Calls an ObjectScript CSP page to execute ObjectScript code asynchronously on the server.
+        * 
+        * This function calls an ObjectScript method on the server, and returns the result.
+        * 
+        * @param {string} action - The name of the method to call.
+        * @returns {Promise} A promise that resolves with the result of the method call.
+        */
         async function apiMgrCallMethod(action) {  
             let url;
             if (action === 'UninstallWebApp') {

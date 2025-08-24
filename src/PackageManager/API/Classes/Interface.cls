@@ -1,4 +1,4 @@
-Class PackageManager.API.Classes.Interface Extends PackageManager.API.REST
+Class PackageManager.API.Classes.Interface Extends PackageManager.API.REST [Final]
 {
 
 ClassMethod ExportClasses() As %Status

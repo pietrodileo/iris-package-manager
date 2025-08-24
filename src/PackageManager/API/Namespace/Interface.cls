@@ -1,4 +1,4 @@
-Class PackageManager.API.Namespace.Interface Extends PackageManager.API.REST
+Class PackageManager.API.Namespace.Interface Extends PackageManager.API.REST [Final]
 {
 
 /// This method retrieves all files in the current namespace, including classes, routines, and CSP files.
@@ -38,7 +38,7 @@ ClassMethod GetAllNamespaceFiles(type As %String = "") As %Status
         Set filesFormats = $LISTBUILD("CSP","MAC","INC","INT","CLS")
         While tResult.%Next() {
             Set Name = tResult.%Get("Name")
-            Set Type = ..TranscodeType(tResult.%Get("Type"))
+            Set Type = ##class(PackageManager.Utility.Utils).TranscodeType(tResult.%Get("Type"))
             // Create a JSON object containing nested objects for the packages and csp files
             #; w Name," - ",Type,!
             If $LISTFIND(filesFormats, Type)'=0 {
@@ -52,9 +52,9 @@ ClassMethod GetAllNamespaceFiles(type As %String = "") As %Status
             }
             Set rootElement = result.%Get(rootType)
             If rootType = "CSP" {
-                Set sc = ..DefineObjFromCSP(.rootElement, Name, "/")  
+                Set sc = ##class(PackageManager.Utility.Utils).DefineObjFromCSP(.rootElement, Name, "/")  
             } ElseIf $LISTFIND(filesFormats, Type)'=0 {
-                Set sc = ..DefineObjFromCLSOrRoutine(.rootElement, Name, ".")  
+                Set sc = ##class(PackageManager.Utility.Utils).DefineObjFromCLSOrRoutine(.rootElement, Name, ".")  
             } ElseIf rootType = "Other" {
                 // For other types, we can just add them directly
                 If '$ISOBJECT(rootElement.%Get(Name)) {

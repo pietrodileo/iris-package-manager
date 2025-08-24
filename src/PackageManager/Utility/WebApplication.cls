@@ -1,4 +1,5 @@
-Class PackageManager.Utility.WebApplication Extends %RegisteredObject [ Abstract ]
+/// This class provides utility methods to register, remove and verify existance of a web application on InterSystems IRIS.
+Class PackageManager.Utility.WebApplication [ Final ]
 {
 
 /// Register a web application. It configure an unauthenticated web application.

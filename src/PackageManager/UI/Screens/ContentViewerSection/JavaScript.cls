@@ -60,6 +60,7 @@ ClassMethod EditProject() As %Status
             `;
         }
 
+        // This method restores the original project description and actions after editing.
         async function restoreRecord(el, NewDesc) {
             const row = el.closest("tr");
             if (!row) return;
@@ -82,6 +83,7 @@ ClassMethod EditProject() As %Status
             `;
         }
 
+        // This method saves the edited project details to the server
         async function saveEditedProject(el, originalName) {
             const row = el.closest("tr");
             const name = row.children[1].innerHTML;
@@ -240,6 +242,7 @@ ClassMethod ProjectList() As %Status
         // Additional project management functions from your code
         let allProjects = [];
 
+        // This method loads the list of projects from the server
         async function loadProjects() {
             try {
                 const res = await fetch("/csp/user/rest/packagemanager/projects", { 
@@ -266,6 +269,7 @@ ClassMethod ProjectList() As %Status
             }
         }
 
+        // This method renders the list of projects in the table
         async function renderProjects(projects) {
             const table = document.getElementById("projectTableBody");
             if (!table) {
@@ -321,6 +325,7 @@ ClassMethod ProjectList() As %Status
             });
         }
 
+        // This method filters the list of projects based on the search term.
         async function filterProjects() {
              const term = document.getElementById("searchInput").value.toLowerCase();
             const filtered = allProjects.filter(p =>
@@ -338,6 +343,8 @@ ClassMethod ContentViewer() As %Status
 {
     Set sc = $$$OK
     &html<<script language="javascript"> 
+
+        // This method get all the content of a project and render the tree view
         async function showSelectedProjectContent(showAll = false, projectId = null) {
             let url = "/csp/user/rest/packagemanager/project/content/";
             if (!showAll) {
@@ -399,6 +406,7 @@ ClassMethod ContentViewer() As %Status
         // Global array to track selected items persistently
         window.persistentTreeSelectedItems = [];
 
+        // This method renders the folder tree for the project content
         function renderFolderTree(data, containerId = "container") {
             const container = document.getElementById(containerId);
             if (!container) {
@@ -582,7 +590,7 @@ ClassMethod ContentViewer() As %Status
                 }
             }
 
-            // Global functions accessible from buttons
+            // This method expands all folders in the folder tree
             window.expandAllTree = function() {
                 if (!window.exported) {
                     alert('Show at least a project before');
@@ -593,6 +601,7 @@ ClassMethod ContentViewer() As %Status
                 });
             };
 
+            // This method collapses all folders in the folder tree
             window.collapseAllTree = function() {
                 if (!window.exported) {
                     alert('Show at least a project before');
@@ -932,6 +941,7 @@ ClassMethod ContentViewer() As %Status
                 traverseAndSelect(nodeData, basePath);
             }
 
+            // Function to get all leaf nodes from a given node 
             function getAllLeafNodes(node, basePath = '') {
                 const leafNodes = [];
                 
@@ -1014,6 +1024,7 @@ ClassMethod ContentViewer() As %Status
                 updateSelectedCount();
             };
 
+            // Function to filter project data based on search term
             function filterProjectData(data, searchTerm) {
                 function nodeMatches(node, key) {
                     if (isLeafNode(node)) {
@@ -1129,7 +1140,7 @@ ClassMethod AddClassesModal() As %Status
         let currentAddProjectName = '';
         let originalNamespaceData = null;
         let currentNamespaceData = null;
-        // KEY FIX: Use array instead of Set for consistent behavior like working version
+
         window.persistentNamespaceSelectedItems = [];
 
         // Main function to open the Add Classes modal
@@ -1212,7 +1223,7 @@ ClassMethod AddClassesModal() As %Status
             }
         }
 
-        // Render the namespace tree (adapted from existing tree but for modal)
+        // Render the namespace tree 
         function renderNamespaceTree(data, containerId) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1373,7 +1384,7 @@ ClassMethod AddClassesModal() As %Status
                 return li;
             }
 
-            // FIXED: Helper function to select/unselect all children (like working version)
+            // Helper function to select/unselect all children
             function selectAllNamespaceChildren(folderElement, select) {
                 const childrenContainer = folderElement.querySelector('.add-classes-tree-children');
                 if (!childrenContainer) return;
@@ -1479,13 +1490,13 @@ ClassMethod AddClassesModal() As %Status
             container.appendChild(ul);
             updateNamespaceSelectedCount();
 
-            // FIXED: Restore selections after rendering (like working version)
+            // Restore selections after rendering (like working version)
             setTimeout(() => {
                 restoreNamespaceSelectionsFromPersistent();
             }, 200);
         }
 
-        // FIXED: Helper function to restore selections from persistent array (like working version)
+        // Helper function to restore selections from persistent array (like working version)
         function restoreNamespaceSelectionsFromPersistent() {
             const container = document.getElementById('namespaceContainer');
             if (!container) return;
@@ -1515,7 +1526,7 @@ ClassMethod AddClassesModal() As %Status
             }
         }
 
-        // FIXED: Tree control functions for Add Classes Modal (like working version)
+        // Tree control functions for Add Classes Modal
         function expandAllNamespaceTree() {
             const container = document.getElementById('namespaceContainer');
             if (!currentNamespaceData) {
@@ -1549,7 +1560,7 @@ ClassMethod AddClassesModal() As %Status
             updateNamespaceSelectedCount();
         }
 
-        // FIXED: Search/filter functionality for namespace tree (like working version)
+        // Search/filter functionality for namespace tree
         function filterNamespaceTree() {
             const searchInput = document.getElementById('namespaceSearchInput');
             if (!searchInput || !originalNamespaceData) return;

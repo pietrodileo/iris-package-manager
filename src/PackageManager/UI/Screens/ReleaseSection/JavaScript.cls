@@ -5,7 +5,6 @@ Class PackageManager.UI.Screens.ReleaseSection.JavaScript Extends PackageManager
     JAVASCRIPT
 */
 /// Render JavaScript code for the page
-/// Render JavaScript code for the page
 ClassMethod RenderJavaScript() As %Status
 {
     Set sc = $$$OK
@@ -17,7 +16,8 @@ ClassMethod RenderJavaScript() As %Status
         let filteredReleases = {};
         let selectedReleases = []; // Changed from Set to Array for consistency
 
-        // Load exported releases from API
+        // Loads the list of exported releases from the API endpoint.
+        // The list of exported releases is an array of objects, where each object represents a release.
         async function loadExportedReleases() {
             try {
                 //showMessageExportedRelease('Loading exported releases...', 'info');
@@ -75,7 +75,9 @@ ClassMethod RenderJavaScript() As %Status
             }, 100);
         }
 
-        // Create project folder item
+        // Creates a project folder item in the release tree.
+        // The project folder item is a container element that holds the releases for the project.
+        // It has a checkbox that allows the user to select or deselect the project.
         function createProjectItem(projectName, releases) {
             const li = document.createElement('li');
             li.className = 'exported-releases-tree-item folder';
@@ -144,7 +146,9 @@ ClassMethod RenderJavaScript() As %Status
             return li;
         }
 
-        // Create release file item
+        // Creates a release file item in the release tree.
+        // The release file item is a container element that holds the files for the release.
+        // It has a checkbox that allows the user to select or deselect the release.
         function createReleaseItem(releaseName, releaseData) {
             const li = document.createElement('li');
             li.className = 'exported-releases-tree-item file';
@@ -201,6 +205,8 @@ ClassMethod RenderJavaScript() As %Status
         }
 
         // Handle project checkbox changes (folder level)
+        // When the project checkbox is checked or unchecked, this function updates the selection state of the project.
+        // If the project is selected, it also selects all the releases and files within the project.
         function handleProjectCheckboxChange(projectName, isSelected, folderElement) {
             const projectReleases = filteredReleases[projectName];
             if (!projectReleases) return;
@@ -239,6 +245,8 @@ ClassMethod RenderJavaScript() As %Status
         }
 
         // Handle individual release checkbox changes (file level)
+        // When the release checkbox is checked or unchecked, this function updates the selection state of the release.
+        // If the release is selected, it also selects all the files within the release.
         function handleReleaseCheckboxChange(filepath, isSelected) {
             if (isSelected) {
                 if (!selectedReleases.includes(filepath)) {

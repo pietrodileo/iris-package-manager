@@ -1,5 +1,6 @@
 Include PackageManager.PackageManager
 
+/// Abstract class for all the UI screens
 Class PackageManager.UI.Screens.Abstract Extends %CSP.Page [ Abstract ]
 {
 
