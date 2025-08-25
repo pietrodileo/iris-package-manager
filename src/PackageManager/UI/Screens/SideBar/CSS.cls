@@ -42,6 +42,11 @@ ClassMethod SideBarCSS() As %Status
             display: inline-block;
         }
 
+        /* Hide user info when collapsed */
+        .sidebar.collapsed .user-info {
+            display: none;
+        }
+
         .sidebar-header {
             padding: 20px;
             font-size: 1.3em;
@@ -78,17 +83,61 @@ ClassMethod SideBarCSS() As %Status
             display: none;
         }
 
-        /* Version indicator styling - matches your theme */
+        /* Bottom info section - groups user info and version together */
+        .bottom-info {
+            margin-top: auto;
+            border-top: 1px solid #2d3c4d;
+            background-color: rgba(22, 32, 41, 0.6);
+        }
+
+        /* User information styling */
+        .user-info {
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid rgba(45, 60, 77, 0.5);
+        }
+
+        .currentNamespace,
+        .currentUser {
+            flex: 1;
+            font-size: 10px;
+            color: rgba(236, 240, 241, 0.7);
+            padding: 4px 6px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-radius: 3px;
+            font-weight: 300;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 0; /* Allows flex items to shrink */
+        }
+
+        .currentNamespace::before {
+            content: "⚙️";
+            margin-right: 3px;
+        }
+
+        .currentUser::before {
+            content: "👤";
+            margin-right: 3px;
+        }
+
+        .currentNamespace:hover,
+        .currentUser:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: rgba(236, 240, 241, 0.9);
+        }
+
+        /* Version indicator styling - now part of bottom info */
         .sidebar-version {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
             text-align: center;
             padding: 8px 12px;
-            border-top: 1px solid #2d3c4d; /* Matches your border color */
-            background-color: rgba(22, 32, 41, 0.8); /* Slightly darker background */
-            transition: all 0.3s ease; /* Smooth transition like sidebar */
+            transition: all 0.3s ease;
         }
 
         .version-text {
@@ -120,6 +169,11 @@ ClassMethod SideBarCSS() As %Status
             .sidebar-version {
                 font-size: 10px;
                 padding: 6px 8px;
+            }
+            
+            .currentNamespace,
+            .currentUser {
+                font-size: 10px;
             }
         }
     </style>>
