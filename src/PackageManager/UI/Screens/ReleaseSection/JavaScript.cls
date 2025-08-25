@@ -37,7 +37,13 @@ ClassMethod RenderJavaScript() As %Status
                 const data = await response.json();
 
                 allReleases = data;
-                filteredReleases = { ...allReleases };
+                // Make a copy of the allReleases object
+                filteredReleases = {};
+                for (const key in allReleases) {
+                    if (allReleases.hasOwnProperty(key)) {
+                        filteredReleases[key] = allReleases[key];
+                    }
+                }
                 selectedReleases = []; // Reset selections
                 renderExportedReleases(filteredReleases);
                 //showMessageExportedRelease('Exported releases loaded successfully', 'success');
@@ -418,7 +424,13 @@ ClassMethod RenderJavaScript() As %Status
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             
             if (!searchTerm) {
-                filteredReleases = { ...allReleases };
+                // Make a copy of the allReleases object
+                filteredReleases = {};
+                for (const key in allReleases) {
+                    if (allReleases.hasOwnProperty(key)) {
+                        filteredReleases[key] = allReleases[key];
+                    }
+                }
             } else {
                 filteredReleases = {};
                 

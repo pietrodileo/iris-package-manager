@@ -50,6 +50,7 @@ ClassMethod SectionsJS() As %Status
     Set sc = $$$OK
 
     // Insert the JavaScript functions for all the sections
+    Do ##class(PackageManager.UI.JavaScript).JavaScriptUtilities()
     Do ##class(PackageManager.UI.Screens.InstallSection.HTML).renderInstallSection()
     Do ##class(PackageManager.UI.Screens.ContentViewerSection.HTML).renderContentViewer()
     Do ##class(PackageManager.UI.Screens.ExportTaskSection.HTML).renderExportTask()

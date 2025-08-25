@@ -1,4 +1,4 @@
-Class PackageManager.API.Projects.Interface Extends PackageManager.API.REST [Final]
+Class PackageManager.API.Projects.Interface Extends PackageManager.API.REST [ Final ]
 {
 
 ClassMethod CreateProject() As %Status

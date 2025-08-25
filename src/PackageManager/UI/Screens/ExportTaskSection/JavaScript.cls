@@ -1397,13 +1397,14 @@ ClassMethod AddProjectModalJavaScript() As %Status
 
         function taskFileSelectorToggleSelection(type, name) {
             const item = document.querySelector(`#taskFileSelector${type.charAt(0).toUpperCase() + type.slice(1)}Files .task-file-selector-file-item[data-name='${name}']`);
-            const set = taskFileSelectorSelected[type];
+            let set = taskFileSelectorSelected[type]; 
             if (!item) {
                 console.error(`Item not found: ${name} in ${type}`);
                 return;
             }
             if (set.has(name)) {
-                set.delete(name);
+                set = removeFromSet(set, name);  // Update local variable
+                taskFileSelectorSelected[type] = set;  // Update the stored reference
                 item.classList.remove("selected");
             } else {
                 set.add(name);

@@ -830,7 +830,8 @@ ClassMethod ContentViewer() As %Status
                 }
 
                 if (prefixes.size === 1) {
-                    return [...prefixes][0];  // The only unique prefix
+                    let prefixes_array = toArray(prefixes);
+                    return prefixes_array[0];  // The only unique prefix
                 } else {
                     return null;  // Multiple different prefixes
                 }
@@ -1037,7 +1038,7 @@ ClassMethod ContentViewer() As %Status
                 }
 
                 function findMatchingPaths(node, key, currentPath = []) {
-                    const fullPath = [...currentPath, key];
+                    const fullPath = currentPath.concat([key]);
                     const matches = [];
 
                     if (nodeMatches(node, key)) {
@@ -1052,7 +1053,7 @@ ClassMethod ContentViewer() As %Status
                         for (const childKey in node) {
                             if (node[childKey]) {
                                 const childMatches = findMatchingPaths(node[childKey], childKey, fullPath);
-                                matches.push(...childMatches);
+                                pushAll(matches, childMatches);
                             }
                         }
                     }
@@ -1087,7 +1088,7 @@ ClassMethod ContentViewer() As %Status
                 for (const key in data) {
                     if (data[key]) {
                         const matches = findMatchingPaths(data[key], key);
-                        allMatches.push(...matches);
+                        pushAll(allMatches, matches);
                     }
                 }
 
@@ -1597,7 +1598,7 @@ ClassMethod AddClassesModal() As %Status
             }
 
             function findMatchingPaths(node, key, currentPath = []) {
-                const fullPath = [...currentPath, key];
+                const fullPath = currentPath.concat([key]);
                 const matches = [];
 
                 if (nodeMatches(node, key)) {
@@ -1611,8 +1612,8 @@ ClassMethod AddClassesModal() As %Status
                 if (!isLeafNodeNamespace(node)) {
                     for (const childKey in node) {
                         if (node[childKey]) {
-                            const childMatches = findMatchingPaths(node[childKey], childKey, fullPath);
-                            matches.push(...childMatches);
+                            const childMatches = findMatchingPaths(node[childKey], childKey, fullPath);                            
+                            pushAll(matches, childMatches);
                         }
                     }
                 }
@@ -1647,7 +1648,7 @@ ClassMethod AddClassesModal() As %Status
             for (const key in data) {
                 if (data[key]) {
                     const matches = findMatchingPaths(data[key], key);
-                    allMatches.push(...matches);
+                    pushAll(allMatches, matches);
                 }
             }
 
