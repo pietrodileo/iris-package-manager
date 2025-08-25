@@ -21,6 +21,7 @@ ClassMethod OnPage() As %Status
     Do ##class(PackageManager.UI.CSS).Styles()
     Do ..SectionsJS()
     Do ..WindowOnLoad()
+
     &html<
         <body>
             <div class="sidebar">
@@ -29,9 +30,19 @@ ClassMethod OnPage() As %Status
                     <span class="label">Package Manager</span>
                 </div>
                 <div id="sidebarList"></div>
-                <!-- Version indicator at the bottom of sidebar -->
-                <div class="sidebar-version" title="Package Manager Version">
-                    <span class="version-text">ℹ️ v#($$$PackageManagerVersion)#</span>
+
+                <!-- Bottom info section with user info and version -->
+                <div class="bottom-info">
+                    <!-- User information section -->
+                    <div class="user-info">
+                        <span class="currentNamespace" title="Current Namespace">#($NAMESPACE)#</span>
+                        <span class="currentUser" title="Current User">#($USERNAME)#</span>
+                    </div>
+
+                    <!-- Version indicator at the bottom of sidebar -->
+                    <div class="sidebar-version" title="Package Manager Version">
+                        <span class="version-text">ℹ️ v#($$$PackageManagerVersion)#</span>
+                    </div>
                 </div>
             </div>
             <div class="main-content" id="mainContent"></div>

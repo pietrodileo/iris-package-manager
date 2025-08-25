@@ -14,9 +14,12 @@ services:
     environment:
       - ISC_DATA_DIRECTORY=/durable/iris
     volumes:
-      # Use forward slashes even on Windows for Docker
+      # System/persistent data (IRIS installation, databases, etc.)
       - ./storage:/durable
-    # # Health check to ensure IRIS is running properly
+      # Separate volume for exports (clean separation)
+      - ./exports:/opt/irisapp/export    
+    
+    # Health check to ensure IRIS is running properly
     # healthcheck:
     #   test: ["CMD", "/usr/irissys/bin/iris", "qlist"]
     #   interval: 30s

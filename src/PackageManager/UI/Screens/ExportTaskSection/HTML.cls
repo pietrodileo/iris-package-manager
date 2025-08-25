@@ -242,7 +242,7 @@ ClassMethod renderCreateTaskModal() As %Status
                                 <!-- Buttons -->
                                 <div style="text-align: right; padding-top: 16px; border-top: 1px solid #e2e8f0; margin-top: 16px;">
                                     <button type="button" class="btn btn-secondary" onclick="closeCreateTaskModal()" style="margin-right: 8px;">Cancel</button>
-                                    <button type="button" class="btn btn-primary" onclick="submitNewTask()">Create Task</button>
+                                    <button type="button" class="btn btn-primary" onclick="submitNewTask('#($USERNAME)#')">Create Task</button>
                                 </div>
                             </form>
                         </div>

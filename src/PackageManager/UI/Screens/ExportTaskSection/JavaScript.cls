@@ -161,6 +161,7 @@ ClassMethod TaskTableJavaScript() As %Status
                             <th>Next Run</th>
                             <th>Start Date</th>
                             <th>End Date</th>
+                            <th>Run As User</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -214,6 +215,9 @@ ClassMethod TaskTableJavaScript() As %Status
                     projectsIconTitle = "Associate projects to this task";
                 }
 
+                // User running the task
+                const running_user = task.RunAsUser;
+
                 html += `
                     <tr>
                         <td>${escapeHtml(task.ID || '')}</td>
@@ -235,13 +239,14 @@ ClassMethod TaskTableJavaScript() As %Status
                         <td>${displayStarted ? displayStarted.toLocaleString() : 'Never'}</td>
                         <td>${displayFinished ? displayFinished.toLocaleString() : '-'}</td>
                         <td>${execution_time_seconds !== '' ? `${execution_time_seconds} sec` : '-'}</td>                        
-                        <td>${displayStatus !== '' ? `${displayStatus}` : '-'}</td>
+                        <td>${displayStatus !== '' ? `${escapeHtml(displayStatus)}` : '-'}</td>
                         <td>${nextScheduled ? nextScheduled.toLocaleString() : '-'}</td>
                         <td>${DisplayStartDate 
                             ? DisplayStartDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
                         : '-'}</td>
                         <td>${DisplayEndDate === "-"
                             ? '-' : DisplayEndDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) }</td>
+                        <td>${running_user ? running_user.toLocaleString() : 'Unknown'}</td>
                         <td>
                             <div class="actions">
                                 <button type="button" class="btn-icon" onclick="editTask('${escapeHtml(task.ID)}')" title="Edit Task">
@@ -493,7 +498,7 @@ ClassMethod CreateTaskModalJavaScript() As %Status
         * @async
         * @returns {Promise<void>}
         */
-        async function submitNewTask() {
+        async function submitNewTask(username) {
             try {
                 // Collect basic task data
                 const taskName = document.getElementById('task_name').value.trim();
@@ -625,12 +630,13 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                 const formData = {
                     task_name: taskName,
                     task_desc: taskDesc,
+                    username: username,
                     schedule: scheduleData,
                     purge_config: purgeConfig,
                     email_notifications: emailNotifications
                 };
                 
-                console.log('Submitting task data:', formData);
+                //console.log('Submitting task data:', formData);
 
                 const response = await fetch('/csp/user/rest/packagemanager/task/create', {
                     method: 'POST',
@@ -853,7 +859,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
         
         // Populate form with existing task data
         function populateFormWithTaskData(taskData) {
-            console.log('Populating form with task data:', taskData);
+            //console.log('Populating form with task data:', taskData);
             try {
                 // Add a small delay to ensure DOM elements are ready
                 setTimeout(() => {
@@ -863,14 +869,14 @@ ClassMethod EditTaskModalJavaScript() As %Status
                     
                     if (taskNameElement) {
                         taskNameElement.value = taskData.Name || '';
-                        console.log('Set task name to:', taskData.Name);
+                        //console.log('Set task name to:', taskData.Name);
                     } else {
                         console.error('edit-task_name element not found');
                     }
                     
                     if (taskDescElement) {
                         taskDescElement.value = taskData.Description || '';
-                        console.log('Set task description to:', taskData.Description);
+                        //console.log('Set task description to:', taskData.Description);
                     } else {
                         console.error('edit-task_desc element not found');
                     }
@@ -953,7 +959,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                     const scheduleTypeElement = document.getElementById('edit-schedule_type');
                     if (scheduleTypeElement) {
                         scheduleTypeElement.value = scheduleType;
-                        console.log('Set schedule type to:', scheduleType);
+                        //console.log('Set schedule type to:', scheduleType);
 
                         const event = new Event('change', { bubbles: true });
                         scheduleTypeElement.dispatchEvent(event);
@@ -978,7 +984,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                                 // TimePeriodDay format: Sunday=1, Monday=2, ..., Saturday=7
                                 // String like "23456" means Monday through Friday
                                 if (taskData.TimePeriodDay) {
-                                    console.log('Processing TimePeriodDay:', taskData.TimePeriodDay);
+                                    //console.log('Processing TimePeriodDay:', taskData.TimePeriodDay);
                                     
                                     // Reset all checkboxes first
                                     document.querySelectorAll('.edit-task-day-checkbox input').forEach(cb => cb.checked = false);
@@ -990,7 +996,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                                         const checkbox = document.querySelector(`.edit-task-day-checkbox input[value="${dayValue}"]`);
                                         if (checkbox) {
                                             checkbox.checked = true;
-                                            console.log('Checked day:', dayValue);
+                                            //console.log('Checked day:', dayValue);
                                         } else {
                                             console.warn('Checkbox not found for day value:', dayValue);
                                         }
@@ -1057,7 +1063,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                 }, 50); // Small delay to ensure form elements are rendered
                 
             } catch (error) {
-                console.error('Error populating form with task data:', error);
+                //console.error('Error populating form with task data:', error);
                 alert('Error loading task data into form. Please try again.');
             }
         }
@@ -1234,7 +1240,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                 }
                 
             } catch (error) {
-                console.error('Error updating task:', error.message);
+                //console.error('Error updating task:', error.message);
                 alert(`Error updating task: ${error}`);
             }
         }
@@ -1469,8 +1475,8 @@ ClassMethod AddProjectModalJavaScript() As %Status
             const removedProjects = originalIds.filter(id => !currentIds.includes(id));
             const addedProjects = currentIds.filter(id => !originalIds.includes(id));
 
-            console.log("Removed:", removedProjects);
-            console.log("Added:", addedProjects);
+            //console.log("Removed:", removedProjects);
+            //console.log("Added:", addedProjects);
 
             fetch("/csp/user/rest/packagemanager/task/updateclasses/" + encodeURIComponent(taskFileSelectorData.ID), {
                 method: "POST",

@@ -18,6 +18,9 @@ Class PackageManager.Utility.Utils [ Final ]
 ClassMethod DirExists(path As %String, create As %Boolean = 0, Output exists As %Boolean) As %Status
 {
     Set sc = $$$OK
+    // Switch to %SYS namespace to get more privileges
+    New $NAMESPACE
+    Set $NAMESPACE = "%SYS"
     Set exists = ##class(%File).DirectoryExists(path) 
     If 'exists {
         If create {

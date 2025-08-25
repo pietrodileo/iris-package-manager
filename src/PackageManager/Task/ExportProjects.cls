@@ -22,6 +22,11 @@ Method OnTask() As %Status
 {
 	Set sc = $$$OK
 	Try {
+        k ^CacheTemp("ExportProject")
+        Set ^CacheTemp("ExportProject","RUN")=$ZDT($h,3)
+        Set ^CacheTemp("ExportProject","Current user")=$USERNAME
+        Set ^CacheTemp("ExportProject","Current namespace")=$NAMESPACE
+
 		Set Today = $zdate($h,4)		
 		Set sql = "SELECT ProjectId FROM PackageManager_Task.ProjectToExport "
             _" WHERE Active = 1 "
@@ -31,10 +36,13 @@ Method OnTask() As %Status
         Set tStatement = ##class(%SQL.Statement).%New()
         Set sc = tStatement.%Prepare(sql)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-        Set tResult = tStatement.%Execute(..TaskID)
+        
+        ;    Set taskid = 1000
+        Set tResult = tStatement.%Execute(..TaskID) ;taskid) ; ..TaskID)
         While tResult.%Next() {
             Set ProjectId = tResult.%Get("ProjectId")
-            Set sc = ..ExportProject(ProjectId, ..TaskID)
+            Set taskid = 1000
+            Set sc = ..ExportProject(ProjectId, ..TaskID) ; taskid) ; ..TaskID)
             If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         }
     } Catch ex {
@@ -59,8 +67,9 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         }
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set prjFilePath = ##class(PackageManager.Utility.WebApplication).GetTempFilePath($$$exportTaskFilePath_ProjectId, .osSeparator)
-        Set prjFilePath = prjFilePath_osSeparator
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .osSeparator)
+        Set prjFilePath = basePath_ProjectId_osSeparator
+        Set ^CacheTemp("ExportProject","prjFilePath")=prjFilePath
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
@@ -74,6 +83,8 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         }
         Set prjRecord = ##class(PackageManager.Task.ProjectToExport).ProjectIdIndexOpen(ProjectId,TaskID)
         Set version = prjRecord.Version
+        Set ^CacheTemp("ExportProject","version")=version
+
         Set sc = prjRecord.IncrementVersion()
         If $$$ISERR(sc) {
             Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -87,6 +98,7 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         Set fileName = ProjectId_"_"_release_"_V"_version_"_"_datetime_format
         
         Set filePath = prjFilePath_fileName
+        Set ^CacheTemp("ExportProject","filePath")=filePath
 
         Set project = ##class(%Studio.Project).%OpenId(ProjectId)
         If '$ISOBJECT(project) {
@@ -98,6 +110,7 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
     } Catch ex {
         Set sc=ex.AsStatus()
+        Set ^CacheTemp("ExportProject","err")=$System.Status.GetErrorText(sc)
     }
     Return sc
 }

@@ -17,5 +17,5 @@ ROUTINE PackageManager.PackageManager [Type=INC]
 #; #define exportTaskFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/task/export/
 
 #; --> For container usage you can use these paths: 
-#define tmpFilePath			"opt/irisapp/packagemanager/"
-#define exportTaskFilePath			 "opt/irisapp/packagemanager/task/export/"
+#define tmpFilePath			"/opt/irisapp/export/packagemanager/tmp/"
+#define exportTaskFilePath			 "/opt/irisapp/export/packagemanager/task/"

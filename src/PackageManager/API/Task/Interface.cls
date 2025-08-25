@@ -1,4 +1,4 @@
-Class PackageManager.API.Task.Interface Extends PackageManager.API.REST [Final]
+Class PackageManager.API.Task.Interface Extends PackageManager.API.REST [ Final ]
 {
 
 /// This method creates a new record for the export task within the task manager
@@ -21,6 +21,7 @@ ClassMethod CreateTask() As %Status
         Set startDate = $ZDATEH(json."schedule"."startDate",3)
         Set type = json."schedule"."type"
         Set priority = json."schedule"."priority"
+        Set username = json."username"
 
         If TaskName="" Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskName is required."))
 
@@ -59,6 +60,7 @@ ClassMethod CreateTask() As %Status
         Set ^CacheTemp("task","TimePeriod") = TimePeriod
         Set ^CacheTemp("task","TaskName") = TaskName
         Set ^CacheTemp("task","TimePeriodDay") = TimePeriodDay
+        Set ^CacheTemp("task","user") = $USERNAME   
 
         Set task=##class(%SYS.Task).%New()
         /// Name of the task must be 50 characters or less, first character must be a letter.
@@ -129,6 +131,8 @@ ClassMethod CreateTask() As %Status
         /// the entry will be directed there.
         // Property OutputDirectory As %String(MAXLEN = 1024);
 
+        Set task.RunAsUser=username
+
         Set sc = task.%Save()
         If $$$ISERR(sc) {
             Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -167,7 +171,7 @@ ClassMethod CheckExistingTasks() As %Status
         Set sql = "SELECT ID,Name,Description,NameSpace,Priority,Suspended,"
 	            _" DisplayRun,DisplayInterval,DisplayDayNextScheduled,TimeNextScheduled,"
                 _" DisplayStartDate,DisplayEndDate,DisplayStarted,DisplayFinished,"
-                _" DisplayStatus,Error,DisplayErrorDate,DisplayErrorNumber" 
+                _" DisplayStatus,Error,DisplayErrorDate,DisplayErrorNumber,Error,RunAsUser" 
 	            _" FROM %SYS.Task "
 	            _" WHERE TaskClass=? "
         //w sql,!
@@ -195,6 +199,11 @@ ClassMethod CheckExistingTasks() As %Status
                     "ProjectId":(prjTResult.%Get("ProjectId"))
                 })
             }
+            Set Error = (tResult.%Get("Error"))
+            Set TaskStatus = (tResult.%Get("DisplayStatus"))
+            If Error '= "" {
+                Set TaskStatus = Error
+            }
             Do elements.%Push({
                 "ID":(tResult.%Get("ID")),
                 "Name":(tResult.%Get("Name")),
@@ -204,13 +213,14 @@ ClassMethod CheckExistingTasks() As %Status
                 "Suspended":(tResult.%Get("Suspended")), // Suspended: 1 or 0
                 "DisplayStarted":(tResult.%Get("DisplayStarted")), // Last time started
                 "DisplayFinished":(tResult.%Get("DisplayFinished")), // Last time finished
-                "DisplayStatus":(tResult.%Get("DisplayStatus")), // Task status (1 or Error)
+                "DisplayStatus": (TaskStatus), // Task status (1 or Error)
                 "DisplayRun":(tResult.%Get("DisplayRun")), // How many times it runs
                 "DisplayInterval":(tResult.%Get("DisplayInterval")), // How many minutes between runs
                 "DisplayDayNextScheduled":(tResult.%Get("DisplayDayNextScheduled")), // Next day the task runs
                 "TimeNextScheduled": ($ZTIME((tResult.%Get("TimeNextScheduled")))), // Next time the task runs
                 "DisplayStartDate":(tResult.%Get("DisplayStartDate")), // Overall start date of the task (before it task won't run)
                 "DisplayEndDate":(tResult.%Get("DisplayEndDate")), // Overall end date of the task (after it task won't run anymore)
+                "RunAsUser":(tResult.%Get("RunAsUser")), // User running the task (it should have the privileges to run the task and access the database)
                 "Projects": (projects) // List of projects associated with the current task
             })            
         }
@@ -312,6 +322,7 @@ ClassMethod GetTaskInfo(taskId As %String) As %Status
         Set out.DailyEndTime = Task.DailyEndTime
         Set out.TaskClass = Task.TaskClass
         Set out.Settings = Task.Settings
+        Set out.RunAsUser = Task.RunAsUser
         #; Set out.EmailOnCompletion = $LISTTOSTRING(Task.EmailOnCompletion,",") 
         #; Set out.EmailOnError = Task.EmailOnError
         #; Set out.EmailOnExpiration = Task.EmailOnExpiration
@@ -567,7 +578,7 @@ ClassMethod GetExportedReleases(ByRef result As %DynamicObject = "", verbose As 
 
         // Define base path and initialize stack for directories
         Kill FILES
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .separator)
         // if the directory contains both slashes and backslashes, replace them with the separator
         If basePath [ "/" {
             Set directory = $REPLACE(basePath, "/", separator) 
