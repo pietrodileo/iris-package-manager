@@ -2,6 +2,6 @@
     "objectscript.conn": {
         "server": "docker_pkg_manager",
         "ns": "USER",
-        "active": true
+        "active": false
     }
 }

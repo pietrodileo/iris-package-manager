@@ -1,4 +1,4 @@
-Class PackageManager.UI.JavaScript Extends PackageManager.UI.Screens.Abstract
+Class PackageManager.UI.JavaScriptUtils Extends PackageManager.UI.Screens.Abstract
 {
 
 /*
