@@ -11,8 +11,6 @@ ClassMethod CreateTask() As %Status
         Set out = {}
 
         Set body = %request.Content.Read()
-        Kill ^CacheTemp("task")  
-        Set ^CacheTemp("task","body") = body
         Set json = {}.%FromJSON(body)
         Set TaskDesc = json."task_desc"
         Set TaskName = json."task_name"
@@ -22,7 +20,13 @@ ClassMethod CreateTask() As %Status
         Set type = json."schedule"."type"
         Set priority = json."schedule"."priority"
         Set username = json."username"
-
+        Set enablePurge = json."purge_config"."enabled"
+        Set retentionDays = ""
+        Set minFilesKeep = ""
+        If enablePurge = 1 {
+            Set retentionDays = json."purge_config"."retentionDays"
+            Set minFilesKeep = json."purge_config"."minFilesKeep"
+        }
         If TaskName="" Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskName is required."))
 
         /// 0 - DAILY<br>
@@ -38,9 +42,6 @@ ClassMethod CreateTask() As %Status
         /// 5 - ONCE <br>
         ///         Task is not scheduled to run. Task is scheduled to run by calling the RunOnce method        
         Set TimePeriod = $SELECT(type="daily":0, type="weekly":1, type="monthly":2,type="once":5,1:"")
-        Set ^CacheTemp("task","TimePeriod") = TimePeriod
-        Set ^CacheTemp("task","startDate") = startDate
-        Set ^CacheTemp("task","runTime") = runTime
 
         Set TimePeriodDay ="", TimePeriodEvery = ""
         If TimePeriod="" Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Invalid schedule type"))
@@ -56,11 +57,6 @@ ClassMethod CreateTask() As %Status
             If TimePeriodEvery > 12 Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Invalid monthly schedule"))
             Set TimePeriodDay = json."schedule"."dayOfMonth"
         }
-        Set ^CacheTemp("task","TimePeriodEvery") = TimePeriodEvery
-        Set ^CacheTemp("task","TimePeriod") = TimePeriod
-        Set ^CacheTemp("task","TaskName") = TaskName
-        Set ^CacheTemp("task","TimePeriodDay") = TimePeriodDay
-        Set ^CacheTemp("task","user") = $USERNAME   
 
         Set task=##class(%SYS.Task).%New()
         /// Name of the task must be 50 characters or less, first character must be a letter.
@@ -139,8 +135,16 @@ ClassMethod CreateTask() As %Status
         }
 
         Set taskId = task.%Id()
-        // Settings for the task properties 
-        set task.Settings=$LB("TaskID",taskId) 
+        // This string contains the settings for the new task. 
+        // It is a string of the form:
+        //    <propertyname>,<value>,<propertyname>,<value>,...
+        Set SettingsString = "" 
+        Set SettingsString = ..InsertTaskSetting("TaskID",taskId,.SettingsString)
+        Set SettingsString = ..InsertTaskSetting("EnablePurge",enablePurge,.SettingsString)
+        If retentionDays '= "" Set SettingsString = ..InsertTaskSetting("PurgeAfterNDays",retentionDays,.SettingsString)
+        If minFilesKeep '= "" Set SettingsString = ..InsertTaskSetting("MinimumNumberOfFilesToKeep",minFilesKeep,.SettingsString)
+        set task.Settings=$LISTFROMSTRING(SettingsString,",") 
+
         Set sc = task.%Save()
         If $$$ISERR(sc) {
             Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -323,6 +327,13 @@ ClassMethod GetTaskInfo(taskId As %String) As %Status
         Set out.TaskClass = Task.TaskClass
         Set out.Settings = Task.Settings
         Set out.RunAsUser = Task.RunAsUser
+        // Get task settings
+        Set out.Settings = { 
+            "TaskID": (..GetTaskSetting("TaskID",Task.Settings)),
+            "EnablePurge": (..GetTaskSetting("EnablePurge",Task.Settings)),
+            "PurgeAfterNDays": (..GetTaskSetting("PurgeAfterNDays",Task.Settings)),
+            "MinimumNumberOfFilesToKeep": (..GetTaskSetting("MinimumNumberOfFilesToKeep",Task.Settings))
+        }
         #; Set out.EmailOnCompletion = $LISTTOSTRING(Task.EmailOnCompletion,",") 
         #; Set out.EmailOnError = Task.EmailOnError
         #; Set out.EmailOnExpiration = Task.EmailOnExpiration
@@ -361,6 +372,13 @@ ClassMethod UpdateTask(taskId As %String) As %Status
         Set priority = json."schedule"."priority"
         If TaskName="" { 
             Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskName is required."))
+        }
+        Set enablePurge = json."purge_config"."enabled"
+        Set retentionDays = ""
+        Set minFilesKeep = ""
+        If enablePurge = 1 {
+            Set retentionDays = json."purge_config"."retentionDays"
+            Set minFilesKeep = json."purge_config"."minFilesKeep"
         }
 
         /// 0 - DAILY<br>
@@ -472,6 +490,18 @@ ClassMethod UpdateTask(taskId As %String) As %Status
         /// If an output directory and output file are chosen, the output from
         /// the entry will be directed there.
         // Property OutputDirectory As %String(MAXLEN = 1024);
+
+        // This string contains the settings for the new task. 
+        // It is a string of the form:
+        //    <propertyname>,<value>,<propertyname>,<value>,...
+        Set SettingsString = task.Settings 
+        Set sc = ..ModifyTaskSetting("EnablePurge",enablePurge,.SettingsString)
+        If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
+        If retentionDays '= "" Set sc = ..ModifyTaskSetting("PurgeAfterNDays",retentionDays,.SettingsString)
+        If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
+        If minFilesKeep '= "" Set sc = ..ModifyTaskSetting("MinimumNumberOfFilesToKeep",minFilesKeep,.SettingsString)
+        If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
+        set task.Settings=SettingsString
 
         Set sc = task.%Save()
         If $$$ISERR(sc) {
@@ -701,6 +731,56 @@ ClassMethod DownloadRelease() As %Status
         #; Do ..WriteResponse(out, sc)
     }
     Catch ex {
+        Set sc=ex.AsStatus()
+    }
+    Return sc
+}
+
+/// This method allow to insert a new setting into the task settings string
+ClassMethod InsertTaskSetting(Key As %String, Value As %String, ByRef SettingsString As %String) As %String
+{
+    Return $SELECT(SettingsString = "":Key_","_Value, 1:SettingsString_","_Key_","_Value)
+}
+
+/// This method allow to insert a new setting into the task settings string
+ClassMethod GetTaskSetting(Key As %String, Settings As %List) As %String
+{
+    Set ptr = 0
+    Set valueIdx = "", keyIdx = ""
+    Set count = 0
+    While $LISTNEXT(Settings, ptr, value) {
+        Set count = count +1
+        If value = Key {
+            Set keyIdx = count, valueIdx = count + 1
+            Quit
+        }
+    }
+    If valueIdx = "" Return ""
+    If valueIdx '= "" Return $LIST(Settings, valueIdx)
+}
+
+/// This method allow to modify the value of an existing setting into the task settings string
+ClassMethod ModifyTaskSetting(Key As %String, newValue As %String, ByRef Settings As %List) As %Status
+{
+    Set sc = $$$OK
+    Try {
+        Set ptr = 0
+        Set valueIdx = "", keyIdx = ""
+        Set count = 0
+        While $LISTNEXT(Settings, ptr, value) {
+            Set count = count +1
+            If value = Key {
+                Set keyIdx = count, valueIdx = count + 1
+                Quit
+            }
+        }
+        If valueIdx = "" {
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Impossible to update Task settings: Key not found in settings"))
+        }
+        If valueIdx '= "" { 
+            Set $LIST(Settings, valueIdx) = newValue
+        }
+    } Catch ex {
         Set sc=ex.AsStatus()
     }
     Return sc

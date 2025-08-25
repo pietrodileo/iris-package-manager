@@ -9,6 +9,18 @@ Parameter TaskName = "Export Projects Utility";
 /// ID of the related %SYS.Task definition
 Property TaskID As %String;
 
+/// Enable automatic purge of old exported files
+/// If enabled, old exported files will be automatically deleted based on the retention policy
+/// defined by the user. If disabled, old exported files will be kept indefinitely.
+Property EnablePurge As %Boolean [ InitialExpression = 0 ];
+
+/// Number of days after which exported files are considered old and eligible for deletion
+Property PurgeAfterNDays As %Integer [ InitialExpression = 60 ];
+
+/// As a security measure, the task will always keep a minimum number of recent exported files 
+/// even if they are older than the retention period.
+Property MinimumNumberOfFilesToKeep As %Integer [ InitialExpression = 5 ];
+
 /// Workaround to test the task using the debugger
 ClassMethod TestTask() As %Status
 {
@@ -22,11 +34,6 @@ Method OnTask() As %Status
 {
 	Set sc = $$$OK
 	Try {
-        k ^CacheTemp("ExportProject")
-        Set ^CacheTemp("ExportProject","RUN")=$ZDT($h,3)
-        Set ^CacheTemp("ExportProject","Current user")=$USERNAME
-        Set ^CacheTemp("ExportProject","Current namespace")=$NAMESPACE
-
 		Set Today = $zdate($h,4)		
 		Set sql = "SELECT ProjectId FROM PackageManager_Task.ProjectToExport "
             _" WHERE Active = 1 "
@@ -36,13 +43,10 @@ Method OnTask() As %Status
         Set tStatement = ##class(%SQL.Statement).%New()
         Set sc = tStatement.%Prepare(sql)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-        
-        ;    Set taskid = 1000
-        Set tResult = tStatement.%Execute(..TaskID) ;taskid) ; ..TaskID)
+        Set tResult = tStatement.%Execute(..TaskID) 
         While tResult.%Next() {
             Set ProjectId = tResult.%Get("ProjectId")
-            Set taskid = 1000
-            Set sc = ..ExportProject(ProjectId, ..TaskID) ; taskid) ; ..TaskID)
+            Set sc = ..ExportProject(ProjectId, ..TaskID) 
             If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         }
     } Catch ex {
@@ -69,7 +73,6 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         // Check if the TEMPFILEPATH directory exists, create it if not
         Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .osSeparator)
         Set prjFilePath = basePath_ProjectId_osSeparator
-        Set ^CacheTemp("ExportProject","prjFilePath")=prjFilePath
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
@@ -83,7 +86,6 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         }
         Set prjRecord = ##class(PackageManager.Task.ProjectToExport).ProjectIdIndexOpen(ProjectId,TaskID)
         Set version = prjRecord.Version
-        Set ^CacheTemp("ExportProject","version")=version
 
         Set sc = prjRecord.IncrementVersion()
         If $$$ISERR(sc) {
@@ -98,7 +100,6 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         Set fileName = ProjectId_"_"_release_"_V"_version_"_"_datetime_format
         
         Set filePath = prjFilePath_fileName
-        Set ^CacheTemp("ExportProject","filePath")=filePath
 
         Set project = ##class(%Studio.Project).%OpenId(ProjectId)
         If '$ISOBJECT(project) {
@@ -110,7 +111,6 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
     } Catch ex {
         Set sc=ex.AsStatus()
-        Set ^CacheTemp("ExportProject","err")=$System.Status.GetErrorText(sc)
     }
     Return sc
 }

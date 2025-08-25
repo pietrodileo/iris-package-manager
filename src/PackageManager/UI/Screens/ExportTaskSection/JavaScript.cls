@@ -937,6 +937,19 @@ ClassMethod EditTaskModalJavaScript() As %Status
                         priorityElement.value = taskData.Priority || '0';
                     }
                     
+                    // Purge Settings
+                    const purge_checkbox = document.getElementById('edit-purge_enabled');
+                    if (purge_checkbox) {
+                        purge_checkbox.checked = taskData?.Settings?.EnablePurge === '1' ? true : false;
+                        if (purge_checkbox.checked) {
+                            const retention_days = document.getElementById('edit-retention_days');
+                            const min_files_keep = document.getElementById('edit-min_files_keep');
+                            retention_days.value = taskData?.Settings?.PurgeAfterNDays
+                            min_files_keep.value = taskData?.Settings?.MinimumNumberOfFilesToKeep
+                        }
+                    }
+
+
                     // Schedule type based on TimePeriod
                     let scheduleType = 'daily'; // default
                     switch(parseInt(taskData.TimePeriod)) {
@@ -1120,14 +1133,14 @@ ClassMethod EditTaskModalJavaScript() As %Status
                 }
 
                 // Collect purge configuration
-                const purgeEnabled = document.getElementById('purge_enabled').checked;
+                const purgeEnabled = document.getElementById('edit-purge_enabled').checked;
                 let purgeConfig = {
                     enabled: purgeEnabled
                 };
                 
                 if (purgeEnabled) {
-                    const retentionDays = parseInt(document.getElementById('retention_days').value);
-                    const minFilesKeep = parseInt(document.getElementById('min_files_keep').value);
+                    const retentionDays = parseInt(document.getElementById('edit-retention_days').value);
+                    const minFilesKeep = parseInt(document.getElementById('edit-min_files_keep').value);
                     
                     // Validate purge settings
                     if (!retentionDays || retentionDays < 1) {
