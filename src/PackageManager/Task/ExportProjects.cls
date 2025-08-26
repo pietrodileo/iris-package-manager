@@ -21,6 +21,10 @@ Property PurgeAfterNDays As %Integer [ InitialExpression = 60 ];
 /// even if they are older than the retention period.
 Property MinimumNumberOfFilesToKeep As %Integer [ InitialExpression = 5 ];
 
+Parameter releasePrefix = "taskId_";
+
+Parameter exportFormat = ".xml";
+
 /// Workaround to test the task using the debugger
 ClassMethod TestTask() As %Status
 {
@@ -48,6 +52,12 @@ Method OnTask() As %Status
             Set ProjectId = tResult.%Get("ProjectId")
             Set sc = ..ExportProject(ProjectId, ..TaskID) 
             If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
+
+            // If the export has been completed successfully, eventually purge old files
+            If ..EnablePurge {
+                Set sc = ..PurgeOldFiles(ProjectId, ..TaskID, ..PurgeAfterNDays, ..MinimumNumberOfFilesToKeep)
+                If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+            }
         }
     } Catch ex {
         Set sc=ex.AsStatus()
@@ -70,7 +80,7 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
             Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
         }
 
-        // Check if the TEMPFILEPATH directory exists, create it if not
+        // Check if the export directory exists, create it if not
         Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .osSeparator)
         Set prjFilePath = basePath_ProjectId_osSeparator
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,1,.exists)
@@ -93,10 +103,9 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         }
 
         // Generate a temporary file name
-        Set now = $NOW()
-        Set release = "taskId_"_TaskID
-        Set format = ".xml"
-        Set datetime = $TRANSLATE($ZDATE(now,3),"-","")_"_"_$TRANSLATE($ZTIME(now,1),":","")
+        Set release = ..#releasePrefix_TaskID
+        Set format = ..#exportFormat
+        Set datetime = $TRANSLATE($ZDATE($PIECE($H,",",1),3),"-","")_"_"_$TRANSLATE($ZTIME($PIECE($H,",",2),1),":","")
         Set fileName = ProjectId_"_"_release_"_V"_version_"_"_datetime_format
         
         Set filePath = prjFilePath_fileName
@@ -111,6 +120,128 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
     } Catch ex {
         Set sc=ex.AsStatus()
+    }
+    Return sc
+}
+
+/// If Purge is enabled, this method will be called to delete old exported files
+/// Each task will delete files that he has create (they start with the project id and then the task id)
+/// Files will be purged only if older than 'PurgeAfterNDays' days, otherwise they will be kept
+/// 
+/// A minimum number of file will be kept. 
+/// If less than 'MinimumNumberOfFilesToKeep' files are found, all the files will be kept.
+/// If more than 'MinimumNumberOfFilesToKeep' files are found, the oldest ones (that are older than 'PurgeAfterNDays') will be deleted until 'MinimumNumberOfFilesToKeep' is reached.
+/// 
+/// This method accepts the following arguments: 
+///     - ProjectId of the project that has been exported 
+///     - TaskID that executed the task.
+///     - Number of days after which a file is considered old and should be purged
+///     - Minimum number of files to keep even if they are expired
+///     - An additional verbose argument (default = 0) can be passed to print information about the purge process.
+ClassMethod PurgeOldFiles(ProjectId As %String, TaskID As %String, PurgeAfterNDays As %Integer, MinimumNumberOfFilesToKeep As %Integer, verbose As %Boolean = 0) As %Status
+{
+    Set sc = $$$OK
+    Try {    
+        // Check if the export directory exists, do not create it if not
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .separator)
+        Set prjFilePath = basePath_ProjectId_separator
+        Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,0,.exists)
+        If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
+        If 'exists { 
+            // The directory does not exist, no files to purge
+            Return sc
+        }
+        // Look for files starting with 
+        Set filenameStart = ..#releasePrefix_TaskID
+        Set format = ..#exportFormat
+
+        // Define base path and initialize stack for directories
+        Kill FILES
+        Set FILES($INCREMENT(FILES)) = prjFilePath
+
+        // list of files to purge
+        Kill PURGELIST
+
+        // Scan the export directory looking for older files
+        Set key = ""
+        For {
+            Set key = $ORDER(FILES(key), 1, searchdir)
+            Quit:key=""
+
+            Set filepath = $ZSEARCH(searchdir_"*")
+            While filepath'="" {
+                Set filename = ##class(%File).GetFilename(filepath)
+
+                // Skip special entries
+                If (filename'=".") && (filename'="..") {
+                    If verbose Write "file: "_filepath_" " 
+                    // If it is a directory, add it to the stack for further inspection
+                    If ##class(%File).DirectoryExists(filepath) {
+                        If verbose Write "is a directory",!
+                        Set FILES($INCREMENT(FILES)) = filepath_separator  // Add subdir to stack
+                    // If it is a file, insert it into the directory node
+                    } Else {
+                        If verbose Write "is a file",! 
+                        If (filename[filenameStart)&&(filename[format) {
+                            Set toPurge = 0
+                            // Get file information                      
+                            Set dataCreatedLogic = ##class(%File).GetFileDateCreated(filepath)
+                            Set fileSize = ##class(%File).GetFileSize(filepath)
+                            // Check if the files should be purged
+                            Set dataCreated = $ZDATETIME(dataCreatedLogic,3)
+                            Set dayCreated = $PIECE(dataCreatedLogic,",")
+                            Set daysDifference = $H - dayCreated
+                            If daysDifference >= PurgeAfterNDays {
+                                Set toPurge = 1
+                            }
+                            If verbose w filename_" - data created "_dataCreated_" (diff "_daysDifference_" days)- size "_fileSize_" - Purge "_toPurge,!
+                            If toPurge {
+                                // Add the file to the list of the files to purge
+                                Set PURGELIST($INCREMENT(PURGELIST)) = filepath
+                            }
+                        } Else {
+                            // File does not match the pattern, skip it
+                            if verbose Write "File does not match the pattern, skipping it",!
+                        }
+                    }
+                }
+                Set filepath = $ZSEARCH("")  // Next entry
+            }
+        }
+        If ($GET(PURGELIST) = "" || ($GET(PURGELIST) = 0)) {
+            If verbose Write "No file to purge",!
+        } Else {
+            If verbose Write "Files to purge: "_$GET(PURGELIST),!
+            If ($GET(PURGELIST) < MinimumNumberOfFilesToKeep) {
+                // Interrupt the process and keep all the files
+                If verbose Write "Keeping all the files",!
+                Return sc
+            }
+            // Purge the older files
+            Set filesToDelete = $GET(PURGELIST) - MinimumNumberOfFilesToKeep
+            If verbose Write "Deleting the oldest "_filesToDelete_" files",!
+            Set deletedCount = 0
+            Set key = ""
+            For {
+                Set key = $ORDER(PURGELIST(key))
+                Quit:key=""
+                Set filepath = $GET(PURGELIST(key))
+                w filepath,! 
+                // Older filepaths come first inside the array
+                If ##class(%File).Delete(filepath) {
+                    Set deletedCount = deletedCount + 1
+                    If verbose Write "Deleted "_filepath,!
+                } Else {
+                    Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Failed to delete "_filepath)) 
+                }
+                If deletedCount = filesToDelete {
+                    Quit
+                }
+            }
+        }
+    } Catch ex {
+        Set sc=ex.AsStatus()
+        If verbose Write "Error :"_$SYSTEM.Status.GetErrorText(sc),!
     }
     Return sc
 }
