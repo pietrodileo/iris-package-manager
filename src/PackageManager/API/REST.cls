@@ -9,39 +9,30 @@ XData UrlMap
     <!-- Project related calls -->
     <Route Url="/project/create" Method="POST" Call="PackageManager.API.Projects.Interface:CreateProject"/>
     <Route Url="/projects" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjects"/>
-    <Route Url="/projects/" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjects"/>
     <Route Url="/project/export/:projectId" Method="GET" Call="PackageManager.API.Projects.Interface:ExportProject"/>
     <Route Url="/project/content/:projectId" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjectContent"/>
-    <Route Url="/project/content/" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjectContent"/>
     <Route Url="/project/content" Method="GET" Call="PackageManager.API.Projects.Interface:GetProjectContent"/>
     <Route Url="/project/update/:projectId" Method="POST" Call="PackageManager.API.Projects.Interface:UpdateProjectDesc"/>
     <Route Url="/project/delete/:projectId" Method="DELETE" Call="PackageManager.API.Projects.Interface:DeleteProject"/>
     <Route Url="/project/add/:projectId" Method="POST" Call="PackageManager.API.Projects.Interface:AddClassesToProject"/>
     <Route Url="/project/remove/:projectId" Method="PUT" Call="PackageManager.API.Projects.Interface:RemoveClassesToProject"/>
     <!-- Export classes calls -->
-    <Route Url="/classes/export/" Method="POST" Call="PackageManager.API.Classes.Interface:ExportClasses"/>
     <Route Url="/classes/export" Method="POST" Call="PackageManager.API.Classes.Interface:ExportClasses"/>
     <!-- Namespace content calls -->
     <Route Url="/namespace/content/:type" Method="GET" Call="PackageManager.API.Namespace.Interface:GetAllNamespaceFiles"/>
-    <Route Url="/namespace/content/" Method="GET" Call="PackageManager.API.Namespace.Interface:GetAllNamespaceFiles"/>
     <Route Url="/namespace/content" Method="GET" Call="PackageManager.API.Namespace.Interface:GetAllNamespaceFiles"/>
     <!-- Tasks related calls -->
     <Route Url="/task/create" Method="POST" Call="PackageManager.API.Task.Interface:CreateTask"/>
-    <Route Url="/task/create/" Method="POST" Call="PackageManager.API.Task.Interface:CreateTask"/>
     <Route Url="/task/existing" Method="GET" Call="PackageManager.API.Task.Interface:CheckExistingTasks"/>
-    <Route Url="/task/existing/" Method="GET" Call="PackageManager.API.Task.Interface:CheckExistingTasks"/>
     <Route Url="/task/delete/:taskId" Method="DELETE" Call="PackageManager.API.Task.Interface:DeleteTask"/>
     <Route Url="/task/run/:taskId" Method="GET" Call="PackageManager.API.Task.Interface:RunTask"/>
     <Route Url="/task/:taskId" Method="GET" Call="PackageManager.API.Task.Interface:GetTaskInfo"/>
     <Route Url="/task/update/:taskId" Method="POST" Call="PackageManager.API.Task.Interface:UpdateTask"/>
     <Route Url="/task/updateclasses/:taskId" Method="POST" Call="PackageManager.API.Task.Interface:UpdateAssociatedClasses"/>
-    <Route Url="/task/releases" Method="GET" Call="PackageManager.API.Task.Interface:GetReleases"/>
     <Route Url="/task/releases/" Method="GET" Call="PackageManager.API.Task.Interface:GetReleases"/>
     <Route Url="/task/release/download" Method="POST" Call="PackageManager.API.Task.Interface:DownloadRelease"/>
-    <Route Url="/task/release/download/" Method="POST" Call="PackageManager.API.Task.Interface:DownloadRelease"/>
     <!-- Ping to test API reachability -->
     <Route Url="/api/ping" Method="GET" Call="Ping"/>
-    <Route Url="/api/ping/" Method="GET" Call="Ping"/>
     <!-- Swagger specs -->
     <Route Url="/_spec" Method="GET" Call="SwaggerSpec" />
     <!-- Server Info -->
@@ -135,7 +126,6 @@ ClassMethod WriteResponse(ByRef response As %DynamicObject = "", sc As %Status) 
     Set %response.IgnoreRESTOutput=0
     If $$$ISERR(sc) {
         Set response = {"error": ("Error: "_$SYSTEM.Status.GetErrorText(sc))}
-        Do ..ReportHttpStatusCode(..#HTTP500INTERNALSERVERERROR)
     }
     // Return the response as a JSON
     If $ISOBJECT(response) {
@@ -147,75 +137,39 @@ ClassMethod WriteResponse(ByRef response As %DynamicObject = "", sc As %Status) 
     } Else {
         Write response 
     }
+	Set %response.IgnoreRESTOutput=1
     Return sc
 }
 
 ClassMethod SwaggerSpec() As %Status
 {
-  Do ##class(%REST.API).GetWebRESTApplication($NAMESPACE, %request.Application, .swagger)
-  Do swagger.info.%Remove("x-ISC_Namespace")
-  Set swagger.basePath = $$$PackageManagerAPI
-  Set swagger.info.title = $$$ProjectName
-  Set swagger.info.version = $$$PackageManagerVersion
-  Set swagger.host = "localhost:52773"
-  Return ..%ProcessResult($$$OK, swagger)
-}
+	Set sc = $$$OK
+	Try {
+		// Declare a variable to hold the generated Swagger specification
+		Set swagger = ""
+		
+		// Use %REST.API to get the OpenAPI spec for the current application.
+		// The first parameter is the namespace, the second is the application path.
+		Do ##class(%REST.API).GetWebRESTApplication($NAMESPACE, %request.Application, .swagger)
+		
+		// Customize the generated specification. These steps are optional but highly recommended.
+		// Set the host and base path
+		Set swagger.host = %request.GetCgiEnv("SERVER_NAME")_":"_%request.GetCgiEnv("SERVER_PORT")
+		Set swagger.basePath = %request.Application
+				
+		// Remove an Intersystems-specific extension if not needed
+		Do swagger.info.%Remove("x-ISC_Namespace")
+		#; Set swagger.basePath = $$$PackageManagerAPI
+		Set swagger.info.title = $$$ProjectName
+		Set swagger.info.version = $$$PackageManagerVersion
+		#; Set swagger.host = "localhost:52773"
 
-ClassMethod %ProcessResult(pStatus As %Status = {$$$OK}, pResult As %DynamicObject = "") As %Status [ Internal ]
-{
-  #dim %response As %CSP.Response
-  Set tSC = $$$OK
-  If $$$ISERR(pStatus) {
-    Set %response.Status = 500
-    Set tSC = ..StatusToJSON(pStatus, .tJSON)
-    If $ISOBJECT(tJSON) {
-      Set pResult = tJSON
-    } Else {
-      Set pResult = { "errors": [ { "error": "Unknown error parsing status code" } ] }
-    }
-  } 
-  ElseIf pStatus=1 {
-    If '$ISOBJECT(pResult){
-      Set pResult = {
-      }
-    }
-  }
-  Else {
-    Set %response.Status = pStatus
-    Set error = $PIECE(pStatus, " ", 2, *)
-    Set pResult = {
-      "error": (error)
-    }
-  }
-  
-  If pResult.%Extends("%Library.DynamicAbstractObject") {
-    Write pResult.%ToJSON()
-  }
-  ElseIf pResult.%Extends("%JSON.Adaptor") {
-    Do pResult.%JSONExport()
-  }
-  ElseIf pResult.%Extends("%Stream.Object") {
-    Do pResult.OutputToDevice()
-  }
-  
-  Quit tSC
-}
-
-ClassMethod ReportHttpStatusCode(pHttpStatus, pSC As %Status = {$$$OK}) As %Status
-{
-  Set %response.Status=pHttpStatus
-  
-  If $$$ISERR(pSC) Do ..outputStatus(pSC)
-  /*
-  If (+pHttpStatus>=400) {
-    Set %response.ContentType = "application/json"
-    SET pResult = {
-      "error": ($PIECE(pHttpStatus, " ", 2, *))
-    }
-    Return ..%ProcessResult($$$OK, pResult)
-  }*/
-      
-  Return $$$OK
+		// Return the generated specification as the response.
+		Do ..WriteResponse(.swagger,sc)
+	} Catch ex {
+		Set sc=ex.AsStatus()
+	}
+	Return sc
 }
 
 }

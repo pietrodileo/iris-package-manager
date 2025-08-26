@@ -30,6 +30,16 @@ ClassMethod CreateProject() As %Status
     Return sc
 }
 
+/// Get all projects.
+/// The description of this API entry should be in this section.
+/// <RESTResponse>
+/// <Status>200</Status>
+/// <Description>Returns an array of project objects.</Description>
+/// </RESTResponse>
+/// <RESTResponse>
+/// <Status>404</Status>
+/// <Description>No projects found.</Description>
+/// </RESTResponse>
 ClassMethod GetProjects() As %Status
 {
     Set sc = $$$OK

@@ -588,6 +588,7 @@ ClassMethod GetReleases() As %Status
 {
     Set sc = $$$OK
     Try {
+        Set ^CacheTemp("zpdl") = "qui alle "_$ZDT($H,3)
         Set sc = ##class(PackageManager.API.Task.Interface).GetExportedReleases(.result)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
         Do ..WriteResponse(.result, sc) 

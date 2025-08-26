@@ -340,7 +340,8 @@ ClassMethod RenderJavaScript() As %Status
 
                 for (const filepath of selectedReleases) {
                     try {
-                        let filename = filepath.split('\\').pop();
+                        // This will work both on Windows or Unix servers
+                        let filename = filepath.split(/[\/\\]/).pop();
                         
                         await downloadSingleFile(filepath, filename);
                         downloadCount++;
