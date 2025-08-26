@@ -89,24 +89,20 @@ ClassMethod EditProject() As %Status
             const name = row.children[1].innerHTML;
             const desc = row.children[2].querySelector("input").value;
 
-            fetch("/csp/user/rest/packagemanager/project/update/" + encodeURIComponent(name), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(
-                    { 
-                        "originalName":originalName, // Non permetti la modifica del name
-                        "desc":desc
-                    })
-            })
-            .then(res => {
-                if (!res.ok) throw new Error("Update failed");
-                alert("Project '"+name+"' updated successfully");
-                loadProjects();
-            })
-            .catch(err => {
-                alert("Error updating project: '"+err.message+"'");
-            });
-        }
+            const updateData = { 
+                "originalName":originalName, // Non permetti la modifica del name
+                "desc":desc
+            };
+
+            PackageManagerAPI.updateProject(name,updateData)
+                .then(function(response) {
+                    alert("Project '"+name+"' updated successfully");
+                    loadProjects();
+                })
+                .catch(function(err) {
+                    alert("Error updating project: '"+err.message+"'");
+                });        
+         }
 
         async function confirmDeleteProject(name) {
             if (confirm('Are you sure you want to delete project "'+name+'" (project content will not be deleted)?')) {
@@ -115,17 +111,14 @@ ClassMethod EditProject() As %Status
         }
 
         async function deleteProject(name) {
-            const res = await fetch('/csp/user/rest/packagemanager/project/delete/' + encodeURIComponent(name), {
-                method: "DELETE"
-            })
-            .then(res => {
-                if (!res.ok) throw new Error("Delete failed");
-                alert("Project '"+name+"' has been deleted");
-                loadProjects();
-            })
-            .catch(err => {
-                alert("Error deleting project: '"+ err.message+"'");
-            });
+            PackageManagerAPI.deleteProject(name)
+                .then(function(response) {
+                    alert("Project '"+name+"' has been deleted");
+                    loadProjects();
+                })
+                .catch(function(err) {
+                    alert("Error deleting project: '"+ err.message+"'");
+                });        
         }
     </script>>
 
@@ -144,50 +137,47 @@ ClassMethod ExportProject() As %Status
             }
 
             const projectId = selected.value;
-            const downloadUrl = "/csp/user/rest/packagemanager/project/export/" + projectId;
-            
-            const res = await fetch(downloadUrl, {
-                method: "GET"
-            });
-            if (res.ok) {
-                const data = await res.text(); // const data = await res.json();
 
-                // Create a Blob from the XML string
-                const blob = new Blob([data], { type: "application/xml" });
+            PackageManagerAPI.exportProject(projectId)
+                .then(function(data) {
+                    // Create a Blob from the XML string
+                    const blob = new Blob([data], { type: "application/xml" });
 
-                // Create a hidden download link and trigger it silently
-                const url = URL.createObjectURL(blob);
+                    // Create a hidden download link and trigger it silently
+                    const url = URL.createObjectURL(blob);
 
-                const a = document.createElement("a");
-                a.style.display = "none";
-                a.href = url;
+                    const a = document.createElement("a");
+                    a.style.display = "none";
+                    a.href = url;
 
-                // Current date time
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
+                    // Current date time
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
 
-                const timestamp = year + month + day + '_' + hours + ':' + minutes + ':' + seconds;
+                    const timestamp = year + month + day + '_' + hours + ':' + minutes + ':' + seconds;
 
-                a.download = projectId + '_' + timestamp + '.xml' || "project_export.xml";
+                    a.download = projectId + '_' + timestamp + '.xml' || "project_export.xml";
 
-                // Append to DOM, trigger click, then remove
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                    // Append to DOM, trigger click, then remove
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
 
-                // Clean up blob URL
-                URL.revokeObjectURL(url);
-            } else {
-                const div = document.getElementById("exportResult");
-                const text = await res.text();
-                div.innerHTML = `<p class='error'>Export failed: ${text}</p>`;
-            }
+                    // Clean up blob URL
+                    URL.revokeObjectURL(url);
+                })
+                .catch(function(err) {
+                    const div = document.getElementById("exportResult");
+                    div.innerHTML = `<p class='error'>Export failed: ${err.message}</p>`;
+                });        
         }
+
+        window.exportSelectedProject = exportSelectedProject;
     </script>>
     Return sc
 }
@@ -244,30 +234,26 @@ ClassMethod ProjectList() As %Status
 
         // This method loads the list of projects from the server
         async function loadProjects() {
-            try {
-                const res = await fetch("/csp/user/rest/packagemanager/projects", { 
-                    method: "GET",
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-                if (!res.ok) {
-                    throw new Error(`Failed to load project content: ${res.status} ${res.statusText}`);
-                }
-                allProjects = await res.json();
-                renderProjects(allProjects);
-            } catch (err) {
-                const table_body = document.getElementById('projectTableBody');
-                table_body.innerHTML = `
-                    <div class="loading">
-                        <p>❌ Error loading projects from database</p>
-                        <p style="font-size: 14px; color: #64748b; margin-top: 8px;">${err.message}</p>
-                    </div>
-                `;
+            const cacheStrategy = 'noCache';
+            PackageManagerAPI.getProjects(cacheStrategy)
+                .then(function(response) {
+                    console.log('API is running:', response.message);
+                    allProjects = response;
+                    renderProjects(response);
+                })
+                .catch(function(err) {
+                    const table_body = document.getElementById('projectTableBody');
+                    table_body.innerHTML = `
+                        <tr>
+                            <td colspan="3" style="color:red; text-align:center;">
+                                ❌ Error loading projects from database<br>
+                                ${err.message}
+                            </td>
+                        </tr>
+                    `;
+                    console.error("Error while fetching projects:", err);
+                });        
             }
-        }
 
         // This method renders the list of projects in the table
         async function renderProjects(projects) {
@@ -346,61 +332,41 @@ ClassMethod ContentViewer() As %Status
 
         // This method get all the content of a project and render the tree view
         async function showSelectedProjectContent(showAll = false, projectId = null) {
-            let url = "/csp/user/rest/packagemanager/project/content/";
+            let idToLoad = null;
+
             if (!showAll) {
                 if (projectId) {
-                    // If passed as an argument, show the content of the specified project
-                    url += projectId;
-                } else {      
-                    // otherwise get it from the table              
+                    idToLoad = projectId;
+                } else {
                     const selected = document.querySelector("input[name='projCheckbox']:checked");
                     if (!selected) {
                         alert("Please select a project.");
                         return;
                     }
-                    url += selected.value;
+                    idToLoad = selected.value;
                 }
             }
-            try {
-                const res = await fetch(url, {
-                    method: "GET",
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-                if (!res.ok) {
-                    const text = await res.text();
-                    const now = new Date();
-                    const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                    alert(`${formatted_date_time} - Network error: Failed to load project content: ${res.status} ${res.statusText}.`);
-                    return;
-                }
-                const json = await res.json();
-                
-                // Store the original data for filtering
-                window.originalProjectData = json;
-                window.currentProjectData = json;
-                
-                // Clear any existing search
-                const searchInput = document.getElementById('treeSearchInput');
-                if (searchInput) {
-                    searchInput.value = '';
-                }
-                
-                // Render the new tree
-                renderFolderTree(json, "container");
-                
-                //console.log("Project content loaded successfully:", json);
-                
-                // Set a global variable to indicate that elements have been exported
-                window.exported = 1;
 
-            } catch (err) {
-                alert("Error loading project content: " + err.message);
-                //console.error("API Error:", err);
-            }
+            PackageManagerAPI.getProjectContent(idToLoad)
+                .then(function(json) {
+                    // Store the original data for filtering
+                    window.originalProjectData = json;
+                    window.currentProjectData = json;
+
+                    // Reset search field if exists
+                    const searchInput = document.getElementById('treeSearchInput');
+                    if (searchInput) searchInput.value = '';
+
+                    // Render new tree
+                    renderFolderTree(json, "container");
+
+                    // Mark as exported
+                    window.exported = 1;
+                })
+                .catch(function(err) {
+                    console.error("Error loading project content:", err);
+                    alert("Error loading project content: " + err.message);
+                });        
         }
 
         // Global array to track selected items persistently
@@ -671,61 +637,43 @@ ClassMethod ContentViewer() As %Status
                         //console.log(`📄 ${item.path} [${item.type}] - ${item.name}`);
                     });
 
-                    const response = await fetch("/csp/user/rest/packagemanager/classes/export/", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(
-                            {
-                                "elements": class_array
-                            }
-                        )
-                    });
+                    const classData = { "elements": class_array }
+                    PackageManagerAPI.exportClasses(classData)
+                        .then(function(data) {
+                            // Create a Blob from the XML string
+                            const blob = new Blob([data], { type: "application/xml" });
 
-                    if (response.ok) {
-                        //const data = await response.json();
-                        // Create a Blob from the XML string
-                        //const blob = new Blob([data.stream], { type: "application/xml" });
+                            // Create a hidden download link and trigger it silently
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.style.display = "none";
+                            a.href = url;
 
-                        const data = await response.text(); // const data = await res.json();
+                            // Current date time
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = String(now.getMonth() + 1).padStart(2, '0');
+                            const day = String(now.getDate()).padStart(2, '0');
+                            const hours = String(now.getHours()).padStart(2, '0');
+                            const minutes = String(now.getMinutes()).padStart(2, '0');
+                            const seconds = String(now.getSeconds()).padStart(2, '0');
 
-                        // Create a Blob from the XML string
-                        const blob = new Blob([data], { type: "application/xml" });
+                            const timestamp = year + month + day + '_' + hours + ':' + minutes + ':' + seconds;
 
-                        // Create a hidden download link and trigger it silently
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.style.display = "none";
-                        a.href = url;
+                            a.download = 'class_export_' + timestamp + '.xml';
 
-                        // Current date time
-                        const now = new Date();
-                        const year = now.getFullYear();
-                        const month = String(now.getMonth() + 1).padStart(2, '0');
-                        const day = String(now.getDate()).padStart(2, '0');
-                        const hours = String(now.getHours()).padStart(2, '0');
-                        const minutes = String(now.getMinutes()).padStart(2, '0');
-                        const seconds = String(now.getSeconds()).padStart(2, '0');
+                            // Append to DOM, trigger click, then remove
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
 
-                        const timestamp = year + month + day + '_' + hours + ':' + minutes + ':' + seconds;
-
-                        a.download = 'class_export_' + timestamp + '.xml';
-
-                        // Append to DOM, trigger click, then remove
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-
-                        // Clean up blob URL
-                        URL.revokeObjectURL(url);
-                    } else {
-                        //const div = document.getElementById("exportResult");
-                        const text = await response.text();
-                        //div.innerHTML = `<p class='error'>Export failed: ${text}</p>`;
-                        alert(`"Export failed: ${text}"`);
-                    }
-                    
+                            // Clean up blob URL
+                            URL.revokeObjectURL(url);
+                        })
+                        .catch(function(err) {
+                            alert(`"Export failed: ${err.message}"`);
+                        });        
+                        
                     return expandedSelection;
                     
                 } catch (error) {
@@ -791,29 +739,17 @@ ClassMethod ContentViewer() As %Status
                         "name": item_fullname
                     })
                 });
-
-                const response = await fetch("/csp/user/rest/packagemanager/project/remove/" + encodeURIComponent(projectId), {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(
-                        {
-                            "elements": class_array
-                        }
-                    )
-                });
-
-                if (response.ok) {
-                    alert("Elements have been successfully removed from the project");
-                    // Reload table to show the updated project content
-                    showSelectedProjectContent(false, projectId);
-                } else {
-                    const errorText = await response.text();
-                    const status = await response.status;
-                    const statusText = await response.statusText;
-                    alert(`Failed to add items to project: ${status}-${statusText} ${errorText}`);
-                }
+    
+                const classes_to_remove = { "elements": class_array }
+                PackageManagerAPI.removeClassesFromProject(projectId, classes_to_remove)
+                    .then(function(response) {
+                        alert("Elements have been successfully removed from the project");
+                        // Reload table to show the updated project content
+                        showSelectedProjectContent(false, projectId);
+                    })
+                    .catch(function(err) {
+                        alert(`Failed to add items to project: ${err.message}`);
+                    });        
 
                 // Initialize the array of the selected items
                 window.persistentTreeSelectedItems = [];
@@ -1182,46 +1118,26 @@ ClassMethod AddClassesModal() As %Status
             const lookIntoKey = 'PackageName';
 
             container.innerHTML = '<div class="add-classes-loading-message">⏳Loading namespace content...</div>';
-            
-            try {
-                let url = `/csp/user/rest/packagemanager/namespace/content${fileType ? '/' + fileType : '/'}`;
-
-                // If not empty, add a parameter to look into specific packages
-                if (lookInto && lookInto.length > 0) { 
-                    url += (url.includes('?') ? '&' : '?') + (lookIntoKey+'='+lookInto); 
-                }
-
-                const response = await fetch(url, { 
-                    method: "GET",
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }                    
-                });
-                if (!response.ok) {
-                    throw new Error(`Failed to load content: ${response.status} ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Store the data
-                originalNamespaceData = data;
-                currentNamespaceData = data;
-                
-                // Clear search
-                document.getElementById('namespaceSearchInput').value = '';
-                
-                // Clear previous selections
-                window.persistentNamespaceSelectedItems = [];
-                
-                // Render the tree
-                renderNamespaceTree(data, 'namespaceContainer');
-                
-            } catch (error) {
-                console.error('Error loading namespace content:', error);
-                container.innerHTML = `<div class="add-classes-error-message">Error loading content: ${error.message}</div>`;
-            }
+                            
+            PackageManagerAPI.getNamespaceContent(fileType,lookInto)
+                .then(function(data) {
+                    // Store the data
+                    originalNamespaceData = data;
+                    currentNamespaceData = data;
+                    
+                    // Clear search
+                    document.getElementById('namespaceSearchInput').value = '';
+                    
+                    // Clear previous selections
+                    window.persistentNamespaceSelectedItems = [];
+                    
+                    // Render the tree
+                    renderNamespaceTree(data, 'namespaceContainer');
+                })
+                .catch(function(err) {
+                    console.error('Error loading namespace content:', err.message);
+                    container.innerHTML = `<div class="add-classes-error-message">Error loading content: ${err.message}</div>`;
+                });        
         }
 
         // Render the namespace tree 
@@ -1714,33 +1630,18 @@ ClassMethod AddClassesModal() As %Status
                 });
             });
 
-            try {
-                // API call to add elements to project
-                const response = await fetch("/csp/user/rest/packagemanager/project/add/" + encodeURIComponent(projId), {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        "projectName": currentAddProjectName,
-                        "elements": classArray
-                    })
-                });
-
-                if (response.ok) {
+            const add_request = {
+                "projectName": currentAddProjectName,
+                "elements": classArray
+            }
+            PackageManagerAPI.addClassesToProject(projId,add_request)
+                .then(function(response) {
                     alert(`Successfully added ${classArray.length} items to project "${currentAddProjectName}"`);
-                    //closeAddClassesModal();
-                } else {
-                    const errorText = await response.text();
-                    const status = await response.status;
-                    const statusText = await response.statusText;
-                    alert(`Failed to add items to project: ${status}-${statusText} ${errorText}`);
-                }
-
-            } catch (error) {
-                console.error('Error adding items to project:', error);
-                alert(`Error adding items to project: ${error.message}`);
-            } 
+                })
+                .catch(function(err) {
+                    console.error('Error adding items to project:', err.message);
+                    alert(`Error adding items to project: ${err.message}`);
+                });        
         }
 
         // Helper functions for Add Classes Modal
@@ -1862,25 +1763,16 @@ ClassMethod NewProjectModal() As %Status
             submitBtn.innerHTML = '<span class="plus-icon">⏳</span> Creating...';
             submitBtn.disabled = true;
             
-            try {
-                const response = await fetch("/csp/user/rest/packagemanager/project/create", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    },
-                    body: JSON.stringify({
-                        'name': projectData.name,
-                        'desc': projectData.description
-                    })
-                });
-
-                const now = new Date();
-                const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                
-                if (response.ok) {
+            const now = new Date();
+            const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            
+            const proj_data = {
+                'name': projectData.name,
+                'desc': projectData.description
+            }
+            
+            PackageManagerAPI.createProject(proj_data)
+                .then(function(response) {
                     // Show success message
                     alert(`${formatted_date_time} - Project "${projectData.name}" has been created successfully!`);
                     
@@ -1891,16 +1783,12 @@ ClassMethod NewProjectModal() As %Status
                     if (typeof loadProjects === 'function') {
                         loadProjects();
                     }
-                } else {
-                    const errorData = await response.text();
-                    // Handle error - Fixed template literal
-                    alert(`${formatted_date_time} - Failed to create project: ${response.status} ${response.statusText} - ${errorData}`);
-                }
-            } catch (error) {
-                const now = new Date();
-                const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                alert(`${formatted_date_time} - Network error: Failed to create project: ${errorData}. Please try again.`);
-            }
+                })
+                .catch(function(err) {
+                    const now = new Date();
+                    const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    alert(`${formatted_date_time} - Network error: Failed to create project: ${err.message}. Please try again.`);
+                });        
             
             // Restore button state
             submitBtn.innerHTML = originalText;

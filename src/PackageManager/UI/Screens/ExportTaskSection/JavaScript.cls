@@ -82,27 +82,18 @@ ClassMethod TaskTableJavaScript() As %Status
                 // Show loading state
                 container.innerHTML = '<div class="loading">Loading tasks from database...</div>';
                 
-                // Make API call to get tasks from database
-                const response = await fetch("/csp/user/rest/packagemanager/task/existing", { 
-                    method: "GET",
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to fetch tasks');
-                }
-                const tasks = await response.json();
-                currentTasks = tasks.tasks;
-                renderTasksTable(currentTasks);
-                
-                // Update task count in header
-                if (taskCountElement) {
-                    taskCountElement.textContent = `🗃️ Existing Tasks: ${currentTasks.length}`;
-                }
-                
+                PackageManagerAPI.checkExistingTasks('noCache')
+                    .then(function(tasks) {
+                        currentTasks = tasks.tasks;
+                        renderTasksTable(currentTasks);
+                        // Update task count in header
+                        if (taskCountElement) {
+                            taskCountElement.textContent = `🗃️ Existing Tasks: ${currentTasks.length}`;
+                        }
+                    })
+                    .catch(function(err) {
+                        throw err;
+                    });        
             } catch (error) {
                 const container = document.getElementById('taskTableContainer');
                 container.innerHTML = `
@@ -636,29 +627,15 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                     email_notifications: emailNotifications
                 };
                 
-                //console.log('Submitting task data:', formData);
-
-                const response = await fetch('/csp/user/rest/packagemanager/task/create', {
-                    method: 'POST',
-                    headers: { 
-                        "Content-Type": "application/json",
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (response.ok) {
-                    alert('Task created successfully!');
-                    closeCreateTaskModal();
-                    loadExportTasks();
-                } else {
-                    const error = await response.text();
-                    const now = new Date();
-                    const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                    alert(`${formatted_date_time} - Error creating task: ${response.status} ${response.statusText} - ${error}.`);
-                }
+                PackageManagerAPI.createTask(formData,'noCache')
+                    .then(function(tasks) {
+                        alert('Task created successfully!');
+                        closeCreateTaskModal();
+                        loadExportTasks();
+                    })
+                    .catch(function(err) {
+                        throw err;
+                    });        
             } catch (error) {
                 const now = new Date();
                 const formatted_date_time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
@@ -692,23 +669,14 @@ ClassMethod TaskTableActionsJavaScript() As %Status
                 return;
             }
             
-            try {
-                const response = await fetch(`/csp/user/rest/packagemanager/task/delete/${encodeURIComponent(taskId)}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
+            PackageManagerAPI.deleteTask(taskId)
+                .then(function(tasks) {
                     loadExportTasks();
                     alert('Task deleted successfully!');
-                } else {
-                    const error = await response.text();
-                    alert(`Error deleting task: ${error}`);
-                }
-                
-            } catch (error) {
-                //console.error('Error deleting task:', error);
-                alert('Error deleting task');
-            }
+                })
+                .catch(function(err) {
+                    alert('Error deleting task: ' + err.message);
+                });        
         }
         
         /**
@@ -728,29 +696,15 @@ ClassMethod TaskTableActionsJavaScript() As %Status
                 return;
             }
             
-            try {
-                const response = await fetch(`/csp/user/rest/packagemanager/task/run/${encodeURIComponent(taskId)}`, {
-                    method: "GET",
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-                
-                if (response.ok) {
+            PackageManagerAPI.runTask(taskId)
+                .then(function(tasks) {
                     loadExportTasks();
                     alert('Task run was scheduled successfully!');
-                } else {
-                    const error = await response.text();
-                    alert(`Error while attempting to run the task: ${error}`);
-                }
-                
-            } catch (error) {
-                alert('Error while attempting to run the task');
-            }
+                })
+                .catch(function(err) {
+                    alert(`Error while attempting to run the task: ${err.message}`);
+                });        
         }
-
 
         </script>>
     Return sc
@@ -797,32 +751,21 @@ ClassMethod EditTaskModalJavaScript() As %Status
 
             modal.style.display = 'flex';  // Force flex display
 
-            // Call API 
-            const response = await fetch('/csp/user/rest/packagemanager/task/' + encodeURIComponent(task.ID), {
-                method: "GET",
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
-            });
-            
-            if (response.ok) {
-                const taskData = await response.json();
-
-                // Store original data for restore functionality
-                originalTaskData = JSON.parse(JSON.stringify(taskData)); // Deep copy
-                
-                // Reset form first
-                document.getElementById('EditTaskForm').reset();
-                
-                // Populate the form with the retrieved task data
-                populateFormWithTaskData(taskData);
-            } else {
-                const response_status = await response.status + '-' + await response.statusText;
-                const error = await response.text();
-                alert(`It was impossible to retrieve task information. ${response_status}. ${error}`);
-            }
+            // Get task info from API
+            PackageManagerAPI.getTaskInfo(task.ID)
+                .then(function(taskData) {
+                    // Store original data for restore functionality
+                    originalTaskData = JSON.parse(JSON.stringify(taskData)); // Deep copy
+                    
+                    // Reset form first
+                    document.getElementById('EditTaskForm').reset();
+                    
+                    // Populate the form with the retrieved task data
+                    populateFormWithTaskData(taskData);
+                })
+                .catch(function(err) {
+                    alert(`It was impossible to retrieve task information. ${err.message}`);
+                });        
         }
 
         // Close edit task modal and clear stored data
@@ -1230,31 +1173,19 @@ ClassMethod EditTaskModalJavaScript() As %Status
                     email_notifications: emailNotificationsEdit
                 };
                 
-                //console.log('Submitting task data:', formData);
-
-                const response = await fetch('/csp/user/rest/packagemanager/task/update/' + encodeURIComponent(currentEditingTaskId), {
-                    method: 'POST',
-                    headers: { 
-                        "Content-Type": "application/json",
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (response.ok) {
-                    alert('Task updated successfully!');
-                    closeEditTaskModal();
-                    loadExportTasks(); // Refresh the task list
-                } else {
-                    const error = await response.text();
-                    alert(`Error updating task: ${error}`);
-                }
+                PackageManagerAPI.updateTask(currentEditingTaskId, formData, 'noCache')
+                    .then(function(taskData) {
+                        alert('Task updated successfully!');
+                        closeEditTaskModal();
+                        loadExportTasks(); // Refresh the task list
+                    })
+                    .catch(function(err) {
+                        alert(`Error updating task. ${err.message}`);
+                    });        
                 
             } catch (error) {
                 //console.error('Error updating task:', error.message);
-                alert(`Error updating task: ${error}`);
+                alert(`Error updating task: ${error.message}`);
             }
         }
 
@@ -1339,29 +1270,18 @@ ClassMethod AddProjectModalJavaScript() As %Status
 
             setTimeout(async () => {
 
-                try {
-                    const res = await fetch("/csp/user/rest/packagemanager/projects", { 
-                        method: "GET",
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
-                    });
-                    if (!res.ok) {
-                        alert("Failed to load projects");
-                        return;
-                    }
-                    taskFileSelectorAllProjects = await res.json();
-                } catch (err) {
-                    alert("Error loading projects: " + err.message);
-                }
-
-                taskFileSelectorPopulateFiles();
-
-                btn.innerHTML = "✓ Refreshed";
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                PackageManagerAPI.getProjects('noCache')
+                    .then(function(response) {
+                        taskFileSelectorAllProjects = response;
+                        taskFileSelectorPopulateFiles();
+                        btn.innerHTML = "✓ Refreshed";
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    })
+                    .catch(function(err) {
+                        alert("Error loading projects: " + err.message);
+                    });        
+                    
             }, 200);
         }
 
@@ -1488,33 +1408,24 @@ ClassMethod AddProjectModalJavaScript() As %Status
             const removedProjects = originalIds.filter(id => !currentIds.includes(id));
             const addedProjects = currentIds.filter(id => !originalIds.includes(id));
 
-            //console.log("Removed:", removedProjects);
-            //console.log("Added:", addedProjects);
-
-            fetch("/csp/user/rest/packagemanager/task/updateclasses/" + encodeURIComponent(taskFileSelectorData.ID), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+            const classes = {
                     taskID: taskFileSelectorData.ID,
                     removed: removedProjects,
                     added: addedProjects
+            }; 
+
+            PackageManagerAPI.updateTaskClasses(taskFileSelectorData.ID, classes)
+                .then(function(response) {
+                    alert(`Changes saved successfully!\nAdded: ${addedProjects.length} projects\nRemoved: ${removedProjects.length} projects`);
+                    // Refresh the task list to show updated data
+                    if (typeof loadExportTasks === 'function') {
+                        loadExportTasks();
+                    }
+                    taskFileSelectorCloseModal();
                 })
-            })
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to update task projects");
-                return res.text();
-            })
-            .then(responseText => {
-                alert(`Changes saved successfully!\nAdded: ${addedProjects.length} projects\nRemoved: ${removedProjects.length} projects`);
-                // Refresh the task list to show updated data
-                if (typeof loadExportTasks === 'function') {
-                    loadExportTasks();
-                }
-                taskFileSelectorCloseModal();
-            })
-            .catch(err => {
-                alert("Error saving changes: " + err.message);
-            });
+                .catch(function(err) {
+                    alert("Error saving changes: " + err.message);
+                });        
         }
 
         window.addEventListener("click", e => {

@@ -16,9 +16,6 @@ ClassMethod RenderJavaScript() As %Status
 {
     Set sc = $$$OK
     &html<<script type="text/javascript">                       
-
-        // Configuration 
-        const API_MGR_BASE_URL = '/csp/user/rest/packagemanager/';
         
         let apiMgrApiInstalled = false;
 
@@ -61,7 +58,8 @@ ClassMethod RenderJavaScript() As %Status
             
             try {
                 let apiMgrApiInstalled;
-                // Check if the web app exists calling an ObjectScript method (it's not possible to fetch the API since if it does not exist, it won't return a response) 
+                // Check if the web app exists calling an ObjectScript method 
+                // (it's not possible to fetch the API since if it does not exist and won't return a response) 
                 result = await apiMgrCallMethod('CheckWebAppStatus');
                 if (result.statusText === "OK") {
                     let res_json = await result.json();
@@ -73,26 +71,22 @@ ClassMethod RenderJavaScript() As %Status
                 
                 if (apiMgrApiInstalled === true) {
                     // Ping the api
-                    const url = new URL(API_MGR_BASE_URL + 'api/ping', window.location.origin);
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(response.error || 'API request failed');
-                    }
-                    const res_json = await response.json();
-
-                    statusBox.className = 'api-mgr-status-box api-mgr-status-box--success';
-                    statusBox.innerHTML = `
-                        <div class="api-mgr-status-text">
-                            <span class="api-mgr-status-indicator api-mgr-status-indicator--green"></span>
-                            API is installed and running
-                        </div>
-                        <div class="api-mgr-status-details">
-                            Last ping: ${res_json.timestamp}<br>
-                            Status: ${res_json.message}
-                        </div>
-                    `;
-                    actionBtn.className = 'api-mgr-btn api-mgr-btn--danger';
-                    btnText.textContent = 'Uninstall API';
+                    PackageManagerAPI.ping()
+                        .then(function(response) {
+                            statusBox.className = 'api-mgr-status-box api-mgr-status-box--success';
+                            statusBox.innerHTML = `
+                                <div class="api-mgr-status-text">
+                                    <span class="api-mgr-status-indicator api-mgr-status-indicator--green"></span>
+                                    API is installed and running
+                                </div>
+                                <div class="api-mgr-status-details">
+                                    Last ping: ${response.timestamp}<br>
+                                    Status: ${response.message}
+                                </div>
+                            `;
+                            actionBtn.className = 'api-mgr-btn api-mgr-btn--danger';
+                            btnText.textContent = 'Uninstall API';
+                        })
                 } else {
                     statusBox.className = 'api-mgr-status-box api-mgr-status-box--error';
                     statusBox.innerHTML = `
@@ -141,7 +135,8 @@ ClassMethod RenderJavaScript() As %Status
         */
         async function apiMgrToggleAPI() {
             let apiMgrApiInstalled;
-            // Check if the web app exists calling an ObjectScript method (it's not possible to fetch the API since if it does not exist, it won't return a response) 
+            // Check if the web app exists calling an ObjectScript method 
+            // (it's not possible to fetch the API since if it does not exist and won't return a response) 
             result = await apiMgrCallMethod('CheckWebAppStatus');
             if (result.statusText === "OK") {
                 let res_json = await result.json();

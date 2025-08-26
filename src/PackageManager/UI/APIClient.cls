@@ -11,21 +11,43 @@ Class PackageManager.UI.APIClient Extends PackageManager.UI.Screens.Abstract
 /// 
 /// The API client can be accessed globally via the `PackageManagerAPI` or `pmAPI` object.
 /// Requests can be made with different caching strategies: no-cache, short-cache (5 minutes), and long-cache (1 hour).
-///
+/// 
 /// Example usage:
 /// PackageManagerAPI.ping()
-/// .then(function(ping) {
-///    // Use releases data
-///    console.log('API is reachable: ', ping.message);
-/// }) 
-/// .catch(function(error) {
-///    // Handle error
-///    console.error('API request failed:', error);
-/// });
+///     .then(function(response) { // This returns a JSON, not a promise
+///         console.log('API is running:', response.message);
+///     });
+/// 
+/// Example usage with catch block:
+///     const cacheStrategy = 'noCache';
+///     PackageManagerAPI.getProjects(cacheStrategy)
+///         .then(function(response) {
+///             console.log('API is running:', response.message);
+///             allProjects = response;
+///             renderProjects(response);
+///          })
+///          .catch(function(err) {
+///             const table_body = document.getElementById('projectTableBody');
+///             table_body.innerHTML = `
+///                 <tr>
+///                     <td colspan="3" style="color:red; text-align:center;">
+///                         ❌ Error loading projects from database<br>
+///                             ${err.message}
+///                     </td>
+///                 </tr>
+///             `;
+///             console.error("Error while fetching projects:", err);
+///         });        
+///     }
+/// 
 ClassMethod APIClient() As %Status
 {
     Set sc = $$$OK
     
+    Set packagemanagerAPIendpoint = $$$PackageManagerAPI
+    If (($EXTRACT(packagemanagerAPIendpoint,*) = "/") || ($EXTRACT(packagemanagerAPIendpoint,*) = "\")) {
+        Set packagemanagerAPIendpoint = $EXTRACT(packagemanagerAPIendpoint,1,*-1)
+    }
     &html<<script type="text/javascript">                       
 
         // Package Manager API Service - ES5 Compatible
@@ -34,7 +56,7 @@ ClassMethod APIClient() As %Status
             
             // Configuration
             var API_CONFIG = {
-                baseURL: '/csp/user/rest/packagemanager',
+                baseURL: '#(packagemanagerAPIendpoint)#', 
                 defaultHeaders: {
                     'Content-Type': 'application/json'
                 },
@@ -70,7 +92,7 @@ ClassMethod APIClient() As %Status
             }
 
             // Generic request method
-            function request(endpoint, options, cacheStrategy = 'noCache') {
+            async function request(endpoint, options, cacheStrategy = 'shortCache') {
                 options = options || {};
                 var url = API_CONFIG.baseURL + endpoint;
                 
@@ -92,16 +114,16 @@ ClassMethod APIClient() As %Status
                 return fetch(url, config)
                     .then(function(response) {
                         if (!response.ok) {
-                            throw new Error('HTTP error! status: ' + response.status);
+                            throw new Error('HTTP error - status: ' + response.status + ' - ' + response.statusText);
                         }
                         
                         var contentType = response.headers.get('content-type');
                         if (contentType && contentType.indexOf('application/json') !== -1) {
-                            return response.json();
+                            return response.json(); // Return the promise
                         } else if (contentType && contentType.indexOf('application/octet-stream') !== -1) {
-                            return response.blob();
+                            return response.blob(); // Return the promise
                         }
-                        return response.text();
+                        return response.text(); // Return the promise
                     })
                     .catch(function(error) {
                         console.error('API request failed: ' + endpoint, error);
@@ -119,8 +141,8 @@ ClassMethod APIClient() As %Status
                     });
                 },
 
-                getProjects: function() {
-                    return request('/projects', { method: 'GET' });
+                getProjects: function(cacheStrategy) {
+                    return request('/projects', { method: 'GET' }, cacheStrategy);
                 },
 
                 getProjectContent: function(projectId) {
@@ -136,7 +158,7 @@ ClassMethod APIClient() As %Status
                 },
 
                 deleteProject: function(projectId) {
-                    return request('/project/delete/' + projectId, { method: 'DELETE' });
+                    return request('/project/delete/' + projectId, { method: 'DELETE' }, 'noCache');
                 },
 
                 addClassesToProject: function(projectId, classes) {
@@ -166,25 +188,32 @@ ClassMethod APIClient() As %Status
                 },
 
                 // Namespace methods
-                getNamespaceContent: function(type) {
+                getNamespaceContent: function(type, lookInto) {
+                    const lookIntoKey = 'PackageName';
                     var endpoint = type ? '/namespace/content/' + type : '/namespace/content';
+                    // If not empty, add a parameter to look into specific packages
+                    if (lookInto && lookInto.length > 0) { 
+                        endpoint += (endpoint.includes('?') ? '&' : '?') + (lookIntoKey+'='+lookInto); 
+                    }
                     return request(endpoint, { method: 'GET' });
                 },
 
                 // Task methods
-                createTask: function(taskData) {
+                createTask: function(taskData, cacheStrategy) {
                     return request('/task/create', {
                         method: 'POST',
                         body: JSON.stringify(taskData)
-                    });
+                    },
+                    cacheStrategy);
                 },
 
-                checkExistingTasks: function() {
+                checkExistingTasks: function(cacheStrategy) {
                     // Force no-cache for dynamic task status
                     return request('/task/existing', { 
                         method: 'GET',
                         headers: API_CONFIG.cacheHeaders.noCache
-                    });
+                    },
+                    cacheStrategy);
                 },
 
                 deleteTask: function(taskId) {
@@ -207,11 +236,12 @@ ClassMethod APIClient() As %Status
                     });
                 },
 
-                updateTask: function(taskId, taskData) {
+                updateTask: function(taskId, taskData, cacheStrategy) {
                     return request('/task/update/' + taskId, {
                         method: 'POST',
                         body: JSON.stringify(taskData)
-                    });
+                    },
+                    cacheStrategy);
                 },
 
                 updateTaskClasses: function(taskId, classes) {
@@ -221,20 +251,21 @@ ClassMethod APIClient() As %Status
                     });
                 },
 
-                getReleases: function() {
-                    return request('/task/releases', { method: 'GET' });
+                getReleases: function(cacheStrategy) {
+                    return request('/task/releases/', { method: 'GET' }, cacheStrategy);
                 },
 
-                downloadRelease: function(releaseData) {
+                downloadRelease: function(releaseData, cacheStrategy) {
                     return request('/task/release/download', {
                         method: 'POST',
                         body: JSON.stringify(releaseData)
-                    });
+                    },
+                    cacheStrategy);
                 },
 
                 // Utility methods
                 ping: function() {
-                    return request('/api/ping', { method: 'GET' });
+                    return request('/api/ping', { method: 'GET' }, 'noCache');
                 },
 
                 getInfo: function() {

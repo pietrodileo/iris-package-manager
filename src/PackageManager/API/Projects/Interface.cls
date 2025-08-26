@@ -132,6 +132,7 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
 {
     Set sc = $$$OK
     Try {    
+        Set %response.IgnoreRESTOutput=1
         Set result = {}  // This will be a JSON object
         Set Args = 0
         Set sql = "SELECT Project, Name, Type FROM %Studio.ProjectItem "
@@ -213,11 +214,13 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         }
 
         //Set %response.ContentType = "application/json"
-        Write result.%ToJSON()
+        #; Write result.%ToJSON()
+        Do ..WriteResponse(.result,sc)
     } Catch ex {
         Set sc = ex.AsStatus()
-        Set %response.Status = 500
-        Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
+        Do ..WriteResponse(.result,sc)
+        #; Set %response.Status = 500
+        #; Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
     }
 
     Return sc

@@ -19,39 +19,23 @@ ClassMethod RenderJavaScript() As %Status
         // Loads the list of exported releases from the API endpoint.
         // The list of exported releases is an array of objects, where each object represents a release.
         async function loadExportedReleases() {
-            try {
-                //showMessageExportedRelease('Loading exported releases...', 'info');
-                
-                // Replace this with actual API call:
-                const response = await fetch('/csp/user/rest/packagemanager/task/releases/', { 
-                    method: "GET",
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
+            PackageManagerAPI.getReleases('noCache')
+                .then(function(data) {
+                    allReleases = data;
+                    // Make a copy of the allReleases object
+                    filteredReleases = {};
+                    for (const key in allReleases) {
+                        if (allReleases.hasOwnProperty(key)) {
+                            filteredReleases[key] = allReleases[key];
+                        }
                     }
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to load exported releases');
-                }
-                const data = await response.json();
-
-                allReleases = data;
-                // Make a copy of the allReleases object
-                filteredReleases = {};
-                for (const key in allReleases) {
-                    if (allReleases.hasOwnProperty(key)) {
-                        filteredReleases[key] = allReleases[key];
-                    }
-                }
-                selectedReleases = []; // Reset selections
-                renderExportedReleases(filteredReleases);
-                //showMessageExportedRelease('Exported releases loaded successfully', 'success');
-                
-            } catch (error) {
-                showMessageExportedRelease('Error loading exported releases: ' + error.message, 'error');
-                console.error('Error:', error);
-            }
+                    selectedReleases = []; // Reset selections
+                    renderExportedReleases(filteredReleases);
+                })
+                .catch(function(err) {
+                    showMessageExportedRelease('Error loading exported releases: ' + err.message, 'error');
+                    console.error('Error:', err.message);
+                });        
         }
 
         // Render the tree structure
@@ -391,32 +375,27 @@ ClassMethod RenderJavaScript() As %Status
 
         // Download a single file
         async function downloadSingleFile(filepath, filename) {
-            const response = await fetch('/csp/user/rest/packagemanager/task/release/download/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ filepath: filepath })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const content = await response.text();
-            const blob = new Blob([content], { type: 'application/xml' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = filename;
-            
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            URL.revokeObjectURL(url);
+            const download_req = { filepath: filepath }
+            PackageManagerAPI.downloadRelease(download_req,'noCache')
+                .then(function(content) {
+                    const blob = new Blob([content], { type: 'application/xml' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = filename;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    URL.revokeObjectURL(url);
+                })
+                .catch(function(err) {
+                    showMessageExportedRelease('Error while downloading exported releases: ' + err.message, 'error');
+                    console.error('Error:', err.message);
+                });        
         }
 
         // Search/filter functionality with selection preservation
