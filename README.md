@@ -1,47 +1,115 @@
-* ```bash
-  docker-compose up -d
-  ```
+# 📦 IRIS Package Manager
 
-http://localhost:9092/csp/sys/UtilHome.csp
+The IRIS Package Manager is a web-based application that simplifies the management and export of code assets within an InterSystems IRIS environment. It provides a modern, dynamic user interface for common development tasks.
 
-Password1234
+## Key Feature
 
-docker compose down -v
+* **Install Package Manager**: Install Package Manager API on your InterSystems IRIS instance.
+* **Projects Content Viewer**: View and manage your projects and their classes.
+* **Export Project Task**: Create, monitor, and run automated tasks to package and distribute your code.
+* **Exported Release**: Browse and download all previously created packages.
 
-🔹 `docker-compose up -d --build`
+## Requirements
 
-* **Cosa fa** : ricostruisce l’immagine *se necessario* e subito dopo avvia il container.
-* **Quando builda** : ricostruisce solo se rileva cambiamenti nel Dockerfile o nei file copiati (ma usa la cache di Docker).
+* Docker
+* Docker Desktop
+* Visual Studio Code and related InterSystems extension (if you want to work with the source code)
 
-oppure
+The application has been developed on the 2025.2 InterSystems IRIS version but should be compatible with previous versions.
 
-🔹 `docker-compose build --no-cache iris`
+Container's version is the following:
 
-* **Cosa fa** : forza la ricostruzione dell’immagine del servizio `iris`, **senza cache** (quindi ogni `COPY`, `RUN`, ecc. viene rieseguito da zero).
-* **Quando builda** : sempre, anche se non è cambiato nulla.
+```
+IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U) Thu Jul 10 2025 11:09:14 EDT
+```
 
-After this, when container is running, you should activate client side mode from vscode.
+## Quick Start with Docker
 
-To do that:
+* Clone this repository.
+* Navigate to the project's root folder.
+* Start the container in detached mode by running the following command:
 
-- Create a namespace connection to the IRIS container through settings.json
-- Click on: View -> Command Palette -> ObjectScript: Connect Folder to Server Namespace... -> Select the container namespace
-- Start working on files into the local src/ folder. Any change will be reflected to the container as well since now the folder base are synchronised and the local src folder has become the source of truth.
-- This can be used with git source control as well. Just create a repository and do git init into the main project local folder, then connect it to the repo. Any local change will be synch both with git and iris container.
+```
+docker-compose up -d
+```
 
+- Once the container is running, the application is accessible at:
 
-Si deve creare una cartella .vscode per il client side editing, contenente un settings.json così fatto:
+```
+http://localhost:9092/csp/USER/PackageManager.UI.Main.cls
+```
 
+- InterSystems IRIS management portal of the containerised instance can be reached at:
+
+```
+http://localhost:9092/csp/sys/_CSP.UI.Portal.About.zen
+```
+
+Default username and password are: 
+
+- username: _SYSTEM
+- password: SYS
+
+### About Docker build
+
+You can build the Docker image with or without using the build cache:
+
+- Rebuild with cache (if needed):
+
+```
+docker-compose up -d --build
+```
+
+This command rebuilds the image only if changes are detected in the Dockerfile or copied files.
+
+- Force rebuild without cache:
+
+```
+docker-compose build --no-cache iris
+```
+
+This command forces a complete rebuild of the iris service image, ignoring all cached layers.
+
+### How to Stop the Container
+
+To stop and remove the container and its associated volumes (including persistent data):
+
+```
+docker-compose down -v
+```
+
+## Development Workflow with VS Code
+
+To work on the source code directly within your local environment while changes are reflected in the running container, follow these steps:
+
+* Build the Docker image
+* When the image is running, open VSCode and add the following connection to your server connections (*settings.json*):
+
+```
+        "docker_pkg_manager": {
+            "webServer": {
+                "scheme": "http",
+                "host": "localhost",
+                "port": 9092
+            }
+```
+
+- Start working on client-side mode by clicking on: View > Command Palette (Ctrl+Shift+P or Cmd+Shift+P) > ObjectScript: Connect Folder to Server Namespace... > Select the container namespace
+- At this point, a .vscode folder should be present in the project's root directory. Inside this folder, a settings.json file with the following content for the client-side connection:
+
+```
 {
-
     "objectscript.conn": {
-
-    "server": "docker_pkg_manager",
-
-    "ns": "USER",
-
-    "active": true
-
+        "server": "docker_pkg_manager",
+        "ns": "USER",
+        "active": true
     }
-
 }
+```
+
+- Your local src/ folder is now synchronized with the container's database and acts as the source of truth. Any changes you make locally will automatically be reflected in the container.
+- This setup works seamlessly with Git. Simply initialize a Git repository in your local project folder and connect it to your remote repository. Your local changes will be synchronized with both Git and the IRIS container.
+
+## Guide
+
+For a detailed explanation of the application's features, architecture, and other deployment methods, please refer to the comprehensive Guide located in the docs/ folder of this repository.
