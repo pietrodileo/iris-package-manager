@@ -62,6 +62,8 @@ This includes endpoints for:
 | `/_spec`         | `GET`          | Returns the OpenAPI (Swagger) specification for this API.                             |
 | `/`              | `GET`          | Returns basic server information, including the version.                              |
 
+---
+
 # Package Manager UI API Client
 
 The `PackageManager.UI.APIClient` class provides a client-side JavaScript interface for the REST API. This script, included in the UI, makes the `PackageManagerAPI` (and its alias `pmAPI`) object globally available in the browser.

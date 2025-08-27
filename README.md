@@ -4,16 +4,24 @@ The IRIS Package Manager is a web-based application that simplifies the manageme
 
 ## Key Feature
 
+![Package Manager Homepage](./docs/user_guide/pic/homepage.png "Package Manager Homepage")
+
 * **Install Package Manager**: Install Package Manager API on your InterSystems IRIS instance.
 * **Projects Content Viewer**: View and manage your projects and their classes.
 * **Export Project Task**: Create, monitor, and run automated tasks to package and distribute your code.
 * **Exported Release**: Browse and download all previously created packages.
 
+---
+
 ## Requirements
 
-* Docker
-* Docker Desktop
-* Visual Studio Code and related InterSystems extension (if you want to work with the source code)
+### Working with Containerized Environment
+
+* [Docker Desktop](https://www.docker.com/)
+* [Visual Studio Code](https://code.visualstudio.com/) and related [InterSystems extension pack](https://marketplace.visualstudio.com/items?itemName=intersystems-community.objectscript-pack)
+* The recommended [Docker extension for VSCode](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)
+
+Check [this article](https://community.intersystems.com/post/setting-vs-code-work-intersystems-technologies) out to know how to set up VSCode to work with InterSystems technologies.
 
 The application has been developed on the 2025.2 InterSystems IRIS version but should be compatible with previous versions.
 
@@ -22,6 +30,17 @@ Container's version is the following:
 ```
 IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U) Thu Jul 10 2025 11:09:14 EDT
 ```
+
+When working with the container, no separate application installation is required, as all code is pre-packaged within the `./src` folder of the image.
+
+### Working with Local InterSystems IRIS Community Edition
+
+* [InterSystems IRIS Community edition](https://community.intersystems.com/post/introducing-evaluation-service-community-edition-downloads)
+* [Visual Studio Code](https://code.visualstudio.com/) and related [InterSystems extension pack](https://marketplace.visualstudio.com/items?itemName=intersystems-community.objectscript-pack)
+
+For a local InterSystems IRIS Community Edition environment, the application must be installed by importing the Package Manager installation XML file from the `./installation` folder.
+
+---
 
 ## Quick Start with Docker
 
@@ -33,22 +52,15 @@ IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U) Thu 
 docker-compose up -d
 ```
 
-- Once the container is running, the application is accessible at:
-
-```
-http://localhost:9092/csp/USER/PackageManager.UI.Main.cls
-```
-
+- Once the container is running, assuming that you didn't change the ports on docker-compose, the application is accessible at:
+  - [http://localhost:9092/csp/USER/PackageManager.UI.Main.cls](http://localhost:9092/csp/USER/PackageManager.UI.Main.cls)
 - InterSystems IRIS management portal of the containerised instance can be reached at:
+  - [http://localhost:9092/csp/sys/_CSP.UI.Portal.About.zen](http://localhost:9092/csp/sys/_CSP.UI.Portal.About.zen)
 
-```
-http://localhost:9092/csp/sys/_CSP.UI.Portal.About.zen
-```
+Default username and password are:
 
-Default username and password are: 
-
-- username: _SYSTEM
-- password: SYS
+- username: `_SYSTEM`
+- password: `SYS`
 
 ### About Docker build
 
@@ -77,6 +89,8 @@ To stop and remove the container and its associated volumes (including persisten
 ```
 docker-compose down -v
 ```
+
+---
 
 ## Development Workflow with VS Code
 
@@ -110,6 +124,6 @@ To work on the source code directly within your local environment while changes 
 - Your local src/ folder is now synchronized with the container's database and acts as the source of truth. Any changes you make locally will automatically be reflected in the container.
 - This setup works seamlessly with Git. Simply initialize a Git repository in your local project folder and connect it to your remote repository. Your local changes will be synchronized with both Git and the IRIS container.
 
-## Guide
+## User Guide
 
-For a detailed explanation of the application's features, architecture, and other deployment methods, please refer to the comprehensive Guide located in the docs/ folder of this repository.
+For a detailed explanation of the application's features, architecture, and other deployment methods, please refer to the comprehensive Guide located in the `.docs/` folder of this repository.
