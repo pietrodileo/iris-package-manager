@@ -1,7 +1,6 @@
 # 📦 Package Manager User Guide
 
 This guide will walk you through setting up and using the Package Manager application.
-Here's a Table of Contents (TOC) in Markdown for your user guide:
 
 ## Table of Contents
 
