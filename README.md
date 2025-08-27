@@ -39,6 +39,11 @@ When working with the container, no separate application installation is require
 * [Visual Studio Code](https://code.visualstudio.com/) and related [InterSystems extension pack](https://marketplace.visualstudio.com/items?itemName=intersystems-community.objectscript-pack)
 
 For a local InterSystems IRIS Community Edition environment, the application must be installed by importing the Package Manager installation XML file from the `./installation` folder.
+Installation file can be imported using the "Classes" menu of IRIS Management Portal. 
+
+Once installed, the user interface will be available at the endpoint returned by the following method:
+* w ##class(PackageManager.UI.Main).GetMainPageClassName()
+Host and port must be adjusted according to the specifications of your connection.
 
 ---
 
