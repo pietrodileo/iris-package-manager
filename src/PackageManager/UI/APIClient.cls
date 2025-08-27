@@ -31,7 +31,7 @@ Class PackageManager.UI.APIClient Extends PackageManager.UI.Screens.Abstract
 ///             table_body.innerHTML = `
 ///                 <tr>
 ///                     <td colspan="3" style="color:red; text-align:center;">
-///                         ❌ Error loading projects from database<br>
+///                          Error loading projects from database<br>
 ///                             ${err.message}
 ///                     </td>
 ///                 </tr>

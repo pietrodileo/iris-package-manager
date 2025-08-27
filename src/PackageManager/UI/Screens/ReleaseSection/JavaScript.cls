@@ -95,8 +95,7 @@ ClassMethod RenderJavaScript() As %Status
 
             // Project icon
             const icon = document.createElement('span');
-            icon.className = 'exported-releases-tree-icon';
-            icon.textContent = '🗂️';
+            icon.className = 'exported-releases-tree-icon icon-bookmark';
             content.appendChild(icon);
 
             // Project label
@@ -167,8 +166,7 @@ ClassMethod RenderJavaScript() As %Status
 
             // File icon
             const icon = document.createElement('span');
-            icon.className = 'exported-releases-tree-icon';
-            icon.textContent = '📄';
+            icon.className = 'exported-releases-tree-icon icon-document';
             content.appendChild(icon);
 
             // File label

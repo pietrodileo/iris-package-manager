@@ -15,7 +15,7 @@ ClassMethod renderInstallSection() As %Status
     &html<<script language='javascript'>
         function renderInstallSection() {
             return `
-                <h2>🔧 #($$$InstallationSectionTitle)#</h2>
+                <h2><span class="icon-tools"></span> #($$$InstallationSectionTitle)#</h2>
                 <p>This section allows you to install and configure the Package Manager in your environment.</p>
 
                     <div id="api-mgr-messages"></div>
@@ -24,7 +24,7 @@ ClassMethod renderInstallSection() As %Status
                     <div class="api-mgr-project-container">
                         <div class="api-mgr-project-header">
                             <div class="api-mgr-project-title">
-                                <span class="api-mgr-icon">🛜</span>
+                                <span class="api-mgr-icon icon-wireless"></span>
                                 <h3>Current API Status</h3>
                             </div>
                         </div>

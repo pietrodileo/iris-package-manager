@@ -15,17 +15,17 @@ ClassMethod renderExportedRelease() As %Status
     &html<<script language='javascript'>
         function renderExportedRelease() {
             return `
-                <h2>📚 #($$$ExportedReleaseSectionTitle)#</h2>
+                <h2><span class='icon-folder-books'></span> #($$$ExportedReleaseSectionTitle)#</h2>
                 <p>This lists all the exported versions created by export tasks..</p>
                 <div class="exported-releases-container">
                     <div class="exported-releases-header">
-                        <h3>🗞️ Exported Releases</h3>
+                        <h3>Exported Releases</h3>
                         <div class="exported-releases-controls">
-                            <button id="refreshBtn" onclick="loadExportedReleases()">🔄 Refresh</button>
-                            <button id="expandBtn" onclick="expandAllReleases()">📂 Expand All</button>
-                            <button id="collapseBtn" onclick="collapseAllReleases()">📁 Collapse All</button>
-                            <button id="clearBtn" onclick="clearReleaseSelection()">❌ Clear Selection</button>
-                            <button id="downloadBtn" onclick="downloadSelectedReleases()" disabled>⬇️ Download Selected</button>
+                            <button id="refreshBtn" onclick="loadExportedReleases()"><span class="icon-refresh"></span> Refresh</button>
+                            <button id="expandBtn" onclick="expandAllReleases()"><span class='icon-folder-open'></span> Expand All</button>
+                            <button id="collapseBtn" onclick="collapseAllReleases()"><span class="icon-folder"></span> Collapse All</button>
+                            <button id="clearBtn" onclick="clearReleaseSelection()"><span class="icon-cancel"></span> Clear Selection</button>
+                            <button id="downloadBtn" onclick="downloadSelectedReleases()" disabled><span class="icon-download"> Download Selected</button>
                         </div>
                     </div>
                     

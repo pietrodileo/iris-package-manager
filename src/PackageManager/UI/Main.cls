@@ -26,7 +26,7 @@ ClassMethod OnPage() As %Status
         <body>
             <div class="sidebar">
                 <div class="sidebar-header" title="Toggle Sidebar"> 
-                    <span class='sidebar-header-icon'>📦</span>
+                    <span class='sidebar-header-icon icon-package'></span>
                     <span class="label">Package Manager</span>
                 </div>
                 <div id="sidebarList"></div>
@@ -35,13 +35,16 @@ ClassMethod OnPage() As %Status
                 <div class="bottom-info">
                     <!-- User information section -->
                     <div class="user-info">
+                        <span class="icon-settings"></span>
                         <span class="currentNamespace" title="Current Namespace">#($NAMESPACE)#</span>
+                        <span class="icon-user"></span>
                         <span class="currentUser" title="Current User">#($USERNAME)#</span>
                     </div>
 
                     <!-- Version indicator at the bottom of sidebar -->
                     <div class="sidebar-version" title="Package Manager Version">
-                        <span class="version-text">ℹ️ v#($$$PackageManagerVersion)#</span>
+                        <span class="icon-info-circle"></span>
+                        <span class="version-text">v#($$$PackageManagerVersion)#</span>
                     </div>
                 </div>
             </div>
@@ -104,18 +107,18 @@ ClassMethod SectionsJS() As %Status
 
         // Logic for icons and sidebar population
         const icons = {
-            '#($$$InstallationSectionTitle)#': "🔧",
-            '#($$$ProjectContentViewerSectionTitle)#': "🧩",
-            '#($$$ExportProjectTaskSectionTitle)#': "📤",
-            '#($$$ExportedReleaseSectionTitle)#': "📚"
+            '#($$$InstallationSectionTitle)#': "icon-tools",
+            '#($$$ProjectContentViewerSectionTitle)#': "icon-csp",
+            '#($$$ExportProjectTaskSectionTitle)#': "icon-outbox",
+            '#($$$ExportedReleaseSectionTitle)#': "icon-books"
         };
 
         function populateSidebar() {
             const sidebar = document.getElementById("sidebarList");
             for (const title in sections) {
                 const el = document.createElement("h3");
-                const icon = icons[title] || "📄";
-                el.innerHTML = `<span class='sidebar-icon'>${icon}</span> <span class='label'>${title}</span>`;
+                const icon = icons[title] || "icon-document";
+                el.innerHTML = `<span class='sidebar-icon ${icon}'></span> <span class='label'>${title}</span>`;
                 el.onclick = () => loadSection(title);
                 sidebar.appendChild(el);
             }

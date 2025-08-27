@@ -199,6 +199,73 @@ ClassMethod Styles() As %Status
             transform: translateY(-1px) scale(1.4);
             animation: spin 0.7s linear infinite;
         }
+
+        /* Icon base styles */
+        .icon {
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+
+        /* Specific icon classes */
+        .icon-save:before { content: "\1f4be"; }        /* floppy disk */
+        .icon-cancel:before { content: "\274c"; }       /* cross mark */
+        .icon-edit:before { content: "\270D"; }         /* pencil */
+        .icon-delete:before { content: "\1F6AE"; }      /* wastebasket */
+        .icon-settings:before { content: "\2699"; }     /* gear */
+        .icon-tools:before { content: "\1f527"; }       /* wrench */
+        .icon-success:before { content: "\2713"; }      /* check mark */
+        .icon-warning:before { content: "\26a0"; }      /* warning sign */
+        .icon-home:before { content: "\1f3e0"; }        /* house */
+        .icon-user:before { content: "\1f464"; }        /* bust in silhouette */
+        .icon-search:before { content: "\1f50d"; }      /* left-pointing magnifying glass */
+        .icon-refresh:before { content: "\21bb"; }      /* clockwise open circle arrow */
+        .icon-download:before { content: "\2B07"; }     /* downwards arrow */
+        .icon-upload:before { content: "\2191"; }       /* upwards arrow */
+        .icon-plus:before { content: "\002b"; }         /* plus sign */
+        .icon-minus:before { content: "\2212"; }        /* minus sign */
+        .icon-left:before { content: "\2190"; }         /* leftwards arrow */
+        .icon-right:before { content: "\2192"; }        /* rightwards arrow */
+        .icon-up:before { content: "\2191"; }           /* upwards arrow */
+        .icon-down:before { content: "\2193"; }         /* downwards arrow */
+        .icon-package:before { content: "\1f4e6"; }     /* package */
+        .icon-info:before { content: "\2139"; }         /* information source */
+        .icon-document:before { content: "\1f4c4"; }    /* page facing up */
+        .icon-cls:before { content: "\1f4d8"; }          /* blue book */
+        .icon-mac:before { content: "\1f4dc"; }          /* scroll */
+        .icon-inc:before { content: "\1f4dd"; }          /* memo */
+        .icon-csp:before { content: "\1f9e9"; }          /* puzzle piece */
+        .icon-css:before { content: "\1f3a8"; }          /* artist palette */
+        .icon-js:before { content: "\1f4bb"; }           /* personal computer */
+        .icon-json:before { content: "\1f9fe"; }         /* receipt */
+        .icon-png:before { content: "\1f5bc"; }          /* framed picture */
+        .icon-html:before { content: "\1f310"; }         /* globe with meridians */
+        .icon-ico:before { content: "\1f5bc"; }          /* framed picture */
+        .icon-jpg:before { content: "\1f5bc"; }          /* framed picture */
+        .icon-folder:before { content: "\1f4c1"; }       /* file folder */
+        .icon-folder-open:before { content: "\1f4c2"; }  /* open file folder */
+        .icon-books:before { content: "\1f4da"; }        /* books */
+        .icon-outbox:before { content: "\1f4e4"; }       /* outbox tray */
+        .icon-info-circle:before { content: "\24d8"; }   /* circled information */
+        .icon-question:before { content: "\2753"; }      /* question mark ornament */
+        .icon-exclamation:before { content: "\2757"; }   /* exclamation mark symbol */
+        .icon-lightbulb:before { content: "\1f4a1"; }    /* light bulb */
+        .icon-speech:before { content: "\1f4ac"; }       /* speech balloon */
+        .icon-thought:before { content: "\1f4ad"; }      /* thought balloon */
+        .icon-wireless:before { content: "\1f6dc"; }     /* wireless */
+        .icon-dividers:before { content: "\1F5C2"; }     /* CARD INDEX DIVIDERS */
+        .icon-new:before { content: "\1F195"; }          /* SQUARED NEW */
+        .icon-refresh:before { content: "\1F504"; }      /* REFRESH */
+        .icon-open-book:before { content: "\1F4D6"; }    /* REFRESH */
+        .icon-plus:before { content: "\2795"; }          /* PLUS SIGN */
+        .icon-calendar:before { content: "\1F4C5"; }     /* CALENDAR */
+        .icon-email:before { content: "\1F4E7"; }        /* EMAIL */
+        .icon-pause:before { content: "\23F8"; }        /* Pause Button */
+        .icon-barchart:before { content: "\1F4CA"; }        /* Bar Chart */
+        .icon-bookmark:before { content: "\1F4BC"; }        /* Bookmark */
+        .icon-clipboard:before { content: "\1F4CB"; }        /* Clipboard */
     </style>>
 
     // Specific CSS for the Sidebar

@@ -19,12 +19,12 @@ ClassMethod renderExportTask() As %Status
     &html<<script language='javascript'>
         function renderExportTask() {
             return `
-                <h2>📤 #($$$ExportProjectTaskSectionTitle)#</h2>
+                <h2><span class="icon-outbox"></span> #($$$ExportProjectTaskSectionTitle)#</h2>
                 <p>Manage system tasks and schedules.</p>
                 <div class="project-container">
                     <div class="project-header">
                         <div class='project-title'>
-                           <h3 id="taskCount">🗂️ Active Tasks</h3>
+                           <h3 id="taskCount"><span class="icon-dividers"></span> Active Tasks</h3>
                         </div>
                         <div class='header-controls'>
                             <button class='new-project-btn' onclick='openCreateTaskModal()'><span class='plus-icon'>+</span> Create New Task</button>
@@ -73,7 +73,7 @@ ClassMethod renderCreateTaskModal() As %Status
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3>🗃️ Create New Task</h3>
+                            <h3><span class="icon-bookmark"></span> Create New Task</h3>
                             <button type="button" class="create-task-close" onclick="closeCreateTaskModal()">×</button>
                         </div>
                         <div class="create-task-modal-content">
@@ -92,7 +92,7 @@ ClassMethod renderCreateTaskModal() As %Status
 
                                 <!-- Schedule Section -->
                                 <div class="schedule-section">
-                                    <h4>📅 Schedule Configuration</h4>
+                                    <h4><span class="icon-calendar"></span> Schedule Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">How often do you want the Task Manager to execute this task?</label>
                                         <select id="schedule_type" class="create-task-form-select" onchange="handleScheduleTypeChange()">
@@ -193,7 +193,7 @@ ClassMethod renderCreateTaskModal() As %Status
 
                                 <!-- Purge Configuration Section -->
                                 <div class="purge-section">
-                                    <h4>🗑️ File Purge Configuration</h4>
+                                    <h4><span class="icon-delete"></span> File Purge Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-purge-checkbox">
                                             <input type="checkbox" id="purge_enabled" onchange="handlePurgeToggle()"> 
@@ -218,7 +218,7 @@ ClassMethod renderCreateTaskModal() As %Status
                                             </div>
                                         </div>
                                         <div class="create-task-purge-warning">
-                                            <span class="warning-icon">⚠️</span>
+                                            <span class="warning-icon"><span class="icon-warning"></span></span>
                                             <span class="warning-text">
                                                 Files will be permanently deleted. The newest files will always be preserved up to the minimum count specified.
                                             </span>
@@ -228,7 +228,7 @@ ClassMethod renderCreateTaskModal() As %Status
 
                                 <!-- Email Notifications Section -->
                                 <div class="create-task-email-section">
-                                    <h4>📧 Email Notifications (Available Soon...)</h4>
+                                    <h4><span class="icon-email"></span> Email Notifications (Available Soon...)</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">Completion Notifications:</label>
                                         <div class="create-task-email-input-group">
@@ -268,14 +268,14 @@ ClassMethod renderEditTaskModal() As %Status
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3>🗃️ Edit Task</h3>
+                            <h3><span class="icon-bookmark"></span> Edit Task</h3>
                             <button type="button" class="create-task-close" onclick="closeEditTaskModal()">×</button>
                         </div>
                         <div class="create-task-modal-content">
                             <form id="EditTaskForm">
                                 <!-- Task Status Info (Read-only) -->
                                 <div class="task-status-section" style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
-                                    <h4>📊 Current Task Status</h4>
+                                    <h4><span class="icon-barchart"></span> Current Task Status</h4>
                                     <div class="create-task-form-row">
                                         <div class="create-task-form-group">
                                             <label class="create-task-form-label">Status</label>
@@ -312,7 +312,7 @@ ClassMethod renderEditTaskModal() As %Status
 
                                 <!-- Schedule Section -->
                                 <div class="schedule-section">
-                                    <h4>📅 Schedule Configuration</h4>
+                                    <h4><span class="icon-calendar"></span> Schedule Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">How often do you want the Task Manager to execute this task?</label>
                                         <select id="edit-schedule_type" class="create-task-form-select" onchange="handleScheduleTypeChange('edit')">
@@ -414,7 +414,7 @@ ClassMethod renderEditTaskModal() As %Status
 
                                 <!-- Purge Configuration Section -->
                                 <div class="purge-section">
-                                    <h4>🗑️ File Purge Configuration</h4>
+                                    <h4><span class="icon-delete"></span> File Purge Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-purge-checkbox">
                                             <input type="checkbox" id="edit-purge_enabled" onchange="handlePurgeToggle('edit')"> 
@@ -439,7 +439,7 @@ ClassMethod renderEditTaskModal() As %Status
                                             </div>
                                         </div>
                                         <div class="create-task-purge-warning">
-                                            <span class="warning-icon">⚠️</span>
+                                            <span class="warning-icon"><span class="icon-warning"></span></span>
                                             <span class="warning-text">
                                                 Files will be permanently deleted. The newest files will always be preserved up to the minimum count specified.
                                             </span>
@@ -449,7 +449,7 @@ ClassMethod renderEditTaskModal() As %Status
 
                                 <!-- Task Control Section -->
                                 <div class="task-control-section" style="background: #fff7ed; padding: 12px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #f59e0b;">
-                                    <h4>🎛️ Task Control</h4>
+                                    <h4><span class="icon-pause"></span> Task Control</h4>
                                     <div class="create-task-form-row">
                                         <div class="create-task-form-group">
                                             <label class="create-task-form-label">Task Status</label>
@@ -463,7 +463,7 @@ ClassMethod renderEditTaskModal() As %Status
 
                                 <!-- Email Notifications Section -->
                                 <div class="create-task-email-section">
-                                    <h4>📧 Email Notifications (Available Soon...)</h4>
+                                    <h4><span class="icon-email"></span> Email Notifications (Available Soon...)</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">Completion Notifications:</label>
                                         <div class="create-task-email-input-group">
@@ -476,7 +476,7 @@ ClassMethod renderEditTaskModal() As %Status
 
                                 <!-- Buttons -->
                                 <div style="text-align: right; padding-top: 16px; border-top: 1px solid #e2e8f0; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-                                    <button type="button" class="btn btn-warning" onclick="restoreOriginalData()" style="background: #f59e0b; color: white;">🔄 Restore Original</button>
+                                    <button type="button" class="btn btn-warning" onclick="restoreOriginalData()" style="background: #f59e0b; color: white;"><span class="icon-refresh"></span> Restore Original</button>
                                     <div>
                                         <button type="button" class="btn btn-secondary" onclick="closeEditTaskModal()" style="margin-right: 8px;">Cancel</button>
                                         <button type="button" class="btn btn-primary" onclick="submitEditTask()">Update Task</button>
@@ -514,7 +514,7 @@ ClassMethod renderAddProjectModal() As %Status
                         <div class="task-file-selector-panel task-file-selector-associated-panel">
                             <div class="task-file-selector-panel-header">
                                 <div class="task-file-selector-panel-title">
-                                    <span class="task-file-selector-panel-icon">📁</span>
+                                    <span class="task-file-selector-panel-icon"><span class="icon-folder"></span></span>
                                     Associated Projects
                                     <span class="task-file-selector-counter" id="taskFileSelectorAssociatedCounter">0</span>
                                 </div>
@@ -537,7 +537,7 @@ ClassMethod renderAddProjectModal() As %Status
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                                     <div>
                                         <div class="task-file-selector-panel-title">
-                                            <span class="task-file-selector-panel-icon">🗂️</span>
+                                            <span class="task-file-selector-panel-icon icon-bookmark"></span>
                                             Available Projects
                                             <span class="task-file-selector-counter" id="taskFileSelectorAvailableCounter">0</span>
                                         </div>
@@ -548,7 +548,7 @@ ClassMethod renderAddProjectModal() As %Status
                                         id="taskFileSelectorLoadProjectsBtn"
                                         onmouseover="this.style.background='#16a34a'"
                                         onmouseout="this.style.background='#22c55e'">
-                                        🔄 Refresh Projects
+                                        <span class="icon-refresh"></span> Refresh Projects
                                     </button>
                                 </div>
                             </div>
@@ -568,7 +568,7 @@ ClassMethod renderAddProjectModal() As %Status
                         <div>
                         </div>
                         <div style="display: flex; gap: 12px;">
-                            <button class="btn-secondary" onclick="taskFileSelectorRestoreChanges()" style="background: #f59e0b; color: white;">🔄 Restore Original</button>
+                            <button class="btn-secondary" onclick="taskFileSelectorRestoreChanges()" style="background: #f59e0b; color: white;"><span class="icon-refresh"></span> Restore Original</button>
                             <button class="btn-secondary" onclick="taskFileSelectorCloseModal()">Cancel</button>
                             <button class="btn-primary" onclick="taskFileSelectorSaveChanges()">Save Changes</button>
                         </div>

@@ -21,13 +21,13 @@ ClassMethod renderContentViewer() As %Status
         function renderContentViewer() {
             // Projects List HTML with container design
             return `
-                <h2>📋 Projects List</h2>
+                <h2><span class="icon-open-book"></span> Projects List</h2>
                 <p>This shows the current list of all projects in the system. You can show their content and export them. </p>
                 <p>You can create new projects and associate them with classes or files on the current namespace. </p>
                 <div class='project-container' id ='projectContainer'>
                     <div class='project-header'>
                         <div class='project-title'>
-                        <h3>🗂️ Projects List</h3>
+                        <h3><span class="icon-open-book"></span> Projects List</h3>
                         </div>
                         <div class='header-controls'>
                         <input type='text' id='searchInput' placeholder='Search projects...' onkeyup='filterProjects()' />
@@ -78,7 +78,7 @@ ClassMethod renderNewProjectModal() As %Status
                 <div id='newProjectModal' class='modal-overlay'>
                     <div class='modal-container'>
                         <div class='modal-header'>
-                            <h3>🆕 Create New Project</h3>
+                            <h3><span class="icon-new"></span> Create New Project</h3>
                             <button class='modal-close' onclick='closeNewProjectModal()'>&times;</button>
                         </div>
                         <div class='modal-content'>
@@ -118,7 +118,7 @@ ClassMethod renderContentViewerTable() As %Status
         function renderContentViewerTable() {
             // Content Viewer HTML
             return `
-                <h2>🧩 Projects Content Viewer</h2>  
+                <h2><span class='icon-csp'></span> Projects Content Viewer</h2>  
                 <p>This shows the project content. 'PKG' nodes are related to classes (cls, inc, mac), while 'DIR' are related to other files (like csp, js, css, etc.). </p>
                 <p>You can remove selected classes from a project (without deleting it from the namespace) or export them into an XML file. </p>              
                 <body>
@@ -129,7 +129,7 @@ ClassMethod renderContentViewerTable() As %Status
                         </div>
                     <div class='tree-wrapper'>
                             <div class='tree-header'>
-                                <h3>📂 Projects Content</h3>
+                                <h3><span class='icon-folder-open'></span> Projects Content</h3>
                                 <div class='tree-controls'>
                                     <button id='tree-expand-btn' type='button' onclick='expandAllTree()'>Expand All</button>
                                     <button id='tree-collapse-btn' type='button' onclick='collapseAllTree()'>Collapse All</button>
@@ -216,8 +216,8 @@ ClassMethod renderAddClassesToPrjModal() As %Status
                                 <span id='namespaceSelectedCount'>0 Selected</span>
                             </div>
                             <div class='add-classes-footer-actions'>
-                                <button class='add-classes-btn add-classes-btn-primary' onclick='loadNamespaceContent()'>🔄 Load Content</button>
-                                <button class='add-classes-btn add-classes-btn-success' onclick='addSelectedToProject()'>➕ Add to Project</button>
+                                <button class='add-classes-btn add-classes-btn-primary' onclick='loadNamespaceContent()'><span class="icon-refresh"></span> Load Content</button>
+                                <button class='add-classes-btn add-classes-btn-success' onclick='addSelectedToProject()'><span class="icon-plus"></span> Add to Project</button>
                                 <button class='add-classes-btn add-classes-btn-secondary' onclick='closeAddClassesModal()'>Cancel</button>
                             </div>
                         </div>

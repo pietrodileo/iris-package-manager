@@ -117,16 +117,6 @@ ClassMethod SideBarCSS() As %Status
             min-width: 0; /* Allows flex items to shrink */
         }
 
-        .currentNamespace::before {
-            content: "⚙️";
-            margin-right: 3px;
-        }
-
-        .currentUser::before {
-            content: "👤";
-            margin-right: 3px;
-        }
-
         .currentNamespace:hover,
         .currentUser:hover {
             background-color: rgba(52, 152, 219, 0.2);

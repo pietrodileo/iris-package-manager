@@ -54,8 +54,8 @@ ClassMethod EditProject() As %Status
             // Modify fields as input fields to modify them and modify actions in order to save the modifications
             actionsCell.innerHTML = `
                 <div class="actions">
-                    <button title="Save" type="button" class="btn-icon" onclick="saveEditedProject(this, '${currentName}')">💾</button>
-                    <button title="Cancel Operation" type="button" class="btn-icon" onclick="restoreRecord(this, '${currentDesc}')">❌</button>
+                    <button title="Save" type="button" class="btn-icon icon-save" onclick="saveEditedProject(this, '${currentName}')"></button>
+                    <button title="Cancel Operation" type="button" class="btn-icon icon-cancel" onclick="restoreRecord(this, '${currentDesc}')"></button>
                 </div>
             `;
         }
@@ -76,9 +76,9 @@ ClassMethod EditProject() As %Status
             // Ripristina icone azioni
             actionsCell.innerHTML = `
                 <div class="actions">
-                    <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)">✏️</button>
-                    <button title="Add Classes To Project" type="button" class="btn-icon" onclick="addClasses(this)">➕</button>
-                    <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${projectName}')">🗑️</button>
+                    <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)"><span class="icon-edit"></span></button>
+                    <button title="Add Classes To Project" type="button" class="btn-icon" onclick="addClasses(this)"><span class="icon-plus"></span></button>
+                    <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${projectName}')"><span class="icon-delete"></span></button>
                 </div>
             `;
         }
@@ -188,14 +188,14 @@ ClassMethod IconsHandler() As %Status
     &html<<script language="javascript"> 
             function getIcon(type) {
                 const icons = {
-                    'CLS': '📘','cls': '📘', 'MAC': '📜', 'mac': '📜', 
-                    'INC': '📝','inc': '📝', 'CSP': '🧩', 'csp': '🧩',
-                    'CSS': '🎨', 'css': '🎨', 'JS': '💻', 'js': '💻',
-                    'JSON': '🧾', 'json': '🧾', 'PNG': '🖼️', 'png': '🖼️',
-                    'HTML': '🌐', 'html': '🌐', 'PKG': '📦', 'DIR': '📁',
-                    'ico': '🖼️', 'JPG': '🖼️', 'jpg': '🖼️'
+                    'CLS': 'icon-cls','cls': 'icon-cls', 'MAC': 'icon-mac', 'mac': 'icon-mac', 
+                    'INC': 'icon-inc','inc': 'icon-inc', 'CSP': 'icon-csp', 'csp': 'icon-csp',
+                    'CSS': 'icon-css', 'css': 'icon-css', 'JS': 'icon-js', 'js': 'icon-js',
+                    'JSON': 'icon-json', 'json': 'icon-json', 'PNG': 'icon-png', 'png': 'icon-png',
+                    'HTML': 'icon-html', 'html': 'icon-html', 'PKG': 'icon-package', 'DIR': 'icon-folder',
+                    'ico': 'icon-email', 'JPG': 'icon-email', 'jpg': 'icon-email'
                 };
-                return icons[type] || '📄';
+                return icons[type] || 'icon-document';
             }
             /*
             Eventual Material Icons support
@@ -246,7 +246,7 @@ ClassMethod ProjectList() As %Status
                     table_body.innerHTML = `
                         <tr>
                             <td colspan="3" style="color:red; text-align:center;">
-                                ❌ Error loading projects from database<br>
+                                <span class="icon-cancel"></span> Error loading projects from database<br>
                                 ${err.message}
                             </td>
                         </tr>
@@ -266,10 +266,10 @@ ClassMethod ProjectList() As %Status
             if (projects.length === 0) {
                 table.innerHTML = `
                     <div class="loading">
-                        <p>📂 No projects found</p>
+                        <p><span class='icon-folder-open'></span> No projects found</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">Create a new project to start managing your code.</p>
                         <button class="btn-primary" onclick="openNewProjectModal()" style="margin-top: 12px;">
-                            ➕ Create New Project
+                            <span class="icon-plus"></span> Create New Project
                         </button>
                     </div>
                 `;
@@ -295,9 +295,9 @@ ClassMethod ProjectList() As %Status
                     <td>${project.last_modified}</td>
                     <td>
                     <div class="actions">
-                        <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)">✏️</button>
-                        <button title="Add Classes To Project" type="button" class="btn-icon" onclick="addClasses(this)">➕</button>
-                        <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${project.name}')">🗑️</button>
+                        <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)"><span class="icon-edit"></span></button>
+                        <button title="Add Classes To Project" type="button" class="btn-icon " onclick="addClasses(this)"><span class="icon-plus"></span></button>
+                        <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${project.name}')"><span class="icon-delete"></span></button>
                     </div>
                     </td>
                 </tr>`;
@@ -472,8 +472,7 @@ ClassMethod ContentViewer() As %Status
                     toggle.style.visibility = 'hidden';
                     
                     const icon = document.createElement('span');
-                    icon.className = "tree-icon";
-                    icon.textContent = getIcon(value.type);
+                    icon.className = "tree-icon "+getIcon(value.type);
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -492,19 +491,18 @@ ClassMethod ContentViewer() As %Status
                     li.classList.add('folder');
                     
                     const icon = document.createElement('span');
-                    icon.className = "tree-icon";
                     // If the icon is related to the project name (not a folder) use a different icon
-                    let curr_icon = '📂'
+                    let curr_icon = 'icon-folder-open'
                     if (!path) {
-                        curr_icon = '🗂️'
+                        curr_icon = 'icon-bookmark'
                     } 
                     if (key === 'DIR') {
-                        curr_icon = '📁'
+                        curr_icon = 'icon-folder'
                     } 
                     if (key === 'PKG') {
-                        curr_icon = '📦'
+                        curr_icon = 'icon-package'
                     } 
-                    icon.textContent = curr_icon;
+                    icon.className = "tree-icon "+curr_icon;
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -634,7 +632,6 @@ ClassMethod ContentViewer() As %Status
                         class_array.push({
                             "name": item_fullname
                         })
-                        //console.log(`📄 ${item.path} [${item.type}] - ${item.name}`);
                     });
 
                     const classData = { "elements": class_array }
@@ -1228,8 +1225,7 @@ ClassMethod AddClassesModal() As %Status
                     toggle.style.visibility = 'hidden';
                     
                     const icon = document.createElement('span');
-                    icon.className = 'add-classes-tree-icon';
-                    icon.textContent = getIcon(value.type);
+                    icon.className = 'add-classes-tree-icon '+getIcon(value.type);
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -1248,20 +1244,19 @@ ClassMethod AddClassesModal() As %Status
                     li.classList.add('folder');
                     
                     const icon = document.createElement('span');
-                    icon.className = 'add-classes-tree-icon';
-                    let icon_emoji = '📁'
+                    let icon_emoji = 'icon-folder'
                     if (key == 'CSP') {
                         icon_emoji = '🧩'
                     } else if (key == 'CLS') {
-                        icon_emoji = '📘'
+                        icon_emoji = 'icon-cls'
                     } else if (key == 'INC') {
-                        icon_emoji = '📝'
+                        icon_emoji = 'icon-inc'
                     } else if (key == 'MAC') {
-                        icon_emoji = '📜'
+                        icon_emoji = 'icon-mac'
                     } else if (key == 'Other') {
-                        icon_emoji = '⚙️'
+                        icon_emoji = 'icon-settings'
                     }
-                    icon.textContent = icon_emoji;
+                    icon.className = 'add-classes-tree-icon '+icon_emoji;
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');

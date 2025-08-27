@@ -88,7 +88,7 @@ ClassMethod TaskTableJavaScript() As %Status
                         renderTasksTable(currentTasks);
                         // Update task count in header
                         if (taskCountElement) {
-                            taskCountElement.textContent = `🗃️ Existing Tasks: ${currentTasks.length}`;
+                            taskCountElement.textContent = `Existing Tasks: ${currentTasks.length}`;
                         }
                     })
                     .catch(function(err) {
@@ -98,10 +98,10 @@ ClassMethod TaskTableJavaScript() As %Status
                 const container = document.getElementById('taskTableContainer');
                 container.innerHTML = `
                     <div class="loading">
-                        <p>❌ Error loading tasks from database</p>
+                        <p><span class="icon-cancel"></span> Error loading tasks from database</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">${error.message}</p>
                         <button class="btn-primary" onclick="loadExportTasks()" style="margin-top: 12px;">
-                            🔄 Retry
+                            <span class="icon-refresh"></span> Retry
                         </button>
                     </div>
                 `;
@@ -120,12 +120,12 @@ ClassMethod TaskTableJavaScript() As %Status
             if (!tasks || tasks.length === 0) {
                 container.innerHTML = `
                     <div class="loading">
-                        <p>📋 No tasks found in database</p>
+                        <p>"<span class='icon-clipboard'></span>" No tasks found in database</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">
                             Create your first task to get started
                         </p>
                         <button class="btn-primary" onclick="openCreateTaskModal()" style="margin-top: 12px;">
-                            ➕ Create New Task
+                            <span class="icon-plus"></span> Create New Task
                         </button>
                     </div>
                 `;
@@ -198,11 +198,11 @@ ClassMethod TaskTableJavaScript() As %Status
                 // Get projects associated with the current task
                 let projects = task.Projects
                 // Set the icon for tasks associated with projects
-                let projectsIcon = "🗂️";
+                let projectsIcon = "<span class='icon-bookmark'></span>";
                 let projectsIconTitle = "View Projects";
                 if (projects.length === 0) {
                     // Task without any associated project
-                    projectsIcon = "📁";
+                    projectsIcon = "<span class='icon-folder'></span>";
                     projectsIconTitle = "Associate projects to this task";
                 }
 
@@ -240,15 +240,11 @@ ClassMethod TaskTableJavaScript() As %Status
                         <td>${running_user ? running_user.toLocaleString() : 'Unknown'}</td>
                         <td>
                             <div class="actions">
-                                <button type="button" class="btn-icon" onclick="editTask('${escapeHtml(task.ID)}')" title="Edit Task">
-                                    ✏️
-                                </button>
+                                <button type="button" class="btn-icon icon-edit" onclick="editTask('${escapeHtml(task.ID)}')" title="Edit Task"></button>
                                 <button type="button" class="btn-icon" onclick="runTask('${escapeHtml(task.ID)}')" title="Run Task">
                                     ▶️
                                 </button>
-                                <button type="button" class="btn-icon" onclick="deleteTask('${escapeHtml(task.ID)}')" title="Delete Task">
-                                    🗑️
-                                </button>
+                                <button type="button" class="btn-icon icon-delete" onclick="deleteTask('${escapeHtml(task.ID)}')" title="Delete Task"></button>
                             </div>
                         </td>
                     </tr>
@@ -1274,7 +1270,7 @@ ClassMethod AddProjectModalJavaScript() As %Status
                     .then(function(response) {
                         taskFileSelectorAllProjects = response;
                         taskFileSelectorPopulateFiles();
-                        btn.innerHTML = "✓ Refreshed";
+                        btn.innerHTML = "<span class='icon-success'></span> Refreshed";
                         btn.innerHTML = originalText;
                         btn.disabled = false;
                     })
@@ -1303,7 +1299,7 @@ ClassMethod AddProjectModalJavaScript() As %Status
 
             if (projects.length === 0) {
                 container.innerHTML = `<div class="empty-state">
-                    <div class="empty-icon">${type === "associated" ? "📁" : "🗂️"}</div>
+                    <div class="empty-icon">${type === "associated" ? "<span class='icon-folder'></span>" : "<span class='icon-bookmark'></span>"}</div>
                     <div>No ${type} projects</div>
                 </div>`;
             }
@@ -1318,7 +1314,7 @@ ClassMethod AddProjectModalJavaScript() As %Status
                     <div class="task-file-selector-file-item" data-name="${projectId}" onclick="taskFileSelectorToggleSelection('${type}', '${projectId}')">
                         <div class="task-file-selector-file-info">
                             <div class="task-file-selector-file-name">
-                                📄 ${projectName} ${type === "associated" ? '<span class="status-badge status-associated">Associated</span>' : ''}
+                                <span class="icon-document"></span> ${projectName} ${type === "associated" ? '<span class="status-badge status-associated">Associated</span>' : ''}
                             </div>
                             ${projectDescription ? `<div class="task-file-selector-file-description">${projectDescription}</div>` : ''}
                             <div class="task-file-selector-file-meta">Last modified: ${new Date(lastModified).toLocaleString()}</div>
@@ -1326,7 +1322,7 @@ ClassMethod AddProjectModalJavaScript() As %Status
                         <div class="task-file-selector-file-actions">
                             ${type === "associated"
                                 ? `<button class="task-file-selector-btn-remove" onclick="event.stopPropagation(); taskFileSelectorQuickRemove('${projectId}')">✖ Remove</button>`
-                                : `<button class="task-file-selector-btn-add" onclick="event.stopPropagation(); taskFileSelectorQuickAdd('${projectId}')">✓ Add</button>`
+                                : `<button class="task-file-selector-btn-add" onclick="event.stopPropagation(); taskFileSelectorQuickAdd('${projectId}')"><span class="icon-success"></span> Add</button>`
                             }
                         </div>
                     </div>
