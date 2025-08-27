@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U)" ts="2025-08-27 08:37:33">
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U)" ts="2025-08-27 13:28:42">
 <Class name="PackageManager.API.Classes.Interface">
 <Final>1</Final>
 <Super>PackageManager.API.REST</Super>
@@ -1665,7 +1665,7 @@ This is the installer class for the PackageManager application.</Description>
 </Class>
 
 
-<Project name="PackageManager" LastModified="2025-08-27 08:37:12.18897921">
+<Project name="PackageManager" LastModified="2025-08-27 13:27:10.845537966">
   <Items>
     <ProjectItem name="PackageManager.API.Classes.Interface" type="CLS"></ProjectItem>
     <ProjectItem name="PackageManager.API.Namespace.Interface" type="CLS"></ProjectItem>
@@ -2211,7 +2211,7 @@ This method increment the version of the record</Description>
 
 <Class name="PackageManager.UI.APIClient">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.169293099</TimeChanged>
+<TimeChanged>67444,45095.292698194</TimeChanged>
 <TimeCreated>67443,59562.169293099</TimeCreated>
 
 <UDLText name="T">
@@ -2251,7 +2251,7 @@ Example usage with catch block:
             table_body.innerHTML = `
                 <tr>
                     <td colspan="3" style="color:red; text-align:center;">
-                        â Error loading projects from database<br>
+                         Error loading projects from database<br>
                             ${err.message}
                     </td>
                 </tr>
@@ -2513,7 +2513,7 @@ Example usage with catch block:
 <Description>
 This class provides the main and generic CSS classes for the Package Manager UI. </Description>
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.168127157</TimeChanged>
+<TimeChanged>67444,48396.139464729</TimeChanged>
 <TimeCreated>67443,59562.168127157</TimeCreated>
 
 <Method name="Styles">
@@ -2716,6 +2716,73 @@ Overall generic styles for the package manager projecty </Description>
             transform: translateY(-1px) scale(1.4);
             animation: spin 0.7s linear infinite;
         }
+
+        /* Icon base styles */
+        .icon {
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+
+        /* Specific icon classes */
+        .icon-save:before { content: "\1f4be"; }        /* floppy disk */
+        .icon-cancel:before { content: "\274c"; }       /* cross mark */
+        .icon-edit:before { content: "\270D"; }         /* pencil */
+        .icon-delete:before { content: "\1F6AE"; }      /* wastebasket */
+        .icon-settings:before { content: "\2699"; }     /* gear */
+        .icon-tools:before { content: "\1f527"; }       /* wrench */
+        .icon-success:before { content: "\2713"; }      /* check mark */
+        .icon-warning:before { content: "\26a0"; }      /* warning sign */
+        .icon-home:before { content: "\1f3e0"; }        /* house */
+        .icon-user:before { content: "\1f464"; }        /* bust in silhouette */
+        .icon-search:before { content: "\1f50d"; }      /* left-pointing magnifying glass */
+        .icon-refresh:before { content: "\21bb"; }      /* clockwise open circle arrow */
+        .icon-download:before { content: "\2B07"; }     /* downwards arrow */
+        .icon-upload:before { content: "\2191"; }       /* upwards arrow */
+        .icon-plus:before { content: "\002b"; }         /* plus sign */
+        .icon-minus:before { content: "\2212"; }        /* minus sign */
+        .icon-left:before { content: "\2190"; }         /* leftwards arrow */
+        .icon-right:before { content: "\2192"; }        /* rightwards arrow */
+        .icon-up:before { content: "\2191"; }           /* upwards arrow */
+        .icon-down:before { content: "\2193"; }         /* downwards arrow */
+        .icon-package:before { content: "\1f4e6"; }     /* package */
+        .icon-info:before { content: "\2139"; }         /* information source */
+        .icon-document:before { content: "\1f4c4"; }    /* page facing up */
+        .icon-cls:before { content: "\1f4d8"; }          /* blue book */
+        .icon-mac:before { content: "\1f4dc"; }          /* scroll */
+        .icon-inc:before { content: "\1f4dd"; }          /* memo */
+        .icon-csp:before { content: "\1f9e9"; }          /* puzzle piece */
+        .icon-css:before { content: "\1f3a8"; }          /* artist palette */
+        .icon-js:before { content: "\1f4bb"; }           /* personal computer */
+        .icon-json:before { content: "\1f9fe"; }         /* receipt */
+        .icon-png:before { content: "\1f5bc"; }          /* framed picture */
+        .icon-html:before { content: "\1f310"; }         /* globe with meridians */
+        .icon-ico:before { content: "\1f5bc"; }          /* framed picture */
+        .icon-jpg:before { content: "\1f5bc"; }          /* framed picture */
+        .icon-folder:before { content: "\1f4c1"; }       /* file folder */
+        .icon-folder-open:before { content: "\1f4c2"; }  /* open file folder */
+        .icon-books:before { content: "\1f4da"; }        /* books */
+        .icon-outbox:before { content: "\1f4e4"; }       /* outbox tray */
+        .icon-info-circle:before { content: "\24d8"; }   /* circled information */
+        .icon-question:before { content: "\2753"; }      /* question mark ornament */
+        .icon-exclamation:before { content: "\2757"; }   /* exclamation mark symbol */
+        .icon-lightbulb:before { content: "\1f4a1"; }    /* light bulb */
+        .icon-speech:before { content: "\1f4ac"; }       /* speech balloon */
+        .icon-thought:before { content: "\1f4ad"; }      /* thought balloon */
+        .icon-wireless:before { content: "\1f6dc"; }     /* wireless */
+        .icon-dividers:before { content: "\1F5C2"; }     /* CARD INDEX DIVIDERS */
+        .icon-new:before { content: "\1F195"; }          /* SQUARED NEW */
+        .icon-refresh:before { content: "\1F504"; }      /* REFRESH */
+        .icon-open-book:before { content: "\1F4D6"; }    /* REFRESH */
+        .icon-plus:before { content: "\2795"; }          /* PLUS SIGN */
+        .icon-calendar:before { content: "\1F4C5"; }     /* CALENDAR */
+        .icon-email:before { content: "\1F4E7"; }        /* EMAIL */
+        .icon-pause:before { content: "\23F8"; }        /* Pause Button */
+        .icon-barchart:before { content: "\1F4CA"; }        /* Bar Chart */
+        .icon-bookmark:before { content: "\1F4BC"; }        /* Bookmark */
+        .icon-clipboard:before { content: "\1F4CB"; }        /* Clipboard */
     </style>>
 
     // Specific CSS for the Sidebar
@@ -2969,7 +3036,7 @@ This class provides the main functionality for the Package Manager UI.
 It provides methods for rendering the main page, initializing the sidebar content, and handling window load events.  
 The class is responsible for setting up the UI components and providing the necessary functionality for the Package Manager UI.</Description>
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.175750499</TimeChanged>
+<TimeChanged>67444,45586.140029603</TimeChanged>
 <TimeCreated>67443,59562.175750499</TimeCreated>
 
 <Method name="OnPage">
@@ -2997,7 +3064,7 @@ This code sets the content of the #mainContent element for the welcome landing p
         <body>
             <div class="sidebar">
                 <div class="sidebar-header" title="Toggle Sidebar"> 
-                    <span class='sidebar-header-icon'>ð¦</span>
+                    <span class='sidebar-header-icon icon-package'></span>
                     <span class="label">Package Manager</span>
                 </div>
                 <div id="sidebarList"></div>
@@ -3006,13 +3073,16 @@ This code sets the content of the #mainContent element for the welcome landing p
                 <div class="bottom-info">
                     <!-- User information section -->
                     <div class="user-info">
+                        <span class="icon-settings"></span>
                         <span class="currentNamespace" title="Current Namespace">#($NAMESPACE)#</span>
+                        <span class="icon-user"></span>
                         <span class="currentUser" title="Current User">#($USERNAME)#</span>
                     </div>
 
                     <!-- Version indicator at the bottom of sidebar -->
                     <div class="sidebar-version" title="Package Manager Version">
-                        <span class="version-text">â¹ï¸ v#($$$PackageManagerVersion)#</span>
+                        <span class="icon-info-circle"></span>
+                        <span class="version-text">v#($$$PackageManagerVersion)#</span>
                     </div>
                 </div>
             </div>
@@ -3079,18 +3149,18 @@ The populateSidebar function is expected to generate the necessary HTML and popu
 
         // Logic for icons and sidebar population
         const icons = {
-            '#($$$InstallationSectionTitle)#': "ð§",
-            '#($$$ProjectContentViewerSectionTitle)#': "ð§©",
-            '#($$$ExportProjectTaskSectionTitle)#': "ð¤",
-            '#($$$ExportedReleaseSectionTitle)#': "ð"
+            '#($$$InstallationSectionTitle)#': "icon-tools",
+            '#($$$ProjectContentViewerSectionTitle)#': "icon-csp",
+            '#($$$ExportProjectTaskSectionTitle)#': "icon-outbox",
+            '#($$$ExportedReleaseSectionTitle)#': "icon-books"
         };
 
         function populateSidebar() {
             const sidebar = document.getElementById("sidebarList");
             for (const title in sections) {
                 const el = document.createElement("h3");
-                const icon = icons[title] || "ð";
-                el.innerHTML = `<span class='sidebar-icon'>${icon}</span> <span class='label'>${title}</span>`;
+                const icon = icons[title] || "icon-document";
+                el.innerHTML = `<span class='sidebar-icon ${icon}'></span> <span class='label'>${title}</span>`;
                 el.onclick = () => loadSection(title);
                 sidebar.appendChild(el);
             }
@@ -4404,7 +4474,7 @@ CSS for Add Classes Modal </Description>
 
 <Class name="PackageManager.UI.Screens.ContentViewerSection.HTML">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.191291865</TimeChanged>
+<TimeChanged>67444,46179.364103871</TimeChanged>
 <TimeCreated>67443,59562.191291865</TimeCreated>
 
 <UDLText name="T">
@@ -4434,13 +4504,13 @@ CSS for Add Classes Modal </Description>
         function renderContentViewer() {
             // Projects List HTML with container design
             return `
-                <h2>ð Projects List</h2>
+                <h2><span class="icon-open-book"></span> Projects List</h2>
                 <p>This shows the current list of all projects in the system. You can show their content and export them. </p>
                 <p>You can create new projects and associate them with classes or files on the current namespace. </p>
                 <div class='project-container' id ='projectContainer'>
                     <div class='project-header'>
                         <div class='project-title'>
-                        <h3>ðï¸ Projects List</h3>
+                        <h3><span class="icon-open-book"></span> Projects List</h3>
                         </div>
                         <div class='header-controls'>
                         <input type='text' id='searchInput' placeholder='Search projects...' onkeyup='filterProjects()' />
@@ -4499,7 +4569,7 @@ CSS for Add Classes Modal </Description>
                 <div id='newProjectModal' class='modal-overlay'>
                     <div class='modal-container'>
                         <div class='modal-header'>
-                            <h3>ð Create New Project</h3>
+                            <h3><span class="icon-new"></span> Create New Project</h3>
                             <button class='modal-close' onclick='closeNewProjectModal()'>&times;</button>
                         </div>
                         <div class='modal-content'>
@@ -4542,7 +4612,7 @@ CSS for Add Classes Modal </Description>
         function renderContentViewerTable() {
             // Content Viewer HTML
             return `
-                <h2>ð§© Projects Content Viewer</h2>  
+                <h2><span class='icon-csp'></span> Projects Content Viewer</h2>  
                 <p>This shows the project content. 'PKG' nodes are related to classes (cls, inc, mac), while 'DIR' are related to other files (like csp, js, css, etc.). </p>
                 <p>You can remove selected classes from a project (without deleting it from the namespace) or export them into an XML file. </p>              
                 <body>
@@ -4553,7 +4623,7 @@ CSS for Add Classes Modal </Description>
                         </div>
                     <div class='tree-wrapper'>
                             <div class='tree-header'>
-                                <h3>ð Projects Content</h3>
+                                <h3><span class='icon-folder-open'></span> Projects Content</h3>
                                 <div class='tree-controls'>
                                     <button id='tree-expand-btn' type='button' onclick='expandAllTree()'>Expand All</button>
                                     <button id='tree-collapse-btn' type='button' onclick='collapseAllTree()'>Collapse All</button>
@@ -4643,8 +4713,8 @@ CSS for Add Classes Modal </Description>
                                 <span id='namespaceSelectedCount'>0 Selected</span>
                             </div>
                             <div class='add-classes-footer-actions'>
-                                <button class='add-classes-btn add-classes-btn-primary' onclick='loadNamespaceContent()'>ð Load Content</button>
-                                <button class='add-classes-btn add-classes-btn-success' onclick='addSelectedToProject()'>â Add to Project</button>
+                                <button class='add-classes-btn add-classes-btn-primary' onclick='loadNamespaceContent()'><span class="icon-refresh"></span> Load Content</button>
+                                <button class='add-classes-btn add-classes-btn-success' onclick='addSelectedToProject()'><span class="icon-plus"></span> Add to Project</button>
                                 <button class='add-classes-btn add-classes-btn-secondary' onclick='closeAddClassesModal()'>Cancel</button>
                             </div>
                         </div>
@@ -4661,7 +4731,7 @@ CSS for Add Classes Modal </Description>
 
 <Class name="PackageManager.UI.Screens.ContentViewerSection.JavaScript">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.19714692</TimeChanged>
+<TimeChanged>67444,47913.268581154</TimeChanged>
 <TimeCreated>67443,59562.19714692</TimeCreated>
 
 <UDLText name="T">
@@ -4733,8 +4803,8 @@ to interact with the Content Viewer and Project List Section page UI components.
             // Modify fields as input fields to modify them and modify actions in order to save the modifications
             actionsCell.innerHTML = `
                 <div class="actions">
-                    <button title="Save" type="button" class="btn-icon" onclick="saveEditedProject(this, '${currentName}')">ð¾</button>
-                    <button title="Cancel Operation" type="button" class="btn-icon" onclick="restoreRecord(this, '${currentDesc}')">â</button>
+                    <button title="Save" type="button" class="btn-icon icon-save" onclick="saveEditedProject(this, '${currentName}')"></button>
+                    <button title="Cancel Operation" type="button" class="btn-icon icon-cancel" onclick="restoreRecord(this, '${currentDesc}')"></button>
                 </div>
             `;
         }
@@ -4755,9 +4825,9 @@ to interact with the Content Viewer and Project List Section page UI components.
             // Ripristina icone azioni
             actionsCell.innerHTML = `
                 <div class="actions">
-                    <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)">âï¸</button>
-                    <button title="Add Classes To Project" type="button" class="btn-icon" onclick="addClasses(this)">â</button>
-                    <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${projectName}')">ðï¸</button>
+                    <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)"><span class="icon-edit"></span></button>
+                    <button title="Add Classes To Project" type="button" class="btn-icon" onclick="addClasses(this)"><span class="icon-plus"></span></button>
+                    <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${projectName}')"><span class="icon-delete"></span></button>
                 </div>
             `;
         }
@@ -4873,14 +4943,14 @@ to interact with the Content Viewer and Project List Section page UI components.
     &html<<script language="javascript"> 
             function getIcon(type) {
                 const icons = {
-                    'CLS': 'ð','cls': 'ð', 'MAC': 'ð', 'mac': 'ð', 
-                    'INC': 'ð','inc': 'ð', 'CSP': 'ð§©', 'csp': 'ð§©',
-                    'CSS': 'ð¨', 'css': 'ð¨', 'JS': 'ð»', 'js': 'ð»',
-                    'JSON': 'ð§¾', 'json': 'ð§¾', 'PNG': 'ð¼ï¸', 'png': 'ð¼ï¸',
-                    'HTML': 'ð', 'html': 'ð', 'PKG': 'ð¦', 'DIR': 'ð',
-                    'ico': 'ð¼ï¸', 'JPG': 'ð¼ï¸', 'jpg': 'ð¼ï¸'
+                    'CLS': 'icon-cls','cls': 'icon-cls', 'MAC': 'icon-mac', 'mac': 'icon-mac', 
+                    'INC': 'icon-inc','inc': 'icon-inc', 'CSP': 'icon-csp', 'csp': 'icon-csp',
+                    'CSS': 'icon-css', 'css': 'icon-css', 'JS': 'icon-js', 'js': 'icon-js',
+                    'JSON': 'icon-json', 'json': 'icon-json', 'PNG': 'icon-png', 'png': 'icon-png',
+                    'HTML': 'icon-html', 'html': 'icon-html', 'PKG': 'icon-package', 'DIR': 'icon-folder',
+                    'ico': 'icon-email', 'JPG': 'icon-email', 'jpg': 'icon-email'
                 };
-                return icons[type] || 'ð';
+                return icons[type] || 'icon-document';
             }
             /*
             Eventual Material Icons support
@@ -4934,7 +5004,7 @@ to interact with the Content Viewer and Project List Section page UI components.
                     table_body.innerHTML = `
                         <tr>
                             <td colspan="3" style="color:red; text-align:center;">
-                                â Error loading projects from database<br>
+                                <span class="icon-cancel"></span> Error loading projects from database<br>
                                 ${err.message}
                             </td>
                         </tr>
@@ -4954,10 +5024,10 @@ to interact with the Content Viewer and Project List Section page UI components.
             if (projects.length === 0) {
                 table.innerHTML = `
                     <div class="loading">
-                        <p>ð No projects found</p>
+                        <p><span class='icon-folder-open'></span> No projects found</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">Create a new project to start managing your code.</p>
                         <button class="btn-primary" onclick="openNewProjectModal()" style="margin-top: 12px;">
-                            â Create New Project
+                            <span class="icon-plus"></span> Create New Project
                         </button>
                     </div>
                 `;
@@ -4983,9 +5053,9 @@ to interact with the Content Viewer and Project List Section page UI components.
                     <td>${project.last_modified}</td>
                     <td>
                     <div class="actions">
-                        <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)">âï¸</button>
-                        <button title="Add Classes To Project" type="button" class="btn-icon" onclick="addClasses(this)">â</button>
-                        <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${project.name}')">ðï¸</button>
+                        <button title="Edit Description" type="button" class="btn-icon" onclick="editProject(this)"><span class="icon-edit"></span></button>
+                        <button title="Add Classes To Project" type="button" class="btn-icon " onclick="addClasses(this)"><span class="icon-plus"></span></button>
+                        <button title="Delete" type="button" class="btn-icon" onclick="confirmDeleteProject('${project.name}')"><span class="icon-delete"></span></button>
                     </div>
                     </td>
                 </tr>`;
@@ -5163,8 +5233,7 @@ to interact with the Content Viewer and Project List Section page UI components.
                     toggle.style.visibility = 'hidden';
                     
                     const icon = document.createElement('span');
-                    icon.className = "tree-icon";
-                    icon.textContent = getIcon(value.type);
+                    icon.className = "tree-icon "+getIcon(value.type);
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -5183,19 +5252,18 @@ to interact with the Content Viewer and Project List Section page UI components.
                     li.classList.add('folder');
                     
                     const icon = document.createElement('span');
-                    icon.className = "tree-icon";
                     // If the icon is related to the project name (not a folder) use a different icon
-                    let curr_icon = 'ð'
+                    let curr_icon = 'icon-folder-open'
                     if (!path) {
-                        curr_icon = 'ðï¸'
+                        curr_icon = 'icon-bookmark'
                     } 
                     if (key === 'DIR') {
-                        curr_icon = 'ð'
+                        curr_icon = 'icon-folder'
                     } 
                     if (key === 'PKG') {
-                        curr_icon = 'ð¦'
+                        curr_icon = 'icon-package'
                     } 
-                    icon.textContent = curr_icon;
+                    icon.className = "tree-icon "+curr_icon;
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -5325,7 +5393,6 @@ to interact with the Content Viewer and Project List Section page UI components.
                         class_array.push({
                             "name": item_fullname
                         })
-                        //console.log(`ð ${item.path} [${item.type}] - ${item.name}`);
                     });
 
                     const classData = { "elements": class_array }
@@ -5928,8 +5995,7 @@ Add Classes Modal JavaScript </Description>
                     toggle.style.visibility = 'hidden';
                     
                     const icon = document.createElement('span');
-                    icon.className = 'add-classes-tree-icon';
-                    icon.textContent = getIcon(value.type);
+                    icon.className = 'add-classes-tree-icon '+getIcon(value.type);
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -5948,20 +6014,19 @@ Add Classes Modal JavaScript </Description>
                     li.classList.add('folder');
                     
                     const icon = document.createElement('span');
-                    icon.className = 'add-classes-tree-icon';
-                    let icon_emoji = 'ð'
+                    let icon_emoji = 'icon-folder'
                     if (key == 'CSP') {
                         icon_emoji = 'ð§©'
                     } else if (key == 'CLS') {
-                        icon_emoji = 'ð'
+                        icon_emoji = 'icon-cls'
                     } else if (key == 'INC') {
-                        icon_emoji = 'ð'
+                        icon_emoji = 'icon-inc'
                     } else if (key == 'MAC') {
-                        icon_emoji = 'ð'
+                        icon_emoji = 'icon-mac'
                     } else if (key == 'Other') {
-                        icon_emoji = 'âï¸'
+                        icon_emoji = 'icon-settings'
                     }
-                    icon.textContent = icon_emoji;
+                    icon.className = 'add-classes-tree-icon '+icon_emoji;
                     itemContent.appendChild(icon);
 
                     const label = document.createElement('span');
@@ -7438,7 +7503,7 @@ Styles for the task file/project selector modal which let the user associate the
 
 <Class name="PackageManager.UI.Screens.ExportTaskSection.HTML">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.195572631</TimeChanged>
+<TimeChanged>67444,48063.772614821</TimeChanged>
 <TimeCreated>67443,59562.195572631</TimeCreated>
 
 <UDLText name="T">
@@ -7466,12 +7531,12 @@ Styles for the task file/project selector modal which let the user associate the
     &html<<script language='javascript'>
         function renderExportTask() {
             return `
-                <h2>ð¤ #($$$ExportProjectTaskSectionTitle)#</h2>
+                <h2><span class="icon-outbox"></span> #($$$ExportProjectTaskSectionTitle)#</h2>
                 <p>Manage system tasks and schedules.</p>
                 <div class="project-container">
                     <div class="project-header">
                         <div class='project-title'>
-                           <h3 id="taskCount">ðï¸ Active Tasks</h3>
+                           <h3 id="taskCount"><span class="icon-dividers"></span> Active Tasks</h3>
                         </div>
                         <div class='header-controls'>
                             <button class='new-project-btn' onclick='openCreateTaskModal()'><span class='plus-icon'>+</span> Create New Task</button>
@@ -7528,7 +7593,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3>ðï¸ Create New Task</h3>
+                            <h3><span class="icon-bookmark"></span> Create New Task</h3>
                             <button type="button" class="create-task-close" onclick="closeCreateTaskModal()">Ã</button>
                         </div>
                         <div class="create-task-modal-content">
@@ -7547,7 +7612,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Schedule Section -->
                                 <div class="schedule-section">
-                                    <h4>ð Schedule Configuration</h4>
+                                    <h4><span class="icon-calendar"></span> Schedule Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">How often do you want the Task Manager to execute this task?</label>
                                         <select id="schedule_type" class="create-task-form-select" onchange="handleScheduleTypeChange()">
@@ -7648,7 +7713,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Purge Configuration Section -->
                                 <div class="purge-section">
-                                    <h4>ðï¸ File Purge Configuration</h4>
+                                    <h4><span class="icon-delete"></span> File Purge Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-purge-checkbox">
                                             <input type="checkbox" id="purge_enabled" onchange="handlePurgeToggle()"> 
@@ -7673,7 +7738,7 @@ Styles for the task file/project selector modal which let the user associate the
                                             </div>
                                         </div>
                                         <div class="create-task-purge-warning">
-                                            <span class="warning-icon">â ï¸</span>
+                                            <span class="warning-icon"><span class="icon-warning"></span></span>
                                             <span class="warning-text">
                                                 Files will be permanently deleted. The newest files will always be preserved up to the minimum count specified.
                                             </span>
@@ -7683,7 +7748,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Email Notifications Section -->
                                 <div class="create-task-email-section">
-                                    <h4>ð§ Email Notifications (Available Soon...)</h4>
+                                    <h4><span class="icon-email"></span> Email Notifications (Available Soon...)</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">Completion Notifications:</label>
                                         <div class="create-task-email-input-group">
@@ -7726,14 +7791,14 @@ Styles for the task file/project selector modal which let the user associate the
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3>ðï¸ Edit Task</h3>
+                            <h3><span class="icon-bookmark"></span> Edit Task</h3>
                             <button type="button" class="create-task-close" onclick="closeEditTaskModal()">Ã</button>
                         </div>
                         <div class="create-task-modal-content">
                             <form id="EditTaskForm">
                                 <!-- Task Status Info (Read-only) -->
                                 <div class="task-status-section" style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
-                                    <h4>ð Current Task Status</h4>
+                                    <h4><span class="icon-barchart"></span> Current Task Status</h4>
                                     <div class="create-task-form-row">
                                         <div class="create-task-form-group">
                                             <label class="create-task-form-label">Status</label>
@@ -7770,7 +7835,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Schedule Section -->
                                 <div class="schedule-section">
-                                    <h4>ð Schedule Configuration</h4>
+                                    <h4><span class="icon-calendar"></span> Schedule Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">How often do you want the Task Manager to execute this task?</label>
                                         <select id="edit-schedule_type" class="create-task-form-select" onchange="handleScheduleTypeChange('edit')">
@@ -7872,7 +7937,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Purge Configuration Section -->
                                 <div class="purge-section">
-                                    <h4>ðï¸ File Purge Configuration</h4>
+                                    <h4><span class="icon-delete"></span> File Purge Configuration</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-purge-checkbox">
                                             <input type="checkbox" id="edit-purge_enabled" onchange="handlePurgeToggle('edit')"> 
@@ -7897,7 +7962,7 @@ Styles for the task file/project selector modal which let the user associate the
                                             </div>
                                         </div>
                                         <div class="create-task-purge-warning">
-                                            <span class="warning-icon">â ï¸</span>
+                                            <span class="warning-icon"><span class="icon-warning"></span></span>
                                             <span class="warning-text">
                                                 Files will be permanently deleted. The newest files will always be preserved up to the minimum count specified.
                                             </span>
@@ -7907,7 +7972,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Task Control Section -->
                                 <div class="task-control-section" style="background: #fff7ed; padding: 12px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #f59e0b;">
-                                    <h4>ðï¸ Task Control</h4>
+                                    <h4><span class="icon-pause"></span> Task Control</h4>
                                     <div class="create-task-form-row">
                                         <div class="create-task-form-group">
                                             <label class="create-task-form-label">Task Status</label>
@@ -7921,7 +7986,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Email Notifications Section -->
                                 <div class="create-task-email-section">
-                                    <h4>ð§ Email Notifications (Available Soon...)</h4>
+                                    <h4><span class="icon-email"></span> Email Notifications (Available Soon...)</h4>
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">Completion Notifications:</label>
                                         <div class="create-task-email-input-group">
@@ -7934,7 +7999,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                                 <!-- Buttons -->
                                 <div style="text-align: right; padding-top: 16px; border-top: 1px solid #e2e8f0; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-                                    <button type="button" class="btn btn-warning" onclick="restoreOriginalData()" style="background: #f59e0b; color: white;">ð Restore Original</button>
+                                    <button type="button" class="btn btn-warning" onclick="restoreOriginalData()" style="background: #f59e0b; color: white;"><span class="icon-refresh"></span> Restore Original</button>
                                     <div>
                                         <button type="button" class="btn btn-secondary" onclick="closeEditTaskModal()" style="margin-right: 8px;">Cancel</button>
                                         <button type="button" class="btn btn-primary" onclick="submitEditTask()">Update Task</button>
@@ -7975,7 +8040,7 @@ Styles for the task file/project selector modal which let the user associate the
                         <div class="task-file-selector-panel task-file-selector-associated-panel">
                             <div class="task-file-selector-panel-header">
                                 <div class="task-file-selector-panel-title">
-                                    <span class="task-file-selector-panel-icon">ð</span>
+                                    <span class="task-file-selector-panel-icon"><span class="icon-folder"></span></span>
                                     Associated Projects
                                     <span class="task-file-selector-counter" id="taskFileSelectorAssociatedCounter">0</span>
                                 </div>
@@ -7998,7 +8063,7 @@ Styles for the task file/project selector modal which let the user associate the
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                                     <div>
                                         <div class="task-file-selector-panel-title">
-                                            <span class="task-file-selector-panel-icon">ðï¸</span>
+                                            <span class="task-file-selector-panel-icon icon-bookmark"></span>
                                             Available Projects
                                             <span class="task-file-selector-counter" id="taskFileSelectorAvailableCounter">0</span>
                                         </div>
@@ -8009,7 +8074,7 @@ Styles for the task file/project selector modal which let the user associate the
                                         id="taskFileSelectorLoadProjectsBtn"
                                         onmouseover="this.style.background='#16a34a'"
                                         onmouseout="this.style.background='#22c55e'">
-                                        ð Refresh Projects
+                                        <span class="icon-refresh"></span> Refresh Projects
                                     </button>
                                 </div>
                             </div>
@@ -8029,7 +8094,7 @@ Styles for the task file/project selector modal which let the user associate the
                         <div>
                         </div>
                         <div style="display: flex; gap: 12px;">
-                            <button class="btn-secondary" onclick="taskFileSelectorRestoreChanges()" style="background: #f59e0b; color: white;">ð Restore Original</button>
+                            <button class="btn-secondary" onclick="taskFileSelectorRestoreChanges()" style="background: #f59e0b; color: white;"><span class="icon-refresh"></span> Restore Original</button>
                             <button class="btn-secondary" onclick="taskFileSelectorCloseModal()">Cancel</button>
                             <button class="btn-primary" onclick="taskFileSelectorSaveChanges()">Save Changes</button>
                         </div>
@@ -8047,7 +8112,7 @@ Styles for the task file/project selector modal which let the user associate the
 
 <Class name="PackageManager.UI.Screens.ExportTaskSection.JavaScript">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.207595076</TimeChanged>
+<TimeChanged>67444,48156.712751421</TimeChanged>
 <TimeCreated>67443,59562.207595076</TimeCreated>
 
 <UDLText name="T">
@@ -8149,7 +8214,7 @@ to interact with the task table UI component.
                         renderTasksTable(currentTasks);
                         // Update task count in header
                         if (taskCountElement) {
-                            taskCountElement.textContent = `ðï¸ Existing Tasks: ${currentTasks.length}`;
+                            taskCountElement.textContent = `Existing Tasks: ${currentTasks.length}`;
                         }
                     })
                     .catch(function(err) {
@@ -8159,10 +8224,10 @@ to interact with the task table UI component.
                 const container = document.getElementById('taskTableContainer');
                 container.innerHTML = `
                     <div class="loading">
-                        <p>â Error loading tasks from database</p>
+                        <p><span class="icon-cancel"></span> Error loading tasks from database</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">${error.message}</p>
                         <button class="btn-primary" onclick="loadExportTasks()" style="margin-top: 12px;">
-                            ð Retry
+                            <span class="icon-refresh"></span> Retry
                         </button>
                     </div>
                 `;
@@ -8181,12 +8246,12 @@ to interact with the task table UI component.
             if (!tasks || tasks.length === 0) {
                 container.innerHTML = `
                     <div class="loading">
-                        <p>ð No tasks found in database</p>
+                        <p>"<span class='icon-clipboard'></span>" No tasks found in database</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">
                             Create your first task to get started
                         </p>
                         <button class="btn-primary" onclick="openCreateTaskModal()" style="margin-top: 12px;">
-                            â Create New Task
+                            <span class="icon-plus"></span> Create New Task
                         </button>
                     </div>
                 `;
@@ -8259,11 +8324,11 @@ to interact with the task table UI component.
                 // Get projects associated with the current task
                 let projects = task.Projects
                 // Set the icon for tasks associated with projects
-                let projectsIcon = "ðï¸";
+                let projectsIcon = "<span class='icon-bookmark'></span>";
                 let projectsIconTitle = "View Projects";
                 if (projects.length === 0) {
                     // Task without any associated project
-                    projectsIcon = "ð";
+                    projectsIcon = "<span class='icon-folder'></span>";
                     projectsIconTitle = "Associate projects to this task";
                 }
 
@@ -8301,15 +8366,11 @@ to interact with the task table UI component.
                         <td>${running_user ? running_user.toLocaleString() : 'Unknown'}</td>
                         <td>
                             <div class="actions">
-                                <button type="button" class="btn-icon" onclick="editTask('${escapeHtml(task.ID)}')" title="Edit Task">
-                                    âï¸
-                                </button>
+                                <button type="button" class="btn-icon icon-edit" onclick="editTask('${escapeHtml(task.ID)}')" title="Edit Task"></button>
                                 <button type="button" class="btn-icon" onclick="runTask('${escapeHtml(task.ID)}')" title="Run Task">
                                     â¶ï¸
                                 </button>
-                                <button type="button" class="btn-icon" onclick="deleteTask('${escapeHtml(task.ID)}')" title="Delete Task">
-                                    ðï¸
-                                </button>
+                                <button type="button" class="btn-icon icon-delete" onclick="deleteTask('${escapeHtml(task.ID)}')" title="Delete Task"></button>
                             </div>
                         </td>
                     </tr>
@@ -9352,7 +9413,7 @@ to interact with the task table UI component.
                     .then(function(response) {
                         taskFileSelectorAllProjects = response;
                         taskFileSelectorPopulateFiles();
-                        btn.innerHTML = "â Refreshed";
+                        btn.innerHTML = "<span class='icon-success'></span> Refreshed";
                         btn.innerHTML = originalText;
                         btn.disabled = false;
                     })
@@ -9381,7 +9442,7 @@ to interact with the task table UI component.
 
             if (projects.length === 0) {
                 container.innerHTML = `<div class="empty-state">
-                    <div class="empty-icon">${type === "associated" ? "ð" : "ðï¸"}</div>
+                    <div class="empty-icon">${type === "associated" ? "<span class='icon-folder'></span>" : "<span class='icon-bookmark'></span>"}</div>
                     <div>No ${type} projects</div>
                 </div>`;
             }
@@ -9396,7 +9457,7 @@ to interact with the task table UI component.
                     <div class="task-file-selector-file-item" data-name="${projectId}" onclick="taskFileSelectorToggleSelection('${type}', '${projectId}')">
                         <div class="task-file-selector-file-info">
                             <div class="task-file-selector-file-name">
-                                ð ${projectName} ${type === "associated" ? '<span class="status-badge status-associated">Associated</span>' : ''}
+                                <span class="icon-document"></span> ${projectName} ${type === "associated" ? '<span class="status-badge status-associated">Associated</span>' : ''}
                             </div>
                             ${projectDescription ? `<div class="task-file-selector-file-description">${projectDescription}</div>` : ''}
                             <div class="task-file-selector-file-meta">Last modified: ${new Date(lastModified).toLocaleString()}</div>
@@ -9404,7 +9465,7 @@ to interact with the task table UI component.
                         <div class="task-file-selector-file-actions">
                             ${type === "associated"
                                 ? `<button class="task-file-selector-btn-remove" onclick="event.stopPropagation(); taskFileSelectorQuickRemove('${projectId}')">â Remove</button>`
-                                : `<button class="task-file-selector-btn-add" onclick="event.stopPropagation(); taskFileSelectorQuickAdd('${projectId}')">â Add</button>`
+                                : `<button class="task-file-selector-btn-add" onclick="event.stopPropagation(); taskFileSelectorQuickAdd('${projectId}')"><span class="icon-success"></span> Add</button>`
                             }
                         </div>
                     </div>
@@ -9995,7 +10056,7 @@ to interact with the task table UI component.
 
 <Class name="PackageManager.UI.Screens.InstallSection.HTML">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.195796255</TimeChanged>
+<TimeChanged>67444,41055.253078836</TimeChanged>
 <TimeCreated>67443,59562.195796255</TimeCreated>
 
 <UDLText name="T">
@@ -10019,7 +10080,7 @@ to interact with the task table UI component.
     &html<<script language='javascript'>
         function renderInstallSection() {
             return `
-                <h2>ð§ #($$$InstallationSectionTitle)#</h2>
+                <h2><span class="icon-tools"></span> #($$$InstallationSectionTitle)#</h2>
                 <p>This section allows you to install and configure the Package Manager in your environment.</p>
 
                     <div id="api-mgr-messages"></div>
@@ -10028,7 +10089,7 @@ to interact with the task table UI component.
                     <div class="api-mgr-project-container">
                         <div class="api-mgr-project-header">
                             <div class="api-mgr-project-title">
-                                <span class="api-mgr-icon">ð</span>
+                                <span class="api-mgr-icon icon-wireless"></span>
                                 <h3>Current API Status</h3>
                             </div>
                         </div>
@@ -10605,7 +10666,7 @@ to interact with the Export Task Section page UI components.</Description>
 
 <Class name="PackageManager.UI.Screens.ReleaseSection.HTML">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.222594357</TimeChanged>
+<TimeChanged>67444,48187.514736441</TimeChanged>
 <TimeCreated>67443,59562.222594357</TimeCreated>
 
 <UDLText name="T">
@@ -10629,17 +10690,17 @@ to interact with the Export Task Section page UI components.</Description>
     &html<<script language='javascript'>
         function renderExportedRelease() {
             return `
-                <h2>ð #($$$ExportedReleaseSectionTitle)#</h2>
+                <h2><span class='icon-folder-books'></span> #($$$ExportedReleaseSectionTitle)#</h2>
                 <p>This lists all the exported versions created by export tasks..</p>
                 <div class="exported-releases-container">
                     <div class="exported-releases-header">
-                        <h3>ðï¸ Exported Releases</h3>
+                        <h3>Exported Releases</h3>
                         <div class="exported-releases-controls">
-                            <button id="refreshBtn" onclick="loadExportedReleases()">ð Refresh</button>
-                            <button id="expandBtn" onclick="expandAllReleases()">ð Expand All</button>
-                            <button id="collapseBtn" onclick="collapseAllReleases()">ð Collapse All</button>
-                            <button id="clearBtn" onclick="clearReleaseSelection()">â Clear Selection</button>
-                            <button id="downloadBtn" onclick="downloadSelectedReleases()" disabled>â¬ï¸ Download Selected</button>
+                            <button id="refreshBtn" onclick="loadExportedReleases()"><span class="icon-refresh"></span> Refresh</button>
+                            <button id="expandBtn" onclick="expandAllReleases()"><span class='icon-folder-open'></span> Expand All</button>
+                            <button id="collapseBtn" onclick="collapseAllReleases()"><span class="icon-folder"></span> Collapse All</button>
+                            <button id="clearBtn" onclick="clearReleaseSelection()"><span class="icon-cancel"></span> Clear Selection</button>
+                            <button id="downloadBtn" onclick="downloadSelectedReleases()" disabled><span class="icon-download"> Download Selected</button>
                         </div>
                     </div>
                     
@@ -10671,7 +10732,7 @@ to interact with the Export Task Section page UI components.</Description>
 
 <Class name="PackageManager.UI.Screens.ReleaseSection.JavaScript">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.226768332</TimeChanged>
+<TimeChanged>67444,47972.309268779</TimeChanged>
 <TimeCreated>67443,59562.226768332</TimeCreated>
 
 <UDLText name="T">
@@ -10776,8 +10837,7 @@ Render JavaScript code for the page</Description>
 
             // Project icon
             const icon = document.createElement('span');
-            icon.className = 'exported-releases-tree-icon';
-            icon.textContent = 'ðï¸';
+            icon.className = 'exported-releases-tree-icon icon-bookmark';
             content.appendChild(icon);
 
             // Project label
@@ -10848,8 +10908,7 @@ Render JavaScript code for the page</Description>
 
             // File icon
             const icon = document.createElement('span');
-            icon.className = 'exported-releases-tree-icon';
-            icon.textContent = 'ð';
+            icon.className = 'exported-releases-tree-icon icon-document';
             content.appendChild(icon);
 
             // File label
@@ -11189,7 +11248,7 @@ Render JavaScript code for the page</Description>
 
 <Class name="PackageManager.UI.Screens.SideBar.CSS">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.23417227</TimeChanged>
+<TimeChanged>67444,40697.827028969</TimeChanged>
 <TimeCreated>67443,59562.23417227</TimeCreated>
 
 <Method name="SideBarCSS">
@@ -11308,16 +11367,6 @@ Render JavaScript code for the page</Description>
             transition: all 0.3s ease;
             text-align: center;
             min-width: 0; /* Allows flex items to shrink */
-        }
-
-        .currentNamespace::before {
-            content: "âï¸";
-            margin-right: 3px;
-        }
-
-        .currentUser::before {
-            content: "ð¤";
-            margin-right: 3px;
         }
 
         .currentNamespace:hover,
