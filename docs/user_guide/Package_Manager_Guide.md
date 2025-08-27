@@ -1,10 +1,39 @@
 # 📦 Package Manager User Guide
 
-This guide will walk you through setting up and using the Package Manager application. It's built on Docker, so we'll start there.
+This guide will walk you through setting up and using the Package Manager application.
+Here's a Table of Contents (TOC) in Markdown for your user guide:
+
+## Table of Contents
+
+* [📦 Package Manager User Guide](#-package-manager-user-guide)
+* [🐳 Docker Setup](#-docker-setup)
+  * [1. Building the Docker Image](#1-building-the-docker-image)
+  * [2. Verifying the Docker Image](#2-verifying-the-docker-image)
+  * [3. Checking the Running Container](#3-checking-the-running-container)
+  * [4. Monitoring the Container Logs](#4-monitoring-the-container-logs)
+  * [5. Inspecting Container Files and Volumes](#5-inspecting-container-files-and-volumes)
+  * [6. Checking Source Code](#6-checking-source-code)
+* [🖥️ User Workflow](#️-user-workflow)
+  * [1. Accessing the Package Manager](#1-accessing-the-package-manager)
+  * [2. Installing the API](#2-installing-the-api)
+    * [2.1. Verifying API Installation](#21-verifying-api-installation)
+  * [3. Managing Projects](#3-managing-projects)
+    * [3.1. Creating a New Project](#31-creating-a-new-project)
+    * [3.2. Adding Classes to the Project](#32-adding-classes-to-the-project)
+    * [3.3. Viewing and Exporting Project Content](#33-viewing-and-exporting-project-content)
+    * [3.4. Modifying your project&#39;s description](#34-modifying-your-projects-description)
+    * [3.5. Deleting a Project](#35-deleting-a-project)
+  * [4. Automating Exports with Tasks 🤖](#4-automating-exports-with-tasks-)
+    * [4.1. Creating a New Export Task](#41-creating-a-new-export-task)
+    * [4.2. Configuring File Purging](#42-configuring-file-purging)
+    * [4.3. Editing Tasks](#43-editing-tasks)
+    * [4.4. Associating Projects with the Task](#44-associating-projects-with-the-task)
+    * [4.5. Manually Running a Task](#45-manually-running-a-task)
+  * [5. Exported Releases 📦](#5-exported-releases-)
 
 # 🐳 Docker Setup
 
-The application is deployed using Docker. You'll need to have Docker Desktop installed and running.
+The application it's built on Docker, so we'll start there. You'll need to have Docker Desktop installed and running.
 
 ## 1. Building the Docker Image
 
@@ -136,9 +165,11 @@ Once the Docker container is running, you can access the application through you
    Clicking this opens the Create New Task window. Here, you'll configure the task's schedule and details:
    ![021](./pic/021.png "021")
 
-   **Task Name & Description**: Give your task a name, like "Daily Export", and a description to explain its purpose.
-   **Schedule Configuration**: Choose how often you want the task to run. Options include Daily, Weekly, or Only Once. You can specify the frequency (e.g., Every 1 day) and a Run time.
+   * **Task Name & Description**: Give your task a name, like "Daily Export", and a description to explain its purpose.
+   * **Schedule Configuration**: Choose how often you want the task to run. Options include Daily, Weekly, or Only Once. You can specify the frequency (e.g., Every 1 day) and a Run time.
    ![022](./pic/022.png "022")
+
+   * It's important to note that tasks, when run from the InterSystems IRIS Task Manager, will inherit the privileges and identity of the user who created them in the Package Manager (visible in the sidebar).
 
 ### 4.2. Configuring File Purging
 
