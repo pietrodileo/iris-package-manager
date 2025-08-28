@@ -73,8 +73,8 @@ ClassMethod renderCreateTaskModal() As %Status
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3><span class="icon-bookmark"></span> Create New Task</h3>
-                            <button type="button" class="create-task-close" onclick="closeCreateTaskModal()">×</button>
+                            <h3><span class="icon-bag"></span> Create New Task</h3>
+                            <button type="button" class="create-task-close icon-multiplication" onclick="closeCreateTaskModal()"></button>
                         </div>
                         <div class="create-task-modal-content">
                             <form id="createTaskForm">
@@ -268,8 +268,8 @@ ClassMethod renderEditTaskModal() As %Status
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3><span class="icon-bookmark"></span> Edit Task</h3>
-                            <button type="button" class="create-task-close" onclick="closeEditTaskModal()">×</button>
+                            <h3><span class="icon-bag"></span> Edit Task</h3>
+                            <button type="button" class="create-task-close icon-multiplication" onclick="closeEditTaskModal()"></button>
                         </div>
                         <div class="create-task-modal-content">
                             <form id="EditTaskForm">
@@ -537,7 +537,7 @@ ClassMethod renderAddProjectModal() As %Status
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                                     <div>
                                         <div class="task-file-selector-panel-title">
-                                            <span class="task-file-selector-panel-icon icon-bookmark"></span>
+                                            <span class="task-file-selector-panel-icon icon-bag"></span>
                                             Available Projects
                                             <span class="task-file-selector-counter" id="taskFileSelectorAvailableCounter">0</span>
                                         </div>

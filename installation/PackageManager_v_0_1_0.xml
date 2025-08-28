@@ -2781,7 +2781,7 @@ Overall generic styles for the package manager projecty </Description>
         .icon-email:before { content: "\1F4E7"; }        /* EMAIL */
         .icon-pause:before { content: "\23F8"; }        /* Pause Button */
         .icon-barchart:before { content: "\1F4CA"; }        /* Bar Chart */
-        .icon-bookmark:before { content: "\1F4BC"; }        /* Bookmark */
+        .icon-bag:before { content: "\1F4BC"; }        /* Bookmark */
         .icon-clipboard:before { content: "\1F4CB"; }        /* Clipboard */
     </style>>
 
@@ -5255,7 +5255,7 @@ to interact with the Content Viewer and Project List Section page UI components.
                     // If the icon is related to the project name (not a folder) use a different icon
                     let curr_icon = 'icon-folder-open'
                     if (!path) {
-                        curr_icon = 'icon-bookmark'
+                        curr_icon = 'icon-bag'
                     } 
                     if (key === 'DIR') {
                         curr_icon = 'icon-folder'
@@ -7593,7 +7593,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3><span class="icon-bookmark"></span> Create New Task</h3>
+                            <h3><span class="icon-bag"></span> Create New Task</h3>
                             <button type="button" class="create-task-close" onclick="closeCreateTaskModal()">Ã</button>
                         </div>
                         <div class="create-task-modal-content">
@@ -7791,7 +7791,7 @@ Styles for the task file/project selector modal which let the user associate the
 
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
-                            <h3><span class="icon-bookmark"></span> Edit Task</h3>
+                            <h3><span class="icon-bag"></span> Edit Task</h3>
                             <button type="button" class="create-task-close" onclick="closeEditTaskModal()">Ã</button>
                         </div>
                         <div class="create-task-modal-content">
@@ -8063,7 +8063,7 @@ Styles for the task file/project selector modal which let the user associate the
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                                     <div>
                                         <div class="task-file-selector-panel-title">
-                                            <span class="task-file-selector-panel-icon icon-bookmark"></span>
+                                            <span class="task-file-selector-panel-icon icon-bag"></span>
                                             Available Projects
                                             <span class="task-file-selector-counter" id="taskFileSelectorAvailableCounter">0</span>
                                         </div>
@@ -8246,7 +8246,7 @@ to interact with the task table UI component.
             if (!tasks || tasks.length === 0) {
                 container.innerHTML = `
                     <div class="loading">
-                        <p>"<span class='icon-clipboard'></span>" No tasks found in database</p>
+                        <p><span class='icon-clipboard'></span> No tasks found in database</p>
                         <p style="font-size: 14px; color: #64748b; margin-top: 8px;">
                             Create your first task to get started
                         </p>
@@ -8324,7 +8324,7 @@ to interact with the task table UI component.
                 // Get projects associated with the current task
                 let projects = task.Projects
                 // Set the icon for tasks associated with projects
-                let projectsIcon = "<span class='icon-bookmark'></span>";
+                let projectsIcon = "<span class='icon-bag'></span>";
                 let projectsIconTitle = "View Projects";
                 if (projects.length === 0) {
                     // Task without any associated project
@@ -9442,7 +9442,7 @@ to interact with the task table UI component.
 
             if (projects.length === 0) {
                 container.innerHTML = `<div class="empty-state">
-                    <div class="empty-icon">${type === "associated" ? "<span class='icon-folder'></span>" : "<span class='icon-bookmark'></span>"}</div>
+                    <div class="empty-icon">${type === "associated" ? "<span class='icon-folder'></span>" : "<span class='icon-bag'></span>"}</div>
                     <div>No ${type} projects</div>
                 </div>`;
             }
@@ -10837,7 +10837,7 @@ Render JavaScript code for the page</Description>
 
             // Project icon
             const icon = document.createElement('span');
-            icon.className = 'exported-releases-tree-icon icon-bookmark';
+            icon.className = 'exported-releases-tree-icon icon-bag';
             content.appendChild(icon);
 
             // Project label

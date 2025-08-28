@@ -224,6 +224,7 @@ ClassMethod Styles() As %Status
         .icon-refresh:before { content: "\21bb"; }      /* clockwise open circle arrow */
         .icon-download:before { content: "\2B07"; }     /* downwards arrow */
         .icon-upload:before { content: "\2191"; }       /* upwards arrow */
+        .icon-multiplication:before { content: "\00D7"; }         /* multiplication sign */
         .icon-plus:before { content: "\002b"; }         /* plus sign */
         .icon-minus:before { content: "\2212"; }        /* minus sign */
         .icon-left:before { content: "\2190"; }         /* leftwards arrow */
@@ -258,14 +259,24 @@ ClassMethod Styles() As %Status
         .icon-dividers:before { content: "\1F5C2"; }     /* CARD INDEX DIVIDERS */
         .icon-new:before { content: "\1F195"; }          /* SQUARED NEW */
         .icon-refresh:before { content: "\1F504"; }      /* REFRESH */
-        .icon-open-book:before { content: "\1F4D6"; }    /* REFRESH */
+        .icon-open-book:before { content: "\1F4D6"; }    /* open book */
         .icon-plus:before { content: "\2795"; }          /* PLUS SIGN */
         .icon-calendar:before { content: "\1F4C5"; }     /* CALENDAR */
         .icon-email:before { content: "\1F4E7"; }        /* EMAIL */
         .icon-pause:before { content: "\23F8"; }        /* Pause Button */
-        .icon-barchart:before { content: "\1F4CA"; }        /* Bar Chart */
-        .icon-bookmark:before { content: "\1F4BC"; }        /* Bookmark */
-        .icon-clipboard:before { content: "\1F4CB"; }        /* Clipboard */
+        .icon-barchart:before { content: "\1F4CA"; }    /* Bar Chart */
+        .icon-bag:before { content: "\1F4BC"; }    /* BRIEFCASE / BAG */
+        .icon-clipboard:before { content: "\1F4CB"; }   /* Clipboard */
+        .icon-run:before {                              /* RUN BUTTON */
+            content: "\25B6"; 
+            background-color: #1c73ffff; /* Sets the background color to blue */
+            padding: 3px 6px; /* Adds space around the icon */
+            border-radius: 4px; /* Rounds the corners for a softer look */
+            color: white; /* Makes the arrow white for contrast against the blue background */
+            font-size: 0.65em;
+        }
+        .icon-right-arrow:before { content: "\25B6"; }        /* ARROW TOGGLE */
+        .icon-hourglass:before { content: "\23F3"; }        /* hourglass with sand */
     </style>>
 
     // Specific CSS for the Sidebar

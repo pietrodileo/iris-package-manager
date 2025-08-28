@@ -400,8 +400,8 @@ ClassMethod ContentViewer() As %Status
 
                 // Folder toggle arrow
                 const toggle = document.createElement('span');
-                toggle.className = 'tree-toggle';
-                toggle.textContent = '▶';
+                toggle.className = 'tree-toggle icon-right-arrow';
+                //toggle.textContent = '▶';
                 itemContent.appendChild(toggle);
                 toggle.title = fullPath;
 
@@ -494,7 +494,7 @@ ClassMethod ContentViewer() As %Status
                     // If the icon is related to the project name (not a folder) use a different icon
                     let curr_icon = 'icon-folder-open'
                     if (!path) {
-                        curr_icon = 'icon-bookmark'
+                        curr_icon = 'icon-bag'
                     } 
                     if (key === 'DIR') {
                         curr_icon = 'icon-folder'
@@ -1114,7 +1114,7 @@ ClassMethod AddClassesModal() As %Status
             const lookInto = document.getElementById('packageSearchInput').value;
             const lookIntoKey = 'PackageName';
 
-            container.innerHTML = '<div class="add-classes-loading-message">⏳Loading namespace content...</div>';
+            container.innerHTML = '<div class="add-classes-loading-message icon-hourglass">Loading namespace content...</div>';
                             
             PackageManagerAPI.getNamespaceContent(fileType,lookInto)
                 .then(function(data) {
@@ -1160,8 +1160,8 @@ ClassMethod AddClassesModal() As %Status
 
                 // Folder toggle arrow
                 const toggle = document.createElement('span');
-                toggle.className = 'add-classes-tree-toggle';
-                toggle.textContent = '▶';
+                toggle.className = 'add-classes-tree-toggle icon-right-arrow';
+                //toggle.textContent = '▶';
                 itemContent.appendChild(toggle);
                 toggle.title = fullPath;
 
@@ -1755,7 +1755,7 @@ ClassMethod NewProjectModal() As %Status
             // Show loading state
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="plus-icon">⏳</span> Creating...';
+            submitBtn.innerHTML = '<span class="plus-icon icon-hourglass"></span> Creating...';
             submitBtn.disabled = true;
             
             const now = new Date();

@@ -77,8 +77,8 @@ ClassMethod RenderJavaScript() As %Status
 
             // Toggle arrow
             const toggle = document.createElement('span');
-            toggle.className = 'exported-releases-tree-toggle';
-            toggle.textContent = '▶';
+            toggle.className = 'exported-releases-tree-toggle icon-right-arrow';
+            //toggle.textContent = '▶';
             content.appendChild(toggle);
 
             // Project checkbox (selects all releases in project)
@@ -95,7 +95,7 @@ ClassMethod RenderJavaScript() As %Status
 
             // Project icon
             const icon = document.createElement('span');
-            icon.className = 'exported-releases-tree-icon icon-bookmark';
+            icon.className = 'exported-releases-tree-icon icon-bag';
             content.appendChild(icon);
 
             // Project label
@@ -331,7 +331,7 @@ ClassMethod RenderJavaScript() As %Status
             let errorCount = 0;
 
             try {
-                downloadBtn.textContent = '⏳ Downloading...';
+                downloadBtn.textContent = 'Downloading...';
                 downloadBtn.disabled = true;
 
                 showMessageExportedRelease(`Starting download of ${selectedReleases.length} file(s)...`, 'info');
@@ -345,7 +345,7 @@ ClassMethod RenderJavaScript() As %Status
                         downloadCount++;
                         
                         // Update progress
-                        downloadBtn.textContent = `⏳ ${downloadCount}/${selectedReleases.length}`;
+                        downloadBtn.textContent = `${downloadCount}/${selectedReleases.length}`;
                         
                         // Small delay between downloads to prevent overwhelming the server
                         await new Promise(resolve => setTimeout(resolve, 100));
