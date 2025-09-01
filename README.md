@@ -42,7 +42,9 @@ For a local InterSystems IRIS Community Edition environment, the application mus
 Installation file can be imported using the "Classes" menu of IRIS Management Portal. 
 
 Once installed, the user interface will be available at the endpoint returned by the following method:
-* w ##class(PackageManager.UI.Main).GetMainPageClassName()
+```
+w ##class(PackageManager.UI.Main).GetMainPageClassName()
+```
 
 Host and port must be adjusted according to the specifications of your connection.
 

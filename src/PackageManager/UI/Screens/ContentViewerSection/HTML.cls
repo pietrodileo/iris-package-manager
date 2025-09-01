@@ -196,7 +196,8 @@ ClassMethod renderAddClassesToPrjModal() As %Status
                                 <label></label>
                                 <div class='add-classes-checkbox-group'>
                                     <input type='checkbox' id='excludeSystemClasses' class='add-classes-checkbox'>
-                                    <label for='excludeSystemClasses' class='add-classes-checkbox-label'>Exclude System Classes</label>
+                                    <label for='excludeSystemClasses' class='add-classes-checkbox-label' title='Exclude Intersystems IRIS default classes starting with the following prefixes: #($$$systemClassesToExclude)#'>
+                                        Exclude System Classes</label>
                                 </div>
                             </div>
                             <div class='add-classes-control-group'>

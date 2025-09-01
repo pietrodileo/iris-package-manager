@@ -277,6 +277,7 @@ ClassMethod Styles() As %Status
         }
         .icon-right-arrow:before { content: "\25B6"; }        /* ARROW TOGGLE */
         .icon-hourglass:before { content: "\23F3"; }        /* hourglass with sand */
+        .icon-select-all:before { content: "\290B"; }        /* Downwards Triple arrow  */
     </style>>
 
     // Specific CSS for the Sidebar

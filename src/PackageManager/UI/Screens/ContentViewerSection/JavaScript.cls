@@ -1074,7 +1074,8 @@ ClassMethod AddClassesModal() As %Status
         let currentAddProjectName = '';
         let originalNamespaceData = null;
         let currentNamespaceData = null;
-        let packageSelections = []; // Track packages that should be sent as 'pkg' instead of individual items
+        let packageSelections = []; // Track packages selected as packages
+        let childrenSelections = []; // Track individual children selected
 
         window.persistentNamespaceSelectedItems = [];
 
@@ -1082,7 +1083,7 @@ ClassMethod AddClassesModal() As %Status
             return node && typeof node === 'object' && 'name' in node && 'type' in node;
         }
 
-        // NEW HELPER FUNCTION: Get all leaf paths under a node
+        // Get all leaf paths under a node
         function getAllLeafPaths(nodeData, basePath) {
             const leafPaths = [];
             
@@ -1103,60 +1104,6 @@ ClassMethod AddClassesModal() As %Status
             
             traverse(nodeData, basePath);
             return leafPaths;
-        }
-
-        function optimizePackageSelections() {
-            if (!currentNamespaceData) return;
-            
-            packageSelections = []; // Reset package selections
-            
-            // Function to check if a package is complete
-            function checkPackageComplete(nodeData, nodePath, parentPath = '') {
-                if (!nodeData || typeof nodeData !== 'object') return false;
-                
-                const fullNodePath = parentPath ? `${parentPath}.${nodePath}` : nodePath;
-                
-                // Get all leaf children of this node
-                const allLeafChildren = getAllLeafPaths(nodeData, fullNodePath);
-                
-                if (allLeafChildren.length === 0) return false;
-                
-                // Check if ALL leaf children are selected
-                const allChildrenSelected = allLeafChildren.every(childPath => 
-                    window.persistentNamespaceSelectedItems.includes(childPath)
-                );
-                
-                if (allChildrenSelected && allLeafChildren.length > 1) {
-                    // This package is complete - add it to package selections
-                    packageSelections.push({
-                        path: fullNodePath,
-                        leafChildren: allLeafChildren
-                    });
-                    
-                    return true;
-                }
-                
-                return false;
-            }
-            
-            // Recursively check all nodes for complete packages
-            function traverseForPackages(obj, currentPath = '') {
-                for (const key in obj) {
-                    const value = obj[key];
-                    if (!value) continue;
-                    
-                    if (!isLeafNodeNamespace(value)) {
-                        // This is a folder/package - check if it's complete
-                        if (!checkPackageComplete(value, key, currentPath)) {
-                            // If not complete, check its children recursively
-                            const fullPath = currentPath ? `${currentPath}.${key}` : key;
-                            traverseForPackages(value, fullPath);
-                        }
-                    }
-                }
-            }
-            
-            traverseForPackages(currentNamespaceData);
         }
 
         // Main function to open the Add Classes modal
@@ -1183,8 +1130,12 @@ ClassMethod AddClassesModal() As %Status
             document.getElementById('packageSearchInput').value = '';
             document.getElementById('namespaceSearchInput').value = '';
             document.getElementById('namespaceContainer').innerHTML = '<div class="add-classes-loading-message">Select a file type and click "Load Content" to begin</div>';
+            
+            // Reset all selection arrays
+            packageSelections = [];
+            childrenSelections = [];
             window.persistentNamespaceSelectedItems = [];
-            packageSelections = []; // Reset package selections
+            
             updateNamespaceSelectedCount();
             originalNamespaceData = null;
             currentNamespaceData = null;
@@ -1222,6 +1173,7 @@ ClassMethod AddClassesModal() As %Status
         }
 
         // Render the namespace tree 
+        // Modified render function with separate selection logic
         function renderNamespaceTree(data, containerId) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1245,58 +1197,36 @@ ClassMethod AddClassesModal() As %Status
                     itemContent.appendChild(toggle);
                     toggle.title = fullPath;
 
-                    // Checkbox
+                    const formats_array = ['csp', 'cls', 'inc', 'mac', 'other'];
+
+                    // Checkbox for package/class selection
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.className = 'add-classes-tree-checkbox';
                     checkbox.value = fullPath;
                     checkbox.id = 'namespace-checkbox-' + fullPath;
 
-                    // Add leaf detection for proper handling
-                    if (!isLeafNodeNamespace(value)) {
-                        checkbox.setAttribute('data-leaf', 'false');
-                    } else {
-                        checkbox.setAttribute('data-leaf', 'true');
+                    if (formats_array.includes(fullPath.toLowerCase())) {
+                        // Hide the checkbox for non-file types   
+                        checkbox.style.display = 'none';   
+                        checkbox.disabled = true;
                     }
 
-                    checkbox.addEventListener('change', (e) => {
-                        e.stopPropagation();
-                        
-                        if (checkbox.checked) {
-                            // If this is a folder, select all its children (visible and hidden)
-                            if (!isLeafNodeNamespace(value)) {
-                                if (li.classList.contains('expanded')) {
-                                    // If expanded, select visible children
-                                    selectAllNamespaceChildren(li, true);
-                                } else {
-                                    // If collapsed, select all hidden children from data
-                                    selectAllNamespaceHiddenChildren(value, fullPath, true);
-                                }
-                            } 
-                            // If the object is a leaf, add it to the global selected items
-                            if (isLeafNodeNamespace(value) && !window.persistentNamespaceSelectedItems.includes(fullPath)) {
-                                window.persistentNamespaceSelectedItems.push(fullPath);                   
-                            }                       
-                        } else {
-                            // If this is a folder, unselect all its children (visible and hidden)
-                            if (!isLeafNodeNamespace(value)) {
-                                if (li.classList.contains('expanded')) {
-                                    // If expanded, unselect visible children
-                                    selectAllNamespaceChildren(li, false);
-                                } else {
-                                    // If collapsed, unselect all hidden children from data
-                                    selectAllNamespaceHiddenChildren(value, fullPath, false);
-                                }
-                            }
-                            // Remove from persistentSelectedItems if present
-                            const idx = window.persistentNamespaceSelectedItems.indexOf(fullPath);
-                            if (idx !== -1) {
-                                window.persistentNamespaceSelectedItems.splice(idx, 1);
-                            }
-                        }
-                        optimizePackageSelections();
-                        updateNamespaceSelectedCount();
-                    });
+                    if (isLeafNodeNamespace(value)) {
+                        // For leaf nodes (classes), checkbox selects the individual class
+                        checkbox.setAttribute('data-leaf', 'true');
+                        checkbox.addEventListener('change', (e) => {
+                            e.stopPropagation();
+                            handleClassSelection(fullPath, checkbox.checked);
+                        });
+                    } else {
+                        // For folder nodes (packages), checkbox selects the package
+                        checkbox.setAttribute('data-leaf', 'false');
+                        checkbox.addEventListener('change', (e) => {
+                            e.stopPropagation();
+                            handlePackageSelection(fullPath, checkbox.checked, value);
+                        });
+                    }
                     
                     itemContent.appendChild(checkbox);
 
@@ -1318,12 +1248,9 @@ ClassMethod AddClassesModal() As %Status
                         type.className = 'add-classes-tree-type';
 
                         let typeValue;
-
-                        // Check if value.type is an object and has a 'type' property
                         if (typeof value.type === 'object' && value.type !== null && 'type' in value.type) {
                             typeValue = value.type.type;
                         } else {
-                            // Otherwise, assume it's a string
                             typeValue = value.type;
                         }
 
@@ -1333,7 +1260,6 @@ ClassMethod AddClassesModal() As %Status
                                 ,'pkg','dir','ico','jpg'
                         ];
 
-                        // Now, use the determined value to set the text content
                         if (typeValue) {
                             type.textContent = typeValue.toLowerCase();
                             if (!validTypes.includes(typeValue.toLowerCase())) {
@@ -1344,7 +1270,6 @@ ClassMethod AddClassesModal() As %Status
                         }
 
                         itemContent.appendChild(type);
-
                         li.appendChild(itemContent);
                     } else {
                         // Folder node
@@ -1371,9 +1296,20 @@ ClassMethod AddClassesModal() As %Status
                         label.textContent = key;
                         itemContent.appendChild(label);
 
+                        // Add "select all children" icon button
+                        const selectChildrenBtn = document.createElement('button');
+                        selectChildrenBtn.className = 'add-classes-select-children-btn icon-select-all';
+                        selectChildrenBtn.title = 'Select all children as individual classes';
+                        selectChildrenBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectAllChildren(fullPath, value);
+                        });
+                        itemContent.appendChild(selectChildrenBtn);
+
                         // Click handler for folder expansion
                         itemContent.addEventListener('click', (e) => {
-                            if (e.target === checkbox) return;
+                            if (e.target === checkbox || e.target === selectChildrenBtn) return;
                             e.preventDefault();
                             e.stopPropagation();
                             
@@ -1406,94 +1342,6 @@ ClassMethod AddClassesModal() As %Status
                 }
             }
 
-            // Helper function to select/unselect all children
-            function selectAllNamespaceChildren(folderElement, select) {
-                const childrenContainer = folderElement.querySelector('.add-classes-tree-children');
-                if (!childrenContainer) return;
-                
-                // Find all checkboxes in the children container
-                const childCheckboxes = childrenContainer.querySelectorAll('input[type="checkbox"]');
-                
-                childCheckboxes.forEach(childCheckbox => {
-                    const childPath = childCheckbox.value;
-                    
-                    if (select) {
-                        childCheckbox.checked = true;
-                        
-                        // If this child is also a folder and is expanded, recursively select its children
-                        const childItem = childCheckbox.closest('.add-classes-tree-item');
-                        if (childItem && childItem.classList.contains('folder') && childItem.classList.contains('expanded')) {
-                            selectAllNamespaceChildren(childItem, true);
-                        } else {
-                            // If the child is not a folder, so if it is a leaf, add it to the global array
-                            if (!window.persistentNamespaceSelectedItems.includes(childPath)) {
-                                window.persistentNamespaceSelectedItems.push(childPath);                   
-                            }                       
-                        }
-                    } else {
-                        childCheckbox.checked = false;
-                        
-                        // If this child is also a folder, recursively unselect its children
-                        const childItem = childCheckbox.closest('.add-classes-tree-item');
-                        if (childItem && childItem.classList.contains('folder')) {
-                            selectAllNamespaceChildren(childItem, false);
-                        } else {
-                            // If the child is not a folder, so if it is a leaf, remove it from the global array
-                            if (window.persistentNamespaceSelectedItems.includes(childPath)) {
-                                const idx = window.persistentNamespaceSelectedItems.indexOf(childPath);
-                                if (idx !== -1) {
-                                    window.persistentNamespaceSelectedItems.splice(idx, 1);
-                                }
-                            }                       
-                        }
-                    }
-                });
-            }
-
-            // Function to select/unselect all hidden children from data structure
-            function selectAllNamespaceHiddenChildren(nodeData, basePath, select) {
-                if (!nodeData || typeof nodeData !== 'object') return;
-                
-                function traverseAndSelect(obj, currentPath) {
-                    for (const key in obj) {
-                        const value = obj[key];
-                        if (!value) continue;
-                        
-                        const fullPath = currentPath ? `${currentPath}.${key}` : key;
-                        
-                        if (isLeafNodeNamespace(value)) {
-                            // This is a leaf node - add/remove from selection
-                            if (select) {
-                                if (!window.persistentNamespaceSelectedItems.includes(fullPath)) {
-                                    window.persistentNamespaceSelectedItems.push(fullPath);
-                                }
-                                // Also check the checkbox if it exists in the DOM
-                                const checkbox = document.querySelector(`input[value="${fullPath}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = true;
-                                }
-                            } else {
-                                const idx = window.persistentNamespaceSelectedItems.indexOf(fullPath);
-                                if (idx !== -1) {
-                                    window.persistentNamespaceSelectedItems.splice(idx, 1);
-                                }
-                                // Also uncheck the checkbox if it exists in the DOM
-                                const checkbox = document.querySelector(`input[value="${fullPath}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = false;
-                                }
-                            }
-                        } else {
-                            // This is a folder - recursively traverse
-                            traverseAndSelect(value, fullPath);
-                        }
-                    }
-                }
-                
-                // Start traversing from the node's children
-                traverseAndSelect(nodeData, basePath);
-            }
-
             // Render the tree
             const ul = document.createElement('ul');
             ul.className = 'add-classes-tree-list';
@@ -1512,10 +1360,111 @@ ClassMethod AddClassesModal() As %Status
             container.appendChild(ul);
             updateNamespaceSelectedCount();
 
-            // Restore selections after rendering (like working version)
+            // Restore selections after rendering
             setTimeout(() => {
-                restoreNamespaceSelectionsFromPersistent();
+                restoreSelectionsFromState();
             }, 200);
+        }
+
+        // Handle individual class selection
+        function handleClassSelection(classPath, selected) {
+            if (selected) {
+                if (!childrenSelections.includes(classPath)) {
+                    childrenSelections.push(classPath);
+                }
+            } else {
+                const idx = childrenSelections.indexOf(classPath);
+                if (idx !== -1) {
+                    childrenSelections.splice(idx, 1);
+                }
+            }
+            updateNamespaceSelectedCount();
+        }
+
+        // Handle package selection (selects the package as a whole)
+        function handlePackageSelection(packagePath, selected, packageData) {
+            if (selected) {
+                // Add package to package selections
+                if (!packageSelections.includes(packagePath)) {
+                    packageSelections.push(packagePath);
+                }
+                
+                // Remove any individual children from childrenSelections since the package is selected
+                const allChildren = getAllLeafPaths(packageData, packagePath);
+                allChildren.forEach(childPath => {
+                    const idx = childrenSelections.indexOf(childPath);
+                    if (idx !== -1) {
+                        childrenSelections.splice(idx, 1);
+                    }
+                    // Uncheck individual child checkboxes
+                    const childCheckbox = document.querySelector(`input[value="${childPath}"]`);
+                    if (childCheckbox) {
+                        childCheckbox.checked = false;
+                    }
+                });
+                
+            } else {
+                // Remove package from package selections
+                const idx = packageSelections.indexOf(packagePath);
+                if (idx !== -1) {
+                    packageSelections.splice(idx, 1);
+                }
+            }
+            updateNamespaceSelectedCount();
+        }
+
+        // Handle "select all children" button click
+        function handleSelectAllChildren(packagePath, packageData) {
+            const allChildren = getAllLeafPaths(packageData, packagePath);
+            
+            // Remove package selection if it exists
+            const packageIdx = packageSelections.indexOf(packagePath);
+            if (packageIdx !== -1) {
+                packageSelections.splice(packageIdx, 1);
+                // Uncheck package checkbox
+                const packageCheckbox = document.querySelector(`input[value="${packagePath}"]`);
+                if (packageCheckbox) {
+                    packageCheckbox.checked = false;
+                }
+            }
+            
+            // Add all children to individual selections
+            allChildren.forEach(childPath => {
+                if (!childrenSelections.includes(childPath)) {
+                    childrenSelections.push(childPath);
+                }
+                // Check individual child checkboxes
+                const childCheckbox = document.querySelector(`input[value="${childPath}"]`);
+                if (childCheckbox) {
+                    childCheckbox.checked = true;
+                }
+            });
+            
+            updateNamespaceSelectedCount();
+        }
+
+        // Restore selections from state
+        function restoreSelectionsFromState() {
+            const container = document.getElementById('namespaceContainer');
+            if (!container) return;
+                                
+            // Restore package selections
+            packageSelections.forEach(path => {
+                const checkbox = container.querySelector(`input[value="${path}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+            
+            // Restore individual class selections
+            childrenSelections.forEach(path => {
+                const checkbox = container.querySelector(`input[value="${path}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+            
+            updateNamespaceSelectedCount();
         }
 
         // Helper function to restore selections from persistent array
@@ -1541,21 +1490,8 @@ ClassMethod AddClassesModal() As %Status
             updateNamespaceSelectedCount();
         }
 
-        /*function updateNamespaceSelectedCount() {
-            const count = window.persistentNamespaceSelectedItems.length;
-            const countElement = document.getElementById('namespaceSelectedCount');
-            if (countElement) {
-                countElement.textContent = `${count} Selected`;
-            }
-        }*/
         function updateNamespaceSelectedCount() {
-            const individualCount = window.persistentNamespaceSelectedItems.filter(path => {
-                // Only count items that aren't part of complete packages
-                return !packageSelections.some(pkg => 
-                    pkg.leafChildren.includes(path)
-                );
-            }).length;
-            
+            const individualCount = childrenSelections.length;
             const packageCount = packageSelections.length;
             const totalDisplayCount = individualCount + packageCount;
             
@@ -1593,7 +1529,10 @@ ClassMethod AddClassesModal() As %Status
         }
 
         function clearNamespaceSelection() {
-            window.persistentNamespaceSelectedItems = []; // Clear persistent array too
+            packageSelections = [];
+            childrenSelections = [];
+            window.persistentNamespaceSelectedItems = [];
+            
             const container = document.getElementById('namespaceContainer');
             if (container) {
                 container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -1710,95 +1649,48 @@ ClassMethod AddClassesModal() As %Status
             return filteredTree;
         }
 
-        // Add selected items to project
+        // Modified addSelectedToProject function
         async function addSelectedToProject() {
-            const selected = window.persistentNamespaceSelectedItems;
             const projId = document.getElementById('modalProjectName').innerHTML;
 
-            if (selected.length === 0) {
-                alert("Please select at least one element to add to the project");
+            if (packageSelections.length === 0 && childrenSelections.length === 0) {
+                alert("Please select at least one package or class to add to the project");
                 return;
             }
 
-            // Optimize selections first
-            optimizePackageSelections();
-
-            /*const expandedSelection = [];
-            
-            // Process selected items
-            selected.forEach(path => {
-                const item = findNamespaceItemByPath(currentNamespaceData, path);
-                if (item && isLeafNodeForAdd(item)) {
-                    expandedSelection.push({
-                        path: path,
-                        name: item.name,
-                        type: item.type,
-                        isLeaf: true
-                    });
-                }
-            });
-
-            // Build the request payload
-            const classArray = [];
-            expandedSelection.forEach(item => {
-                let itemParts = item.path.split(".");
-                // Always remove the first element (it is just a placeholder)
-                const itemType = itemParts[0];
-                itemParts.slice(1);
-                if (itemType === 'CSP') { 
-                    item.path = itemParts.slice(1).join('/');
-                } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
-                    item.path = itemParts.slice(1).join('.');
-                } else if (itemType === 'Other') {
-                    item.path = itemParts.slice(1).join('.');
-                    item.type = '';
-                }
-                const itemFullname = (item.type === '') ?  item.path : (item.path + '.' + item.type.toLowerCase()); 
-                classArray.push({
-                    "name": itemFullname
-                });
-            });*/
-
             const classArray = [];
             
-            // Add complete packages first
-            packageSelections.forEach(pkg => {
-                let pathParts = pkg.path.split(".");
+            // Add packages
+            packageSelections.forEach(packagePath => {
+                let pathParts = packagePath.split(".");
                 const itemType = pathParts[0];
                 
                 if (itemType === 'CSP') { 
-                    const packagePath = pathParts.slice(1).join('/');
+                    const packagePathFormatted = pathParts.slice(1).join('/');
                     classArray.push({
-                        "name": packagePath,
+                        "name": packagePathFormatted,
                         "type": "pkg"
                     });
                 } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
-                    const packagePath = pathParts.slice(1).join('.');
+                    const packagePathFormatted = pathParts.slice(1).join('.');
                     classArray.push({
-                        "name": packagePath,
+                        "name": packagePathFormatted,
                         "type": "pkg"
                     });
                 } else if (itemType === 'Other') {
-                    const packagePath = pathParts.slice(1).join('.');
+                    const packagePathFormatted = pathParts.slice(1).join('.');
                     classArray.push({
-                        "name": packagePath,
+                        "name": packagePathFormatted,
                         "type": "pkg"
                     });
                 }
             });
             
-            // Add individual items that aren't part of complete packages
-            const remainingItems = window.persistentNamespaceSelectedItems.filter(path => {
-                // Check if this item is part of any complete package
-                return !packageSelections.some(pkg => 
-                    pkg.leafChildren.includes(path)
-                );
-            });
-            
-            remainingItems.forEach(path => {
-                const item = findNamespaceItemByPath(currentNamespaceData, path);
+            // Add individual classes
+            childrenSelections.forEach(classPath => {
+                const item = findNamespaceItemByPath(currentNamespaceData, classPath);
                 if (item && isLeafNodeForAdd(item)) {
-                    let itemParts = path.split(".");
+                    let itemParts = classPath.split(".");
                     const itemType = itemParts[0];
                     
                     if (itemType === 'CSP') { 
@@ -1826,18 +1718,38 @@ ClassMethod AddClassesModal() As %Status
                 }
             });
 
+            // --- Check for parent/child overlap
+            const pkgs = classArray.filter(e => e.type === "pkg").map(e => e.name);
+            const classes = classArray.filter(e => e.type !== "pkg").map(e => e.name);
+
+            for (const pkg of pkgs) {
+                for (const cls of classes) {
+                    if (cls.startsWith(pkg + ".")) {
+                        alert(`Conflict detected: Package "${pkg}" and one of its classes "${cls}" are both selected.\nPlease select either the package or its children, not both.`);
+                        return; // stop execution
+                    }
+                }
+            }
+
             const add_request = {
                 "projectName": currentAddProjectName,
                 "elements": classArray
             }
-            PackageManagerAPI.addClassesToProject(projId,add_request)
+            
+            PackageManagerAPI.addClassesToProject(projId, add_request)
                 .then(function(response) {
-                    //alert(`Successfully added ${classArray.length} items to project "${currentAddProjectName}"`);
                     const packageCount = packageSelections.length;
-                    const individualCount = remainingItems.length;
-                    const message = packageCount > 0 
-                        ? `Successfully added ${packageCount} packages and ${individualCount} individual items to project "${currentAddProjectName}"`
-                        : `Successfully added ${individualCount} items to project "${currentAddProjectName}"`;
+                    const classCount = childrenSelections.length;
+                    let message;
+                    
+                    if (packageCount > 0 && classCount > 0) {
+                        message = `Successfully added ${packageCount} packages and ${classCount} individual classes to project "${currentAddProjectName}"`;
+                    } else if (packageCount > 0) {
+                        message = `Successfully added ${packageCount} packages to project "${currentAddProjectName}"`;
+                    } else {
+                        message = `Successfully added ${classCount} individual classes to project "${currentAddProjectName}"`;
+                    }
+                    
                     alert(message);
                 })
                 .catch(function(err) {

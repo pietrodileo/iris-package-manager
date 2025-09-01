@@ -116,7 +116,7 @@ ClassMethod AddNewProjectToExportTask() As %Status
     Return sc
 }
 
-ClassMethod WriteResponse(ByRef response As %DynamicObject = "", sc As %Status) As %Status
+ClassMethod WriteResponse(ByRef response As %DynamicObject = "", sc As %Status, responseStatusCode As %Integer = 200) As %Status
 {
     If '$ISOBJECT(response) {
         Set response = {}
@@ -126,6 +126,7 @@ ClassMethod WriteResponse(ByRef response As %DynamicObject = "", sc As %Status) 
     Set %response.IgnoreRESTOutput=0
     If $$$ISERR(sc) {
         Set response = {"error": ("Error: "_$SYSTEM.Status.GetErrorText(sc))}
+        Set %response.Status = responseStatusCode
     }
     // Return the response as a JSON
     If $ISOBJECT(response) {

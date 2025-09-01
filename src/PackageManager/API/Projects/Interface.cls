@@ -228,7 +228,7 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         Do ..WriteResponse(.result,sc)
     } Catch ex {
         Set sc = ex.AsStatus()
-        Do ..WriteResponse(.result,sc)
+        Do ..WriteResponse(.result,sc,500)
         #; Set %response.Status = 500
         #; Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
     }
@@ -259,7 +259,7 @@ ClassMethod UpdateProjectDesc(projectId As %String) As %Status
         }
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.res,sc)
+        Do ..WriteResponse(.res,sc,500)
     }
     Return sc
 }
@@ -282,7 +282,7 @@ ClassMethod DeleteProject(projectId As %String) As %Status
         }
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.res,sc)
+        Do ..WriteResponse(.res,sc,500)
     }
     Return sc
 }
@@ -317,7 +317,7 @@ ClassMethod AddClassesToProject(projectId As %String) As %Status
         Set sc = proj.%Save()        
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.out, sc)
+        Do ..WriteResponse(.out, sc,500)
     }
     Return sc
 }
