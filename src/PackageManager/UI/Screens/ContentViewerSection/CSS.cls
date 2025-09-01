@@ -1102,20 +1102,34 @@ ClassMethod AddClassesModal() As %Status
             }
         }
 
-        /* ADDITION: Fix toggle arrow rotation for expanded items */
+        /* Fix toggle arrow rotation for expanded items */
         .add-classes-tree-item.expanded .add-classes-tree-toggle {
             transform: rotate(90deg);
         }
 
-        /* ADDITION: Ensure nested collapsed items stay hidden */
+        /* Ensure nested collapsed items stay hidden */
         .add-classes-tree-item:not(.expanded) .add-classes-tree-children {
             display: none !important;
         }
 
-        /* ADDITION: Reset rotation for nested non-expanded items */
+        /* Reset rotation for nested non-expanded items */
         .add-classes-tree-item:not(.expanded) .add-classes-tree-toggle {
             transform: rotate(0deg);
         }
+
+        .add-classes-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .add-classes-checkbox-label {
+            cursor: pointer;
+            font-weight: 500;
+            color: #333;
+            user-select: none;
+        }
+
     </style>>
     Return sc
 }

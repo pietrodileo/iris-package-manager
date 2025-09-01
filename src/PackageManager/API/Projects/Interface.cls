@@ -11,7 +11,7 @@ ClassMethod CreateProject() As %Status
         Set desc = json."desc"
         If name'="" {
             If ##class(%Studio.Project).NameIdxExists(name) {
-                Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Un progetto con lo stesso nome è già presente. Non è possibile creare progetti con lo stesso nome!")) 
+                Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Un progetto con lo stesso nome Ã¨ giÃ  presente. Non Ã¨ possibile creare progetti con lo stesso nome!")) 
             } 
             Set proj = ##class(%Studio.Project).%New()
             Set proj.Name = name
@@ -21,7 +21,7 @@ ClassMethod CreateProject() As %Status
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
         } Else {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name è un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name Ã¨ un campo obbligatorio")) 
         }
     } Catch ex {
         Set sc=ex.AsStatus()
@@ -241,7 +241,7 @@ ClassMethod UpdateProjectDesc(projectId As %String) As %Status
     Set sc = $$$OK
     Try {
         If projectId = "" {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId è un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId Ã¨ un campo obbligatorio")) 
         }
         Set body = %request.Content.Read()
         Set json = {}.%FromJSON(body)
@@ -255,7 +255,7 @@ ClassMethod UpdateProjectDesc(projectId As %String) As %Status
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
         } Else {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name è un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name Ã¨ un campo obbligatorio")) 
         }
     } Catch ex {
         Set sc=ex.AsStatus()
@@ -269,7 +269,7 @@ ClassMethod DeleteProject(projectId As %String) As %Status
     Set sc = $$$OK
     Try {
         If projectId = "" {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId è un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId Ã¨ un campo obbligatorio")) 
         }
         Set sc = ##class(%Studio.Project).NameIdxDelete(projectId)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -305,7 +305,11 @@ ClassMethod AddClassesToProject(projectId As %String) As %Status
         Set iter = elements.%GetIterator()
         While iter.%GetNext(.key, .value) { 
             Set element = value."name"
-            Set sc = proj.AddItem(element)
+            Set type = $ZCONVERT(value."type","U")
+            If (type = "OTHER") {
+                Set type = ""
+            }
+            Set sc = proj.AddItem(element,type)
             If $$$ISERR(sc) {
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
