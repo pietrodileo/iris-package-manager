@@ -1,4 +1,4 @@
-Class PackageManager.API.Namespace.Interface Extends PackageManager.API.REST [Final]
+Class PackageManager.API.Namespace.Interface Extends PackageManager.API.REST [ Final ]
 {
 
 /// This method retrieves all files in the current namespace, including classes, routines, and CSP files.
@@ -13,8 +13,27 @@ ClassMethod GetAllNamespaceFiles(type As %String = "") As %Status
     Set sc = $$$OK
     Try {        
         Set packageName = $GET(%request.Data("PackageName",1))
+        Set ExcludeSystemClasses = $SELECT($GET(%request.Data("ExcludeSystemClasses",1))="true":1,1:0)
         Set result = {}
         Set sql = "SELECT Name, Type FROM %Library.RoutineMgr_StudioOpenDialog(?,?,?,?,?,?,?)"
+        ; If ExludeSystemClasses is true, filter out system classes / default IRIS classes
+        Set systemPrefixes = $LISTBUILD("CSPX","Ens","EnsHL7","EnsLib","HS","HSMOD","HIPAA","%")
+        If ExcludeSystemClasses {
+            Set whereConditions = ""    
+            Set ptr = 0
+            While $LISTNEXT(systemPrefixes, ptr, prefix) {
+                If whereConditions '= "" {
+                    Set whereConditions = whereConditions _ " AND "
+                }
+                if prefix = "%" {
+                    Set whereConditions = whereConditions _ "Name NOT LIKE '\%%' ESCAPE '\'"
+                } Else {
+                    Set whereConditions = whereConditions _ "Name NOT LIKE '" _ prefix _ "%'"
+                }
+            }
+            Set sql = sql _ " WHERE " _ whereConditions
+        }
+
         // Define arguments
         Set spec = ""
         If packageName'="" {

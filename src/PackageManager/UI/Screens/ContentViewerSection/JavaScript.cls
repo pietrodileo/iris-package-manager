@@ -401,7 +401,7 @@ ClassMethod ContentViewer() As %Status
                 // Folder toggle arrow
                 const toggle = document.createElement('span');
                 toggle.className = 'tree-toggle icon-right-arrow';
-                //toggle.textContent = '▶';
+                //toggle.textContent = 'â¶';
                 itemContent.appendChild(toggle);
                 toggle.title = fullPath;
 
@@ -1074,8 +1074,90 @@ ClassMethod AddClassesModal() As %Status
         let currentAddProjectName = '';
         let originalNamespaceData = null;
         let currentNamespaceData = null;
+        let packageSelections = []; // Track packages that should be sent as 'pkg' instead of individual items
 
         window.persistentNamespaceSelectedItems = [];
+
+        function isLeafNodeNamespace(node) {
+            return node && typeof node === 'object' && 'name' in node && 'type' in node;
+        }
+
+        // NEW HELPER FUNCTION: Get all leaf paths under a node
+        function getAllLeafPaths(nodeData, basePath) {
+            const leafPaths = [];
+            
+            function traverse(obj, currentPath) {
+                for (const key in obj) {
+                    const value = obj[key];
+                    if (!value) continue;
+                    
+                    const fullPath = currentPath ? `${currentPath}.${key}` : key;
+                    
+                    if (isLeafNodeNamespace(value)) {
+                        leafPaths.push(fullPath);
+                    } else {
+                        traverse(value, fullPath);
+                    }
+                }
+            }
+            
+            traverse(nodeData, basePath);
+            return leafPaths;
+        }
+
+        function optimizePackageSelections() {
+            if (!currentNamespaceData) return;
+            
+            packageSelections = []; // Reset package selections
+            
+            // Function to check if a package is complete
+            function checkPackageComplete(nodeData, nodePath, parentPath = '') {
+                if (!nodeData || typeof nodeData !== 'object') return false;
+                
+                const fullNodePath = parentPath ? `${parentPath}.${nodePath}` : nodePath;
+                
+                // Get all leaf children of this node
+                const allLeafChildren = getAllLeafPaths(nodeData, fullNodePath);
+                
+                if (allLeafChildren.length === 0) return false;
+                
+                // Check if ALL leaf children are selected
+                const allChildrenSelected = allLeafChildren.every(childPath => 
+                    window.persistentNamespaceSelectedItems.includes(childPath)
+                );
+                
+                if (allChildrenSelected && allLeafChildren.length > 1) {
+                    // This package is complete - add it to package selections
+                    packageSelections.push({
+                        path: fullNodePath,
+                        leafChildren: allLeafChildren
+                    });
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // Recursively check all nodes for complete packages
+            function traverseForPackages(obj, currentPath = '') {
+                for (const key in obj) {
+                    const value = obj[key];
+                    if (!value) continue;
+                    
+                    if (!isLeafNodeNamespace(value)) {
+                        // This is a folder/package - check if it's complete
+                        if (!checkPackageComplete(value, key, currentPath)) {
+                            // If not complete, check its children recursively
+                            const fullPath = currentPath ? `${currentPath}.${key}` : key;
+                            traverseForPackages(value, fullPath);
+                        }
+                    }
+                }
+            }
+            
+            traverseForPackages(currentNamespaceData);
+        }
 
         // Main function to open the Add Classes modal
         function addClasses(element) {
@@ -1102,6 +1184,7 @@ ClassMethod AddClassesModal() As %Status
             document.getElementById('namespaceSearchInput').value = '';
             document.getElementById('namespaceContainer').innerHTML = '<div class="add-classes-loading-message">Select a file type and click "Load Content" to begin</div>';
             window.persistentNamespaceSelectedItems = [];
+            packageSelections = []; // Reset package selections
             updateNamespaceSelectedCount();
             originalNamespaceData = null;
             currentNamespaceData = null;
@@ -1111,12 +1194,13 @@ ClassMethod AddClassesModal() As %Status
         async function loadNamespaceContent() {
             let fileType = document.getElementById('fileTypeSelector').value;
             const container = document.getElementById('namespaceContainer');
+            const exclude_system_classes = document.getElementById('excludeSystemClasses').checked;
             const lookInto = document.getElementById('packageSearchInput').value;
             const lookIntoKey = 'PackageName';
 
             container.innerHTML = '<div class="add-classes-loading-message icon-hourglass">Loading namespace content...</div>';
                             
-            PackageManagerAPI.getNamespaceContent(fileType,lookInto)
+            PackageManagerAPI.getNamespaceContent(fileType,lookInto,exclude_system_classes)
                 .then(function(data) {
                     // Store the data
                     originalNamespaceData = data;
@@ -1145,155 +1229,181 @@ ClassMethod AddClassesModal() As %Status
             container.innerHTML = '';
             currentNamespaceData = data;
 
-            function isLeafNodeNamespace(node) {
-                return node && typeof node === 'object' && 'name' in node && 'type' in node;
-            }
-
             function createNamespaceTreeItem(key, value, path = '') {
-                const fullPath = path ? `${path}.${key}` : key;
-                const li = document.createElement('li');
-                li.className = 'add-classes-tree-item';
-                li.title = fullPath;
+                try {
+                    const fullPath = path ? `${path}.${key}` : key;
+                    const li = document.createElement('li');
+                    li.className = 'add-classes-tree-item';
+                    li.title = fullPath;
 
-                const itemContent = document.createElement('div');
-                itemContent.className = 'add-classes-tree-item-content';
+                    const itemContent = document.createElement('div');
+                    itemContent.className = 'add-classes-tree-item-content';
 
-                // Folder toggle arrow
-                const toggle = document.createElement('span');
-                toggle.className = 'add-classes-tree-toggle icon-right-arrow';
-                //toggle.textContent = '▶';
-                itemContent.appendChild(toggle);
-                toggle.title = fullPath;
+                    // Folder toggle arrow
+                    const toggle = document.createElement('span');
+                    toggle.className = 'add-classes-tree-toggle icon-right-arrow';
+                    itemContent.appendChild(toggle);
+                    toggle.title = fullPath;
 
-                // Checkbox
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'add-classes-tree-checkbox';
-                checkbox.value = fullPath;
-                checkbox.id = 'namespace-checkbox-' + fullPath;
+                    // Checkbox
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'add-classes-tree-checkbox';
+                    checkbox.value = fullPath;
+                    checkbox.id = 'namespace-checkbox-' + fullPath;
 
-                // Add leaf detection for proper handling
-                if (!isLeafNodeNamespace(value)) {
-                    checkbox.setAttribute('data-leaf', 'false');
-                } else {
-                    checkbox.setAttribute('data-leaf', 'true');
-                }
-
-                checkbox.addEventListener('change', (e) => {
-                    e.stopPropagation();
-                    
-                    if (checkbox.checked) {
-                        // If this is a folder, select all its children (visible and hidden)
-                        if (!isLeafNodeNamespace(value)) {
-                            if (li.classList.contains('expanded')) {
-                                // If expanded, select visible children
-                                selectAllNamespaceChildren(li, true);
-                            } else {
-                                // If collapsed, select all hidden children from data
-                                selectAllNamespaceHiddenChildren(value, fullPath, true);
-                            }
-                        } 
-                        // If the object is a leaf, add it to the global selected items
-                        if (isLeafNodeNamespace(value) && !window.persistentNamespaceSelectedItems.includes(fullPath)) {
-                            window.persistentNamespaceSelectedItems.push(fullPath);                   
-                        }                       
+                    // Add leaf detection for proper handling
+                    if (!isLeafNodeNamespace(value)) {
+                        checkbox.setAttribute('data-leaf', 'false');
                     } else {
-                        // If this is a folder, unselect all its children (visible and hidden)
-                        if (!isLeafNodeNamespace(value)) {
-                            if (li.classList.contains('expanded')) {
-                                // If expanded, unselect visible children
-                                selectAllNamespaceChildren(li, false);
-                            } else {
-                                // If collapsed, unselect all hidden children from data
-                                selectAllNamespaceHiddenChildren(value, fullPath, false);
-                            }
-                        }
-                        // Remove from persistentSelectedItems if present
-                        const idx = window.persistentNamespaceSelectedItems.indexOf(fullPath);
-                        if (idx !== -1) {
-                            window.persistentNamespaceSelectedItems.splice(idx, 1);
-                        }
+                        checkbox.setAttribute('data-leaf', 'true');
                     }
-                    updateNamespaceSelectedCount();
-                });
-                
-                itemContent.appendChild(checkbox);
 
-                if (isLeafNodeNamespace(value)) {
-                    // File node
-                    li.classList.add('file');
-                    toggle.style.visibility = 'hidden';
-                    
-                    const icon = document.createElement('span');
-                    icon.className = 'add-classes-tree-icon '+getIcon(value.type);
-                    itemContent.appendChild(icon);
-
-                    const label = document.createElement('span');
-                    label.className = 'add-classes-tree-label';
-                    label.textContent = value.name;
-                    itemContent.appendChild(label);
-
-                    const type = document.createElement('span');
-                    type.className = 'add-classes-tree-type';
-                    type.textContent = value.type.toLowerCase();
-                    itemContent.appendChild(type);
-
-                    li.appendChild(itemContent);
-                } else {
-                    // Folder node
-                    li.classList.add('folder');
-                    
-                    const icon = document.createElement('span');
-                    let icon_emoji = 'icon-folder'
-                    if (key == 'CSP') {
-                        icon_emoji = '🧩'
-                    } else if (key == 'CLS') {
-                        icon_emoji = 'icon-cls'
-                    } else if (key == 'INC') {
-                        icon_emoji = 'icon-inc'
-                    } else if (key == 'MAC') {
-                        icon_emoji = 'icon-mac'
-                    } else if (key == 'Other') {
-                        icon_emoji = 'icon-settings'
-                    }
-                    icon.className = 'add-classes-tree-icon '+icon_emoji;
-                    itemContent.appendChild(icon);
-
-                    const label = document.createElement('span');
-                    label.className = 'add-classes-tree-label';
-                    label.textContent = key;
-                    itemContent.appendChild(label);
-
-                    // FIXED: Click handler for folder expansion (like working version)
-                    itemContent.addEventListener('click', (e) => {
-                        if (e.target === checkbox) return;
-                        e.preventDefault();
+                    checkbox.addEventListener('change', (e) => {
                         e.stopPropagation();
                         
-                        const wasExpanded = li.classList.contains('expanded');
-                        if (wasExpanded) {
-                            li.classList.remove('expanded');
+                        if (checkbox.checked) {
+                            // If this is a folder, select all its children (visible and hidden)
+                            if (!isLeafNodeNamespace(value)) {
+                                if (li.classList.contains('expanded')) {
+                                    // If expanded, select visible children
+                                    selectAllNamespaceChildren(li, true);
+                                } else {
+                                    // If collapsed, select all hidden children from data
+                                    selectAllNamespaceHiddenChildren(value, fullPath, true);
+                                }
+                            } 
+                            // If the object is a leaf, add it to the global selected items
+                            if (isLeafNodeNamespace(value) && !window.persistentNamespaceSelectedItems.includes(fullPath)) {
+                                window.persistentNamespaceSelectedItems.push(fullPath);                   
+                            }                       
                         } else {
-                            li.classList.add('expanded');
+                            // If this is a folder, unselect all its children (visible and hidden)
+                            if (!isLeafNodeNamespace(value)) {
+                                if (li.classList.contains('expanded')) {
+                                    // If expanded, unselect visible children
+                                    selectAllNamespaceChildren(li, false);
+                                } else {
+                                    // If collapsed, unselect all hidden children from data
+                                    selectAllNamespaceHiddenChildren(value, fullPath, false);
+                                }
+                            }
+                            // Remove from persistentSelectedItems if present
+                            const idx = window.persistentNamespaceSelectedItems.indexOf(fullPath);
+                            if (idx !== -1) {
+                                window.persistentNamespaceSelectedItems.splice(idx, 1);
+                            }
                         }
+                        optimizePackageSelections();
+                        updateNamespaceSelectedCount();
                     });
+                    
+                    itemContent.appendChild(checkbox);
 
-                    // Create children
-                    const childrenContainer = document.createElement('ul');
-                    childrenContainer.className = 'add-classes-tree-children';
+                    if (isLeafNodeNamespace(value)) {
+                        // File node
+                        li.classList.add('file');
+                        toggle.style.visibility = 'hidden';
+                        
+                        const icon = document.createElement('span');
+                        icon.className = 'add-classes-tree-icon '+getIcon(value.type);
+                        itemContent.appendChild(icon);
 
-                    for (const childKey in value) {
-                        if (value[childKey]) {
-                            const childItem = createNamespaceTreeItem(childKey, value[childKey], fullPath);
-                            childrenContainer.appendChild(childItem);
+                        const label = document.createElement('span');
+                        label.className = 'add-classes-tree-label';
+                        label.textContent = value.name;
+                        itemContent.appendChild(label);
+
+                        const type = document.createElement('span');
+                        type.className = 'add-classes-tree-type';
+
+                        let typeValue;
+
+                        // Check if value.type is an object and has a 'type' property
+                        if (typeof value.type === 'object' && value.type !== null && 'type' in value.type) {
+                            typeValue = value.type.type;
+                        } else {
+                            // Otherwise, assume it's a string
+                            typeValue = value.type;
                         }
+
+                        const validTypes = [
+                                'csp', 'cls', 'inc', 'mac','js','json'
+                                ,'abs','dtl','dfi','css','png','html'
+                                ,'pkg','dir','ico','jpg'
+                        ];
+
+                        // Now, use the determined value to set the text content
+                        if (typeValue) {
+                            type.textContent = typeValue.toLowerCase();
+                            if (!validTypes.includes(typeValue.toLowerCase())) {
+                                type.textContent = 'Other';
+                            }
+                        } else {
+                            type.textContent = 'Other';
+                        }
+
+                        itemContent.appendChild(type);
+
+                        li.appendChild(itemContent);
+                    } else {
+                        // Folder node
+                        li.classList.add('folder');
+                        
+                        const icon = document.createElement('span');
+                        let icon_emoji = 'icon-folder'
+                        if (key == 'CSP') {
+                            icon_emoji = 'icon-csp'
+                        } else if (key == 'CLS') {
+                            icon_emoji = 'icon-cls'
+                        } else if (key == 'INC') {
+                            icon_emoji = 'icon-inc'
+                        } else if (key == 'MAC') {
+                            icon_emoji = 'icon-mac'
+                        } else if (key == 'Other') {
+                            icon_emoji = 'icon-settings'
+                        }
+                        icon.className = 'add-classes-tree-icon '+icon_emoji;
+                        itemContent.appendChild(icon);
+
+                        const label = document.createElement('span');
+                        label.className = 'add-classes-tree-label';
+                        label.textContent = key;
+                        itemContent.appendChild(label);
+
+                        // Click handler for folder expansion
+                        itemContent.addEventListener('click', (e) => {
+                            if (e.target === checkbox) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const wasExpanded = li.classList.contains('expanded');
+                            if (wasExpanded) {
+                                li.classList.remove('expanded');
+                            } else {
+                                li.classList.add('expanded');
+                            }
+                        });
+
+                        // Create children
+                        const childrenContainer = document.createElement('ul');
+                        childrenContainer.className = 'add-classes-tree-children';
+
+                        for (const childKey in value) {
+                            if (value[childKey]) {
+                                const childItem = createNamespaceTreeItem(childKey, value[childKey], fullPath);
+                                childrenContainer.appendChild(childItem);
+                            }
+                        }
+
+                        li.appendChild(itemContent);
+                        li.appendChild(childrenContainer);
                     }
-
-                    li.appendChild(itemContent);
-                    li.appendChild(childrenContainer);
+                    return li;
+                } catch (error) {
+                    console.error('createNamespaceTreeItem error at path ' + path + ' - value: ' + value + ' - error: ' + error);
+                    return null;
                 }
-
-                return li;
             }
 
             // Helper function to select/unselect all children
@@ -1408,7 +1518,7 @@ ClassMethod AddClassesModal() As %Status
             }, 200);
         }
 
-        // Helper function to restore selections from persistent array (like working version)
+        // Helper function to restore selections from persistent array
         function restoreNamespaceSelectionsFromPersistent() {
             const container = document.getElementById('namespaceContainer');
             if (!container) return;
@@ -1426,15 +1536,36 @@ ClassMethod AddClassesModal() As %Status
                 }
             });
             
-            // Update the selection counter
+            // Update the selection counter and optimize
+            optimizePackageSelections();
             updateNamespaceSelectedCount();
         }
 
-        function updateNamespaceSelectedCount() {
+        /*function updateNamespaceSelectedCount() {
             const count = window.persistentNamespaceSelectedItems.length;
             const countElement = document.getElementById('namespaceSelectedCount');
             if (countElement) {
                 countElement.textContent = `${count} Selected`;
+            }
+        }*/
+        function updateNamespaceSelectedCount() {
+            const individualCount = window.persistentNamespaceSelectedItems.filter(path => {
+                // Only count items that aren't part of complete packages
+                return !packageSelections.some(pkg => 
+                    pkg.leafChildren.includes(path)
+                );
+            }).length;
+            
+            const packageCount = packageSelections.length;
+            const totalDisplayCount = individualCount + packageCount;
+            
+            const countElement = document.getElementById('namespaceSelectedCount');
+            if (countElement) {
+                if (packageCount > 0) {
+                    countElement.textContent = `${totalDisplayCount} Selected (${packageCount} packages, ${individualCount} individual)`;
+                } else {
+                    countElement.textContent = `${totalDisplayCount} Selected`;
+                }
             }
         }
 
@@ -1589,7 +1720,10 @@ ClassMethod AddClassesModal() As %Status
                 return;
             }
 
-            const expandedSelection = [];
+            // Optimize selections first
+            optimizePackageSelections();
+
+            /*const expandedSelection = [];
             
             // Process selected items
             selected.forEach(path => {
@@ -1623,6 +1757,73 @@ ClassMethod AddClassesModal() As %Status
                 classArray.push({
                     "name": itemFullname
                 });
+            });*/
+
+            const classArray = [];
+            
+            // Add complete packages first
+            packageSelections.forEach(pkg => {
+                let pathParts = pkg.path.split(".");
+                const itemType = pathParts[0];
+                
+                if (itemType === 'CSP') { 
+                    const packagePath = pathParts.slice(1).join('/');
+                    classArray.push({
+                        "name": packagePath,
+                        "type": "pkg"
+                    });
+                } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
+                    const packagePath = pathParts.slice(1).join('.');
+                    classArray.push({
+                        "name": packagePath,
+                        "type": "pkg"
+                    });
+                } else if (itemType === 'Other') {
+                    const packagePath = pathParts.slice(1).join('.');
+                    classArray.push({
+                        "name": packagePath,
+                        "type": "pkg"
+                    });
+                }
+            });
+            
+            // Add individual items that aren't part of complete packages
+            const remainingItems = window.persistentNamespaceSelectedItems.filter(path => {
+                // Check if this item is part of any complete package
+                return !packageSelections.some(pkg => 
+                    pkg.leafChildren.includes(path)
+                );
+            });
+            
+            remainingItems.forEach(path => {
+                const item = findNamespaceItemByPath(currentNamespaceData, path);
+                if (item && isLeafNodeForAdd(item)) {
+                    let itemParts = path.split(".");
+                    const itemType = itemParts[0];
+                    
+                    if (itemType === 'CSP') { 
+                        const itemPath = itemParts.slice(1).join('/');
+                        const itemFullname = itemPath + '.' + item.type.toLowerCase();
+                        classArray.push({
+                            "name": itemFullname,
+                            "type": item.type.toLowerCase()
+                        });
+                    } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
+                        const itemPath = itemParts.slice(1).join('.');
+                        const itemFullname = itemPath + '.' + item.type.toLowerCase();
+                        classArray.push({
+                            "name": itemFullname,
+                            "type": item.type.toLowerCase()
+                        });
+                    } else if (itemType === 'Other') {
+                        const itemPath = itemParts.slice(1).join('.');
+                        const itemFullname = (item.type === '') ? itemPath : (itemPath + '.' + item.type.toLowerCase()); 
+                        classArray.push({
+                            "name": itemFullname,
+                            "type": item.type.toLowerCase()
+                        });
+                    }
+                }
             });
 
             const add_request = {
@@ -1631,7 +1832,13 @@ ClassMethod AddClassesModal() As %Status
             }
             PackageManagerAPI.addClassesToProject(projId,add_request)
                 .then(function(response) {
-                    alert(`Successfully added ${classArray.length} items to project "${currentAddProjectName}"`);
+                    //alert(`Successfully added ${classArray.length} items to project "${currentAddProjectName}"`);
+                    const packageCount = packageSelections.length;
+                    const individualCount = remainingItems.length;
+                    const message = packageCount > 0 
+                        ? `Successfully added ${packageCount} packages and ${individualCount} individual items to project "${currentAddProjectName}"`
+                        : `Successfully added ${individualCount} items to project "${currentAddProjectName}"`;
+                    alert(message);
                 })
                 .catch(function(err) {
                     console.error('Error adding items to project:', err.message);

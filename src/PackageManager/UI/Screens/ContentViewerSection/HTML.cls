@@ -193,6 +193,13 @@ ClassMethod renderAddClassesToPrjModal() As %Status
                                 </select>
                             </div>
                             <div class='add-classes-control-group'>
+                                <label></label>
+                                <div class='add-classes-checkbox-group'>
+                                    <input type='checkbox' id='excludeSystemClasses' class='add-classes-checkbox'>
+                                    <label for='excludeSystemClasses' class='add-classes-checkbox-label'>Exclude System Classes</label>
+                                </div>
+                            </div>
+                            <div class='add-classes-control-group'>
                                 <label for='packageSearchInput'>Look Into:</label>
                                 <input type='text' id='packageSearchInput' class='add-classes-search-input' placeholder='Look into package...'>
                             </div>

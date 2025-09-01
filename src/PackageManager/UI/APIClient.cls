@@ -188,13 +188,27 @@ ClassMethod APIClient() As %Status
                 },
 
                 // Namespace methods
-                getNamespaceContent: function(type, lookInto) {
+                getNamespaceContent: function(type, lookInto, excludeSystemClasses = false) {
                     const lookIntoKey = 'PackageName';
+                    const excludeSystemKey = 'ExcludeSystemClasses';
                     var endpoint = type ? '/namespace/content/' + type : '/namespace/content';
+
+                    // Build query parameters
+                    const params = [];
+                    
+                    // Add excludeSystemClasses parameter
+                    params.push(excludeSystemKey + '=' + excludeSystemClasses);
+
                     // If not empty, add a parameter to look into specific packages
                     if (lookInto && lookInto.length > 0) { 
-                        endpoint += (endpoint.includes('?') ? '&' : '?') + (lookIntoKey+'='+lookInto); 
+                        params.push(lookIntoKey + '=' + encodeURIComponent(lookInto));
                     }
+                    
+                    // Append parameters to endpoint if any exist
+                    if (params.length > 0) {
+                        endpoint += '?' + params.join('&');
+                    }
+
                     return request(endpoint, { method: 'GET' });
                 },
 
