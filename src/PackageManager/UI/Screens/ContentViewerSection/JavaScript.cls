@@ -1727,7 +1727,7 @@ ClassMethod AddClassesModal() As %Status
                     if (cls.startsWith(pkg + ".")) {
                         alert(`Conflict detected: Package "${pkg}" and one of its classes "${cls}" are both selected.\nPlease select either the package or its children, not both.`);
                         return; // stop execution
-                    }
+                    } 
                 }
             }
 
