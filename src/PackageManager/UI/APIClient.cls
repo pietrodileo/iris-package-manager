@@ -112,9 +112,14 @@ ClassMethod APIClient() As %Status
                 }
 
                 return fetch(url, config)
-                    .then(function(response) {
+                    .then(async function(response) {
+
                         if (!response.ok) {
-                            throw new Error('HTTP error - status: ' + response.status + ' - ' + response.statusText);
+                            // return the error content as text if returned
+                            const errorText = await response.text();
+                            throw new Error(
+                                `HTTP error - status: ${response.status} - ${response.statusText} - details: ${errorText}`
+                            );
                         }
                         
                         var contentType = response.headers.get('content-type');

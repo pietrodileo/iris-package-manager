@@ -155,6 +155,8 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         Set sc = tStatement.%Prepare(sql)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 
+        Set pkgsListStr = ""
+
         Set tResult = tStatement.%Execute(Args...)
         While tResult.%Next() {
             Set currProject = tResult.%Get("Project")
@@ -167,6 +169,7 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
             }
 
             If type = "PKG" {
+                Set pkgsListStr = $SELECT(pkgsListStr="":item_"^"_currProject, 1:pkgsListStr_","_item_"^"_currProject)
                 // Expand package to classes
                 Set sc = $SYSTEM.OBJ.GetPackageList(.pkgItems, item, "/mapped/includesubpackages")
                 Set childName = ""
@@ -223,14 +226,31 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
             }
         }
 
-        //Set %response.ContentType = "application/json"
-        #; Write result.%ToJSON()
+        // Insert a flag to identify whole packages that are project items
+        If pkgsListStr '= "" {
+            Set ptr = ""
+            ;W pkgsListStr,! 
+            For i = 1:1:$length(pkgsListStr, ",") {
+                Set pkg = $piece(pkgsListStr, ",", i)
+                Set pkgName = $piece(pkg, "^", 1)
+                Set currProjectName = $piece(pkg, "^", 2)
+                // reset the resultNode to parse the current package
+                Set resultNode = result.%Get(currProjectName)."PKG"
+                For j = 1:1:$length(pkgName, ".") {
+                    Set value = $piece(pkgName, ".", j)
+                    Set resultNode = resultNode.%Get(value)
+                    ;Write resultNode.%ToJSON(),!,!
+                }
+                Set resultNode."*project-item"="true"
+            }
+        }
+
+        ;Write result.%ToJSON()
         Do ..WriteResponse(.result,sc)
     } Catch ex {
         Set sc = ex.AsStatus()
         Do ..WriteResponse(.result,sc,500)
-        #; Set %response.Status = 500
-        #; Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
+        ;Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
     }
 
     Return sc
@@ -340,8 +360,8 @@ ClassMethod RemoveClassesToProject(projectId As %String) As %Status
         Set iter = elements.%GetIterator()
         While iter.%GetNext(.key, .value) { 
             Set element = value."name"
-            Set ^CacheTemp("RemoveClassesToProject",element) = ""
-            Set sc = proj.RemoveItem(element)
+            Set type = value.%Get("type")
+            Set sc = proj.RemoveItem(element,type)
             If $$$ISERR(sc) {
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
@@ -349,7 +369,8 @@ ClassMethod RemoveClassesToProject(projectId As %String) As %Status
         Set sc = proj.%Save()        
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.out, sc)
+        Do ..WriteResponse(.out, sc, 500)
+        Set sc = $$$OK // Return a successful status to avoid returning the default error response by IRIS
     }
     Return sc
 }

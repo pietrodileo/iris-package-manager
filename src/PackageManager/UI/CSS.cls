@@ -214,7 +214,7 @@ ClassMethod Styles() As %Status
         .icon-cancel:before { content: "\274c"; }       /* cross mark */
         .icon-edit:before { content: "\270D"; }         /* pencil */
         .icon-delete:before { content: "\1F6AE"; }      /* wastebasket */
-        .icon-settings:before { content: "\2699"; }     /* gear */
+        .icon-settings:before { content: "\1F4D1"; }     /* whitepaper */
         .icon-tools:before { content: "\1f527"; }       /* wrench */
         .icon-success:before { content: "\2713"; }      /* check mark */
         .icon-warning:before { content: "\26a0"; }      /* warning sign */

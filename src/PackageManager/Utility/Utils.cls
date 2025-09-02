@@ -62,25 +62,24 @@ ClassMethod GetInstanceDetails() As %Status
     Return sc
 }
 
-/**
- * Creates a nested object structure within the provided result object.
- * 
- * @param {string} item - The base name of the object to create.
- * @param {string} type - The type of object to create (e.g. "csp" or other).
- * @param {string} currProject - The current project name.
- * @param {object} result - The object to create the nested structure within.
- * @param {string} [Separator="."] - The separator to use when splitting the item name.
- * @param {string} [CSPExtension=""] - An optional extension to use for CSP files.
- * 
- * @returns {status} - The status of the operation.
- * 
- * @description
- * This method creates a nested object structure within the provided result object.
- * It extracts the base name from the item parameter, and then creates a nested object
- * structure based on the type and project name. If the type is "csp", it uses a
- * specific root node, otherwise it uses a different root node. It then creates or
- * gets the nested container and sets the metadata for the leaf node.
- */
+/// 
+/// Creates a nested object structure within the provided result object.
+/// 
+/// @param {string} item - The base name of the object to create.
+/// @param {string} type - The type of object to create (e.g. "csp" or other).
+/// @param {string} currProject - The current project name.
+/// @param {object} result - The object to create the nested structure within.
+/// @param {string} [Separator="."] - The separator to use when splitting the item name.
+/// @param {string} [CSPExtension=""] - An optional extension to use for CSP files.
+/// 
+/// @returns {status} - The status of the operation.
+/// 
+/// @description
+/// This method creates a nested object structure within the provided result object.
+/// It extracts the base name from the item parameter, and then creates a nested object
+/// structure based on the type and project name. If the type is "csp", it uses a
+/// specific root node, otherwise it uses a different root node. It then creates or
+/// gets the nested container and sets the metadata for the leaf node.
 ClassMethod CreateNestedObject(item As %String, type As %String, currProject As %String, ByRef result As %DynamicObject, Separator As %String = ".", CSPExtension As %String = "") As %Status
 {
     Set sc = $$$OK
