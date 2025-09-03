@@ -169,9 +169,7 @@ ClassMethod JSONFolderTree(directory As %String, currProject As %String, ByRef r
         If '$ISOBJECT(result) Set result = {}
 
         // if the directory contains both slashes and backslashes, replace them with the separator
-        If directory [ "/" {
-            Set directory = $REPLACE(directory, "/", separator) 
-        }
+        Set directory = ..AdaptPathToOS(directory, .separator)
 
         // Ensure project root exists in result
         If '$ISOBJECT(result.%Get(currProject)) {
