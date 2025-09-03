@@ -995,12 +995,7 @@ ClassMethod ContentViewer() As %Status
                     const filteredData = filterProjectData(window.originalProjectData, searchTerm);
                     renderFolderTree(filteredData, containerId);
                     setTimeout(() => { window.expandAllTree(); }, 100);
-                }
-                
-                // Restore selections after re-rendering
-                setTimeout(() => {
-                    restoreSelectionsFromPersistent();
-                }, 200);
+                }                
             };
 
             // Restore selections from state
@@ -1043,6 +1038,9 @@ ClassMethod ContentViewer() As %Status
 
             // Function to filter project data based on search term
             function filterProjectData(data, searchTerm) {
+                // Set to track visited nodes and prevent infinite recursion
+                const visitedNodes = new WeakSet();
+
                 function nodeMatches(node, key) {
                     if (isLeafNode(node)) {
                         return node.name.toLowerCase().includes(searchTerm) || 
@@ -1054,6 +1052,14 @@ ClassMethod ContentViewer() As %Status
                 }
 
                 function findMatchingPaths(node, key, currentPath = []) {
+                    // Prevent infinite recursion by checking if we've already visited this node
+                    if (visitedNodes.has(node)) {
+                        return [];
+                    }
+
+                    // Mark this node as visited
+                    visitedNodes.add(node);
+
                     const fullPath = currentPath.concat([key]);
                     const matches = [];
 
@@ -1065,9 +1071,14 @@ ClassMethod ContentViewer() As %Status
                         });
                     }
 
-                    if (!isLeafNode(node)) {
+                    if (!isLeafNode(node) && typeof node === 'object' && node !== null) {
                         for (const childKey in node) {
-                            if (node[childKey]) {
+                            // Skip unwanted keys and null/undefined values
+                            if (childKey === "*project-item" || !node[childKey]) {
+                                continue;
+                            }
+
+                            if (typeof node[childKey] === 'object' && node[childKey] !== null) {
                                 const childMatches = findMatchingPaths(node[childKey], childKey, fullPath);
                                 pushAll(matches, childMatches);
                             }
@@ -1102,7 +1113,7 @@ ClassMethod ContentViewer() As %Status
 
                 const allMatches = [];
                 for (const key in data) {
-                    if (data[key]) {
+                    if (data[key] && typeof data[key] === 'object') {
                         const matches = findMatchingPaths(data[key], key);
                         pushAll(allMatches, matches);
                     }
@@ -1114,6 +1125,9 @@ ClassMethod ContentViewer() As %Status
                     if (match.isDirectMatch && !isLeafNode(match.node)) {
                         let current = filteredTree;
                         for (let i = 0; i < match.path.length - 1; i++) {
+                            if (!current[match.path[i]]) {
+                                current[match.path[i]] = {};
+                            }
                             current = current[match.path[i]];
                         }
                         const lastSegment = match.path[match.path.length - 1];
