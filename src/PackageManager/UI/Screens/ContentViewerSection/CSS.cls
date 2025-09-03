@@ -757,6 +757,83 @@ ClassMethod ContentTreeViewer() As %Status
             outline: none;
             border-color: #0e639c;
         }    
+
+        .tree-select-children-btn {
+            background: none;
+            border: none;
+            padding: 4px 6px;
+            margin-left: 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+        }
+
+        .tree-select-children-btn:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            transform: scale(1.1);
+        }
+
+        .tree-select-children-btn:active {
+            background-color: #bbdefb;
+            transform: scale(0.95);
+        }
+
+        /* For folders that are expanded, show different visual state */
+        .tree-item.folder.expanded .tree-select-children-btn {
+            background-color: #f0f8ff;
+        }
+
+        /* Focus states for accessibility */
+        .tree-select-children-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* Different states based on selection */
+        .tree-item.has-selected-children .tree-select-children-btn {
+            color: #1976d2;
+            background-color: #e3f2fd;
+        }
+
+        /* Animation for button press */
+        @keyframes selectPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .tree-select-children-btn.selecting {
+            animation: selectPulse 0.3s ease-in-out;
+        }
+
+        /* Responsive behavior for mobile */
+        @media (max-width: 768px) {
+            .tree-select-children-btn {
+                min-width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+        }
+
+        .tree-select-children-btn.icon-select-all-modern::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M8 12l4 4 4-4'/%3E%3Cpath d='M8 6l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+
     </style>>
     Return sc
 }
@@ -786,7 +863,7 @@ ClassMethod AddClassesModal() As %Status
             left: 50%;
             transform: translate(-50%, -50%);
             width: 90%;
-            max-width: 1200px;
+            max-width: 1300px;
             height: 85%;
             max-height: 800px;
             background: white;
@@ -1130,6 +1207,88 @@ ClassMethod AddClassesModal() As %Status
             user-select: none;
         }
 
+        /* Select all children button styling */
+        .add-classes-select-children-btn {
+            background: none;
+            border: none;
+            padding: 4px 6px;
+            margin-left: 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+        }
+
+        .add-classes-select-children-btn:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            transform: scale(1.1);
+        }
+
+        .add-classes-select-children-btn:active {
+            background-color: #bbdefb;
+            transform: scale(0.95);
+        }
+
+        /* Modern approach with SVG-like symbols */
+        .add-classes-select-children-btn.icon-select-all-modern::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M8 12l4 4 4-4'/%3E%3Cpath d='M8 6l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+
+        /* For folders that are expanded, show different visual state */
+        .add-classes-tree-item.folder.expanded .add-classes-select-children-btn {
+            background-color: #f0f8ff;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 768px) {
+            .add-classes-select-children-btn {
+                min-width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+        }
+
+        /* Tooltip enhancement */
+        .add-classes-select-children-btn[title] {
+            position: relative;
+        }
+
+        /* Focus states for accessibility */
+        .add-classes-select-children-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* Different states based on selection */
+        .add-classes-tree-item.has-selected-children .add-classes-select-children-btn {
+            color: #1976d2;
+            background-color: #e3f2fd;
+        }
+
+        /* Animation for button press */
+        @keyframes selectPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .add-classes-select-children-btn.selecting {
+            animation: selectPulse 0.3s ease-in-out;
+        }
     </style>>
     Return sc
 }

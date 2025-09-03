@@ -11,10 +11,11 @@ ROUTINE PackageManager.PackageManager [Type=INC]
 #define ExportedReleaseSectionTitle			 "Exported Release"
 #define InstallationSectionTitle			 "Install Package Manager"
 #define defaultTaskDescription			 "Export projects utility task"
+#define systemClassesToExclude			 "CSPX,Ens,EnsHL7,EnsLib,HS,HSMOD,HIPAA,%"
 
 #; --> For standard usage you can use these paths: 
 #; #define tmpFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/"
-#; #define exportTaskFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/task/export/
+#; #define exportTaskFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/task/export/"
 
 #; --> For container usage you can use these paths: 
 #define tmpFilePath			"/opt/irisapp/export/packagemanager/tmp/"

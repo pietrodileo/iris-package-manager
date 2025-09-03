@@ -17,7 +17,7 @@ ClassMethod GetAllNamespaceFiles(type As %String = "") As %Status
         Set result = {}
         Set sql = "SELECT Name, Type FROM %Library.RoutineMgr_StudioOpenDialog(?,?,?,?,?,?,?)"
         ; If ExludeSystemClasses is true, filter out system classes / default IRIS classes
-        Set systemPrefixes = $LISTBUILD("CSPX","Ens","EnsHL7","EnsLib","HS","HSMOD","HIPAA","%")
+        Set systemPrefixes = $LISTFROMSTRING($$$systemClassesToExclude,",")
         If ExcludeSystemClasses {
             Set whereConditions = ""    
             Set ptr = 0

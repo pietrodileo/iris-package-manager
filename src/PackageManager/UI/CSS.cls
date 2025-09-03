@@ -214,7 +214,7 @@ ClassMethod Styles() As %Status
         .icon-cancel:before { content: "\274c"; }       /* cross mark */
         .icon-edit:before { content: "\270D"; }         /* pencil */
         .icon-delete:before { content: "\1F6AE"; }      /* wastebasket */
-        .icon-settings:before { content: "\2699"; }     /* gear */
+        .icon-settings:before { content: "\1F4D1"; }     /* whitepaper */
         .icon-tools:before { content: "\1f527"; }       /* wrench */
         .icon-success:before { content: "\2713"; }      /* check mark */
         .icon-warning:before { content: "\26a0"; }      /* warning sign */
@@ -275,8 +275,13 @@ ClassMethod Styles() As %Status
             color: white; /* Makes the arrow white for contrast against the blue background */
             font-size: 0.65em;
         }
-        .icon-right-arrow:before { content: "\25B6"; }        /* ARROW TOGGLE */
-        .icon-hourglass:before { content: "\23F3"; }        /* hourglass with sand */
+        .icon-right-arrow:before { content: "\25B6"; } /* ARROW TOGGLE */
+        .icon-hourglass:before { content: "\23F3"; } /* hourglass with sand */
+        .icon-select-all:before { content: "\2705"; } /* checkbox icon  */
+        .icon-blackcircle:before { 
+            content: "\26AB"; 
+            font-size: 0.65em;
+        } /* black circle  */
     </style>>
 
     // Specific CSS for the Sidebar

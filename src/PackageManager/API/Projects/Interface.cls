@@ -155,6 +155,11 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         Set sc = tStatement.%Prepare(sql)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 
+        Set pkgsListStr = ""
+        // Improved separators
+        Set pkgListStrSeparator = "|,|"
+        Set pkgListStrPrjSeparator = "|^|"
+
         Set tResult = tStatement.%Execute(Args...)
         While tResult.%Next() {
             Set currProject = tResult.%Get("Project")
@@ -167,6 +172,7 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
             }
 
             If type = "PKG" {
+                Set pkgsListStr = $SELECT(pkgsListStr="":item_pkgListStrPrjSeparator_currProject, 1:pkgsListStr_pkgListStrSeparator_item_pkgListStrPrjSeparator_currProject)
                 // Expand package to classes
                 Set sc = $SYSTEM.OBJ.GetPackageList(.pkgItems, item, "/mapped/includesubpackages")
                 Set childName = ""
@@ -223,16 +229,35 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
             }
         }
 
-        //Set %response.ContentType = "application/json"
-        #; Write result.%ToJSON()
+        // Insert a flag to identify whole packages that are project items
+        If pkgsListStr '= "" {
+            Set ptr = ""
+            ;W pkgsListStr,! 
+            For i = 1:1:$length(pkgsListStr, pkgListStrSeparator) {
+                Set pkg = $piece(pkgsListStr, pkgListStrSeparator, i)
+                Set pkgName = $piece(pkg, pkgListStrPrjSeparator, 1)
+                Set currProjectName = $piece(pkg, pkgListStrPrjSeparator, 2)
+                // reset the resultNode to parse the current package
+                Set resultNode = result.%Get(currProjectName)."PKG"
+                For j = 1:1:$length(pkgName, ".") {
+                    Set value = $piece(pkgName, ".", j)
+                    Set resultNode = resultNode.%Get(value)
+                    ;Write resultNode.%ToJSON(),!,!
+                }
+                // If the desired node of the object has been found, otherwise don't set any flag (troubleshooting)
+                If $ISOBJECT(resultNode) {
+                    Set resultNode."*project-item"="true"
+                }
+            }
+        }
+
+        ;Write result.%ToJSON()
         Do ..WriteResponse(.result,sc)
     } Catch ex {
         Set sc = ex.AsStatus()
-        Do ..WriteResponse(.result,sc)
-        #; Set %response.Status = 500
-        #; Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
+        Do ..WriteResponse(.result,sc,500)
+        ;Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
     }
-
     Return sc
 }
 
@@ -259,7 +284,7 @@ ClassMethod UpdateProjectDesc(projectId As %String) As %Status
         }
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.res,sc)
+        Do ..WriteResponse(.res,sc,500)
     }
     Return sc
 }
@@ -282,7 +307,7 @@ ClassMethod DeleteProject(projectId As %String) As %Status
         }
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.res,sc)
+        Do ..WriteResponse(.res,sc,500)
     }
     Return sc
 }
@@ -317,7 +342,7 @@ ClassMethod AddClassesToProject(projectId As %String) As %Status
         Set sc = proj.%Save()        
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.out, sc)
+        Do ..WriteResponse(.out, sc,500)
     }
     Return sc
 }
@@ -340,8 +365,8 @@ ClassMethod RemoveClassesToProject(projectId As %String) As %Status
         Set iter = elements.%GetIterator()
         While iter.%GetNext(.key, .value) { 
             Set element = value."name"
-            Set ^CacheTemp("RemoveClassesToProject",element) = ""
-            Set sc = proj.RemoveItem(element)
+            Set type = value.%Get("type")
+            Set sc = proj.RemoveItem(element,type)
             If $$$ISERR(sc) {
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
@@ -349,7 +374,8 @@ ClassMethod RemoveClassesToProject(projectId As %String) As %Status
         Set sc = proj.%Save()        
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.out, sc)
+        Do ..WriteResponse(.out, sc, 500)
+        Set sc = $$$OK // Return a successful status to avoid returning the default error response by IRIS
     }
     Return sc
 }

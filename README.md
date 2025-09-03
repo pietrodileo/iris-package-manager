@@ -33,18 +33,40 @@ IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U) Thu 
 
 When working with the container, no separate application installation is required, as all code is pre-packaged within the `./src` folder of the image.
 
+#### Export File Paths (Container Environment)
+
+For containerized deployments, exported files are stored in the following paths:
+
+Temporary files: `/opt/irisapp/export/packagemanager/tmp/`
+Export task files: `/opt/irisapp/export/packagemanager/task/`
+
+This is set as default for this repository.
+
 ### Working with Local InterSystems IRIS Community Edition
 
 * [InterSystems IRIS Community edition](https://community.intersystems.com/post/introducing-evaluation-service-community-edition-downloads)
 * [Visual Studio Code](https://code.visualstudio.com/) and related [InterSystems extension pack](https://marketplace.visualstudio.com/items?itemName=intersystems-community.objectscript-pack)
 
 For a local InterSystems IRIS Community Edition environment, the application must be installed by importing the Package Manager installation XML file from the `./installation` folder.
-Installation file can be imported using the "Classes" menu of IRIS Management Portal. 
+Installation file can be imported using the "Classes" menu of IRIS Management Portal.
 
 Once installed, the user interface will be available at the endpoint returned by the following method:
-* w ##class(PackageManager.UI.Main).GetMainPageClassName()
+
+```
+w ##class(PackageManager.UI.Main).GetMainPageClassName()
+```
 
 Host and port must be adjusted according to the specifications of your connection.
+
+#### Export File Paths (Local Installation)
+
+For local InterSystems IRIS Community Edition installations, exported files are stored in the following paths:
+
+Temporary files: `{InstallDirectory}tmp/packagemanager/`
+Export task files: `{InstallDirectory}tmp/packagemanager/task/export/`
+
+Where `{InstallDirectory}` corresponds to the value returned by command `$system.Util.InstallDirectory()`.
+This project has been designed to work both on UNIX or Windows installations of InterSystems IRIS, so the path will be automatically updated according to the operating system in use.
 
 ---
 
