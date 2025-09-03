@@ -1583,8 +1583,7 @@ ClassMethod AddClassesModal() As %Status
                 }
             });
             
-            // Update the selection counter and optimize
-            optimizePackageSelections();
+            // Update the selection counter after restoring
             updateNamespaceSelectedCount();
         }
 
