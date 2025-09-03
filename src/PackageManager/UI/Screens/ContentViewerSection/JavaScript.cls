@@ -509,13 +509,16 @@ ClassMethod ContentViewer() As %Status
 
                     // Verify if the package is directly associated with the project (i.e. is a project item itself)
                     if (is_pkg === true) {
+                        const prj_item_icon = document.createElement('span');
                         if (value && value.hasOwnProperty("*project-item")) {
                             // Show an icon to indicate that the package is directly associated with the project
-                            const prj_item_icon = document.createElement('span');
                             prj_item_icon.className = "icon-lightbulb";
                             prj_item_icon.title = "This package is a project item. All classes in this package will be directly associated with the project. It is not possible to add or remove classes from a package that is a project item, but it is possible to add or remove the package itself.";
-                            itemContent.appendChild(prj_item_icon);
+                        } else {
+                            prj_item_icon.className = "icon-blackcircle";
+                            prj_item_icon.title = "This package is not a project item. It is possible that not all classes in this package are directly associated with the project. It is possible to add or remove classes from this package, but it is not possible to add or remove the package itself.";
                         }
+                        itemContent.appendChild(prj_item_icon);
                     }
 
                     icon.className = "tree-icon "+curr_icon;
@@ -666,8 +669,10 @@ ClassMethod ContentViewer() As %Status
                 if (countElement) {
                     if (packageCount > 0) {
                         countElement.textContent = `${totalDisplayCount} Selected (${packageCount} packages, ${individualCount} individual)`;
+                        countElement.title = window.persistentTreeSelectedItems.join(', ');
                     } else {
                         countElement.textContent = `${totalDisplayCount} Selected`;
+                        countElement.title = window.persistentTreeSelectedItems.join(', ');
                     }
                 }
             }
@@ -839,7 +844,7 @@ ClassMethod ContentViewer() As %Status
                 
                 // Process package selections
                 window.projectPackageSelections.forEach(packagePath => {
-                    const packageData = findItemByPath(window.currentProjectData, packagePath);
+                    //const packageData = findItemByPath(window.currentProjectData, packagePath);
                     if (packageData && !isLeafNode(packageData)) {
                         expandedSelection.push({
                             path: packagePath
@@ -1574,12 +1579,16 @@ ClassMethod AddClassesModal() As %Status
             const packageCount = packageSelections.length;
             const totalDisplayCount = individualCount + packageCount;
             
+            const selectedItems = combineAll(window.projectPackageSelections, window.projectClassSelections);
+
             const countElement = document.getElementById('namespaceSelectedCount');
             if (countElement) {
                 if (packageCount > 0) {
                     countElement.textContent = `${totalDisplayCount} Selected (${packageCount} packages, ${individualCount} individual)`;
+                    countElement.title = selectedItems.join(', ');
                 } else {
                     countElement.textContent = `${totalDisplayCount} Selected`;
+                    countElement.title = selectedItems.join(', ');
                 }
             }
         }

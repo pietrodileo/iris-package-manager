@@ -1320,7 +1320,7 @@ ClassMethod AddProjectModalJavaScript() As %Status
                         </div>
                         <div class="task-file-selector-file-actions">
                             ${type === "associated"
-                                ? `<button class="task-file-selector-btn-remove" onclick="event.stopPropagation(); taskFileSelectorQuickRemove('${projectId}')">✖ Remove</button>`
+                                ? `<button class="task-file-selector-btn-remove" onclick="event.stopPropagation(); taskFileSelectorQuickRemove('${projectId}')"><span class="icon-multiplication"></span> Remove</button>`
                                 : `<button class="task-file-selector-btn-add" onclick="event.stopPropagation(); taskFileSelectorQuickAdd('${projectId}')"><span class="icon-success"></span> Add</button>`
                             }
                         </div>

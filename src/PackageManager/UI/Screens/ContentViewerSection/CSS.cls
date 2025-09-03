@@ -786,13 +786,6 @@ ClassMethod ContentTreeViewer() As %Status
             transform: scale(0.95);
         }
 
-        /* Icon for select all children button */
-        .tree-select-children-btn.icon-select-all::before {
-            content: '⤋';
-            font-size: 16px;
-            font-weight: bold;
-        }
-
         /* For folders that are expanded, show different visual state */
         .tree-item.folder.expanded .tree-select-children-btn {
             background-color: #f0f8ff;
@@ -828,23 +821,6 @@ ClassMethod ContentTreeViewer() As %Status
                 height: 28px;
                 font-size: 16px;
             }
-        }
-
-        /* Alternative icon styles you can use */
-        .tree-select-children-btn.icon-select-all-alt1::before {
-            content: '↓';
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .tree-select-children-btn.icon-select-all-alt2::before {
-            content: '⬇';
-            font-size: 14px;
-        }
-
-        .tree-select-children-btn.icon-select-all-alt3::before {
-            content: '▼';
-            font-size: 12px;
         }
 
         .tree-select-children-btn.icon-select-all-modern::before {
@@ -1258,45 +1234,6 @@ ClassMethod AddClassesModal() As %Status
         .add-classes-select-children-btn:active {
             background-color: #bbdefb;
             transform: scale(0.95);
-        }
-
-        /* Icon-based approach using CSS classes */
-        .add-classes-select-children-btn.icon-select-all::before {
-            content: '⤋';
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        /* Alternative icons you can use */
-        .add-classes-select-children-btn.icon-select-all-alt1::before {
-            content: '↓';
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .add-classes-select-children-btn.icon-select-all-alt2::before {
-            content: '⬇';
-            font-size: 14px;
-        }
-
-        .add-classes-select-children-btn.icon-select-all-alt3::before {
-            content: '▼';
-            font-size: 12px;
-        }
-
-        .add-classes-select-children-btn.icon-select-all-alt4::before {
-            content: '⇊';
-            font-size: 16px;
-        }
-
-        .add-classes-select-children-btn.icon-select-all-alt5::before {
-            content: '🔽';
-            font-size: 12px;
-        }
-
-        .add-classes-select-children-btn.icon-select-all-alt6::before {
-            content: '⊡';
-            font-size: 16px;
         }
 
         /* Modern approach with SVG-like symbols */

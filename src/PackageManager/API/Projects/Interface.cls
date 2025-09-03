@@ -156,6 +156,9 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 
         Set pkgsListStr = ""
+        // Improved separators
+        Set pkgListStrSeparator = "|,|"
+        Set pkgListStrPrjSeparator = "|^|"
 
         Set tResult = tStatement.%Execute(Args...)
         While tResult.%Next() {
@@ -169,7 +172,7 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
             }
 
             If type = "PKG" {
-                Set pkgsListStr = $SELECT(pkgsListStr="":item_"^"_currProject, 1:pkgsListStr_","_item_"^"_currProject)
+                Set pkgsListStr = $SELECT(pkgsListStr="":item_pkgListStrPrjSeparator_currProject, 1:pkgsListStr_pkgListStrSeparator_item_pkgListStrPrjSeparator_currProject)
                 // Expand package to classes
                 Set sc = $SYSTEM.OBJ.GetPackageList(.pkgItems, item, "/mapped/includesubpackages")
                 Set childName = ""
@@ -230,10 +233,10 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         If pkgsListStr '= "" {
             Set ptr = ""
             ;W pkgsListStr,! 
-            For i = 1:1:$length(pkgsListStr, ",") {
-                Set pkg = $piece(pkgsListStr, ",", i)
-                Set pkgName = $piece(pkg, "^", 1)
-                Set currProjectName = $piece(pkg, "^", 2)
+            For i = 1:1:$length(pkgsListStr, pkgListStrSeparator) {
+                Set pkg = $piece(pkgsListStr, pkgListStrSeparator, i)
+                Set pkgName = $piece(pkg, pkgListStrPrjSeparator, 1)
+                Set currProjectName = $piece(pkg, pkgListStrPrjSeparator, 2)
                 // reset the resultNode to parse the current package
                 Set resultNode = result.%Get(currProjectName)."PKG"
                 For j = 1:1:$length(pkgName, ".") {
@@ -241,7 +244,10 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
                     Set resultNode = resultNode.%Get(value)
                     ;Write resultNode.%ToJSON(),!,!
                 }
-                Set resultNode."*project-item"="true"
+                // If the desired node of the object has been found, otherwise don't set any flag (troubleshooting)
+                If $ISOBJECT(resultNode) {
+                    Set resultNode."*project-item"="true"
+                }
             }
         }
 
@@ -252,7 +258,6 @@ ClassMethod GetProjectContent(ProjectId As %String = "") As %Status
         Do ..WriteResponse(.result,sc,500)
         ;Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
     }
-
     Return sc
 }
 

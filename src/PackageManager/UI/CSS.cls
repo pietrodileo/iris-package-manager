@@ -275,9 +275,13 @@ ClassMethod Styles() As %Status
             color: white; /* Makes the arrow white for contrast against the blue background */
             font-size: 0.65em;
         }
-        .icon-right-arrow:before { content: "\25B6"; }        /* ARROW TOGGLE */
-        .icon-hourglass:before { content: "\23F3"; }        /* hourglass with sand */
-        .icon-select-all:before { content: "\290B"; }        /* Downwards Triple arrow  */
+        .icon-right-arrow:before { content: "\25B6"; } /* ARROW TOGGLE */
+        .icon-hourglass:before { content: "\23F3"; } /* hourglass with sand */
+        .icon-select-all:before { content: "\2705"; } /* checkbox icon  */
+        .icon-blackcircle:before { 
+            content: "\26AB"; 
+            font-size: 0.65em;
+        } /* black circle  */
     </style>>
 
     // Specific CSS for the Sidebar
