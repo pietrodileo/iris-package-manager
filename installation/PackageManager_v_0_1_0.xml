@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U)" ts="2025-08-27 13:28:42">
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2025.2 (Build 227U)" ts="2025-09-03 10:19:19">
 <Class name="PackageManager.API.Classes.Interface">
 <Final>1</Final>
 <Super>PackageManager.API.REST</Super>
@@ -85,10 +85,12 @@
 </Class>
 
 
+
+
 <Class name="PackageManager.API.Namespace.Interface">
 <Final>1</Final>
 <Super>PackageManager.API.REST</Super>
-<TimeChanged>67443,59562.143397317</TimeChanged>
+<TimeChanged>67449,34251.478278122</TimeChanged>
 <TimeCreated>67443,59562.143397317</TimeCreated>
 
 <Method name="GetAllNamespaceFiles">
@@ -107,8 +109,27 @@ It supports any kind of ObjectScript file, including classes, routines, and CSP 
     Set sc = $$$OK
     Try {        
         Set packageName = $GET(%request.Data("PackageName",1))
+        Set ExcludeSystemClasses = $SELECT($GET(%request.Data("ExcludeSystemClasses",1))="true":1,1:0)
         Set result = {}
         Set sql = "SELECT Name, Type FROM %Library.RoutineMgr_StudioOpenDialog(?,?,?,?,?,?,?)"
+        ; If ExludeSystemClasses is true, filter out system classes / default IRIS classes
+        Set systemPrefixes = $LISTFROMSTRING($$$systemClassesToExclude,",")
+        If ExcludeSystemClasses {
+            Set whereConditions = ""    
+            Set ptr = 0
+            While $LISTNEXT(systemPrefixes, ptr, prefix) {
+                If whereConditions '= "" {
+                    Set whereConditions = whereConditions _ " AND "
+                }
+                if prefix = "%" {
+                    Set whereConditions = whereConditions _ "Name NOT LIKE '\%%' ESCAPE '\'"
+                } Else {
+                    Set whereConditions = whereConditions _ "Name NOT LIKE '" _ prefix _ "%'"
+                }
+            }
+            Set sql = sql _ " WHERE " _ whereConditions
+        }
+
         // Define arguments
         Set spec = ""
         If packageName'="" {
@@ -173,10 +194,12 @@ It supports any kind of ObjectScript file, including classes, routines, and CSP 
 </Class>
 
 
+
+
 <Class name="PackageManager.API.Projects.Interface">
 <Final>1</Final>
 <Super>PackageManager.API.REST</Super>
-<TimeChanged>67443,59562.14980484</TimeChanged>
+<TimeChanged>67451,30210.992347478</TimeChanged>
 <TimeCreated>67443,59562.14980484</TimeCreated>
 
 <Method name="CreateProject">
@@ -191,7 +214,7 @@ It supports any kind of ObjectScript file, including classes, routines, and CSP 
         Set desc = json."desc"
         If name'="" {
             If ##class(%Studio.Project).NameIdxExists(name) {
-                Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Un progetto con lo stesso nome Ã¨ giÃ  presente. Non Ã¨ possibile creare progetti con lo stesso nome!")) 
+                Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Un progetto con lo stesso nome ÃÂ¨ giÃÂ  presente. Non ÃÂ¨ possibile creare progetti con lo stesso nome!")) 
             } 
             Set proj = ##class(%Studio.Project).%New()
             Set proj.Name = name
@@ -201,7 +224,7 @@ It supports any kind of ObjectScript file, including classes, routines, and CSP 
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
         } Else {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name Ã¨ un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name ÃÂ¨ un campo obbligatorio")) 
         }
     } Catch ex {
         Set sc=ex.AsStatus()
@@ -347,6 +370,11 @@ The description of this API entry should be in this section.
         Set sc = tStatement.%Prepare(sql)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 
+        Set pkgsListStr = ""
+        // Improved separators
+        Set pkgListStrSeparator = "|,|"
+        Set pkgListStrPrjSeparator = "|^|"
+
         Set tResult = tStatement.%Execute(Args...)
         While tResult.%Next() {
             Set currProject = tResult.%Get("Project")
@@ -359,6 +387,7 @@ The description of this API entry should be in this section.
             }
 
             If type = "PKG" {
+                Set pkgsListStr = $SELECT(pkgsListStr="":item_pkgListStrPrjSeparator_currProject, 1:pkgsListStr_pkgListStrSeparator_item_pkgListStrPrjSeparator_currProject)
                 // Expand package to classes
                 Set sc = $SYSTEM.OBJ.GetPackageList(.pkgItems, item, "/mapped/includesubpackages")
                 Set childName = ""
@@ -415,16 +444,35 @@ The description of this API entry should be in this section.
             }
         }
 
-        //Set %response.ContentType = "application/json"
-        #; Write result.%ToJSON()
+        // Insert a flag to identify whole packages that are project items
+        If pkgsListStr '= "" {
+            Set ptr = ""
+            ;W pkgsListStr,! 
+            For i = 1:1:$length(pkgsListStr, pkgListStrSeparator) {
+                Set pkg = $piece(pkgsListStr, pkgListStrSeparator, i)
+                Set pkgName = $piece(pkg, pkgListStrPrjSeparator, 1)
+                Set currProjectName = $piece(pkg, pkgListStrPrjSeparator, 2)
+                // reset the resultNode to parse the current package
+                Set resultNode = result.%Get(currProjectName)."PKG"
+                For j = 1:1:$length(pkgName, ".") {
+                    Set value = $piece(pkgName, ".", j)
+                    Set resultNode = resultNode.%Get(value)
+                    ;Write resultNode.%ToJSON(),!,!
+                }
+                // If the desired node of the object has been found, otherwise don't set any flag (troubleshooting)
+                If $ISOBJECT(resultNode) {
+                    Set resultNode."*project-item"="true"
+                }
+            }
+        }
+
+        ;Write result.%ToJSON()
         Do ..WriteResponse(.result,sc)
     } Catch ex {
         Set sc = ex.AsStatus()
-        Do ..WriteResponse(.result,sc)
-        #; Set %response.Status = 500
-        #; Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
+        Do ..WriteResponse(.result,sc,500)
+        ;Write "Error: "_$SYSTEM.Status.GetErrorText(sc)
     }
-
     Return sc
 ]]></Implementation>
 </Method>
@@ -437,7 +485,7 @@ The description of this API entry should be in this section.
     Set sc = $$$OK
     Try {
         If projectId = "" {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId Ã¨ un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId ÃÂ¨ un campo obbligatorio")) 
         }
         Set body = %request.Content.Read()
         Set json = {}.%FromJSON(body)
@@ -451,11 +499,11 @@ The description of this API entry should be in this section.
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
         } Else {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name Ã¨ un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"Name ÃÂ¨ un campo obbligatorio")) 
         }
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.res,sc)
+        Do ..WriteResponse(.res,sc,500)
     }
     Return sc
 ]]></Implementation>
@@ -469,7 +517,7 @@ The description of this API entry should be in this section.
     Set sc = $$$OK
     Try {
         If projectId = "" {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId Ã¨ un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"ProjectId ÃÂ¨ un campo obbligatorio")) 
         }
         Set sc = ##class(%Studio.Project).NameIdxDelete(projectId)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -482,7 +530,7 @@ The description of this API entry should be in this section.
         }
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.res,sc)
+        Do ..WriteResponse(.res,sc,500)
     }
     Return sc
 ]]></Implementation>
@@ -509,7 +557,11 @@ The description of this API entry should be in this section.
         Set iter = elements.%GetIterator()
         While iter.%GetNext(.key, .value) { 
             Set element = value."name"
-            Set sc = proj.AddItem(element)
+            Set type = $ZCONVERT(value."type","U")
+            If (type = "OTHER") {
+                Set type = ""
+            }
+            Set sc = proj.AddItem(element,type)
             If $$$ISERR(sc) {
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
@@ -517,7 +569,7 @@ The description of this API entry should be in this section.
         Set sc = proj.%Save()        
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.out, sc)
+        Do ..WriteResponse(.out, sc,500)
     }
     Return sc
 ]]></Implementation>
@@ -544,8 +596,8 @@ The description of this API entry should be in this section.
         Set iter = elements.%GetIterator()
         While iter.%GetNext(.key, .value) { 
             Set element = value."name"
-            Set ^CacheTemp("RemoveClassesToProject",element) = ""
-            Set sc = proj.RemoveItem(element)
+            Set type = value.%Get("type")
+            Set sc = proj.RemoveItem(element,type)
             If $$$ISERR(sc) {
                 Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
             }
@@ -553,7 +605,8 @@ The description of this API entry should be in this section.
         Set sc = proj.%Save()        
     } Catch ex {
         Set sc=ex.AsStatus()
-        Do ..WriteResponse(.out, sc)
+        Do ..WriteResponse(.out, sc, 500)
+        Set sc = $$$OK // Return a successful status to avoid returning the default error response by IRIS
     }
     Return sc
 ]]></Implementation>
@@ -561,11 +614,13 @@ The description of this API entry should be in this section.
 </Class>
 
 
+
+
 <Class name="PackageManager.API.REST">
 <Abstract>1</Abstract>
 <IncludeCode>PackageManager.PackageManager</IncludeCode>
 <Super>%CSP.REST</Super>
-<TimeChanged>67443,59562.155147615</TimeChanged>
+<TimeChanged>67450,56049.462026587</TimeChanged>
 <TimeCreated>67443,59562.155147615</TimeCreated>
 
 <XData name="UrlMap">
@@ -702,7 +757,7 @@ This method is used to add a new project to the export task.</Description>
 
 <Method name="WriteResponse">
 <ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[&response:%DynamicObject="",sc:%Status]]></FormalSpec>
+<FormalSpec><![CDATA[&response:%DynamicObject="",sc:%Status,responseStatusCode:%Integer=200]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
     If '$ISOBJECT(response) {
@@ -713,6 +768,7 @@ This method is used to add a new project to the export task.</Description>
     Set %response.IgnoreRESTOutput=0
     If $$$ISERR(sc) {
         Set response = {"error": ("Error: "_$SYSTEM.Status.GetErrorText(sc))}
+        Set %response.Status = responseStatusCode
     }
     // Return the response as a JSON
     If $ISOBJECT(response) {
@@ -1665,11 +1721,11 @@ This is the installer class for the PackageManager application.</Description>
 </Class>
 
 
-<Project name="PackageManager" LastModified="2025-08-27 13:27:10.845537966">
+<Project name="PackageManager" LastModified="2025-09-01 09:28:17.551542315">
   <Items>
-    <ProjectItem name="PackageManager.API.Classes.Interface" type="CLS"></ProjectItem>
-    <ProjectItem name="PackageManager.API.Namespace.Interface" type="CLS"></ProjectItem>
-    <ProjectItem name="PackageManager.API.Projects.Interface" type="CLS"></ProjectItem>
+    <ProjectItem name="PackageManager.API.Classes" type="PKG"></ProjectItem>
+    <ProjectItem name="PackageManager.API.Namespace" type="PKG"></ProjectItem>
+    <ProjectItem name="PackageManager.API.Projects" type="PKG"></ProjectItem>
     <ProjectItem name="PackageManager.API.REST" type="CLS"></ProjectItem>
     <ProjectItem name="PackageManager.API.Task.Interface" type="CLS"></ProjectItem>
     <ProjectItem name="PackageManager.Installer.WebApplication" type="CLS"></ProjectItem>
@@ -1704,7 +1760,7 @@ This is the installer class for the PackageManager application.</Description>
 </Project>
 
 
-<Routine name="PackageManager.PackageManager" type="INC" timestamp="67443,59562.075859796"><![CDATA[
+<Routine name="PackageManager.PackageManager" type="INC" timestamp="67451,33416.682355265"><![CDATA[
 
 #define ProjectName			 "IRIS Package Manager"
 #define PackageManagerVersion			 "0.1.0"
@@ -1717,10 +1773,11 @@ This is the installer class for the PackageManager application.</Description>
 #define ExportedReleaseSectionTitle			 "Exported Release"
 #define InstallationSectionTitle			 "Install Package Manager"
 #define defaultTaskDescription			 "Export projects utility task"
+#define systemClassesToExclude			 "CSPX,Ens,EnsHL7,EnsLib,HS,HSMOD,HIPAA,%"
 
 #; --> For standard usage you can use these paths: 
 #; #define tmpFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/"
-#; #define exportTaskFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/task/export/
+#; #define exportTaskFilePath			 $system.Util.InstallDirectory()_"tmp/packagemanager/task/export/"
 
 #; --> For container usage you can use these paths: 
 #define tmpFilePath			"/opt/irisapp/export/packagemanager/tmp/"
@@ -2211,7 +2268,7 @@ This method increment the version of the record</Description>
 
 <Class name="PackageManager.UI.APIClient">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,45095.292698194</TimeChanged>
+<TimeChanged>67450,56373.594654336</TimeChanged>
 <TimeCreated>67443,59562.169293099</TimeCreated>
 
 <UDLText name="T">
@@ -2333,9 +2390,14 @@ Example usage with catch block:
                 }
 
                 return fetch(url, config)
-                    .then(function(response) {
+                    .then(async function(response) {
+
                         if (!response.ok) {
-                            throw new Error('HTTP error - status: ' + response.status + ' - ' + response.statusText);
+                            // return the error content as text if returned
+                            const errorText = await response.text();
+                            throw new Error(
+                                `HTTP error - status: ${response.status} - ${response.statusText} - details: ${errorText}`
+                            );
                         }
                         
                         var contentType = response.headers.get('content-type');
@@ -2409,13 +2471,27 @@ Example usage with catch block:
                 },
 
                 // Namespace methods
-                getNamespaceContent: function(type, lookInto) {
+                getNamespaceContent: function(type, lookInto, excludeSystemClasses = false) {
                     const lookIntoKey = 'PackageName';
+                    const excludeSystemKey = 'ExcludeSystemClasses';
                     var endpoint = type ? '/namespace/content/' + type : '/namespace/content';
+
+                    // Build query parameters
+                    const params = [];
+                    
+                    // Add excludeSystemClasses parameter
+                    params.push(excludeSystemKey + '=' + excludeSystemClasses);
+
                     // If not empty, add a parameter to look into specific packages
                     if (lookInto && lookInto.length > 0) { 
-                        endpoint += (endpoint.includes('?') ? '&' : '?') + (lookIntoKey+'='+lookInto); 
+                        params.push(lookIntoKey + '=' + encodeURIComponent(lookInto));
                     }
+                    
+                    // Append parameters to endpoint if any exist
+                    if (params.length > 0) {
+                        endpoint += '?' + params.join('&');
+                    }
+
                     return request(endpoint, { method: 'GET' });
                 },
 
@@ -2513,7 +2589,7 @@ Example usage with catch block:
 <Description>
 This class provides the main and generic CSS classes for the Package Manager UI. </Description>
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,48396.139464729</TimeChanged>
+<TimeChanged>67451,30779.723896677</TimeChanged>
 <TimeCreated>67443,59562.168127157</TimeCreated>
 
 <Method name="Styles">
@@ -2731,7 +2807,7 @@ Overall generic styles for the package manager projecty </Description>
         .icon-cancel:before { content: "\274c"; }       /* cross mark */
         .icon-edit:before { content: "\270D"; }         /* pencil */
         .icon-delete:before { content: "\1F6AE"; }      /* wastebasket */
-        .icon-settings:before { content: "\2699"; }     /* gear */
+        .icon-settings:before { content: "\1F4D1"; }     /* whitepaper */
         .icon-tools:before { content: "\1f527"; }       /* wrench */
         .icon-success:before { content: "\2713"; }      /* check mark */
         .icon-warning:before { content: "\26a0"; }      /* warning sign */
@@ -2741,6 +2817,7 @@ Overall generic styles for the package manager projecty </Description>
         .icon-refresh:before { content: "\21bb"; }      /* clockwise open circle arrow */
         .icon-download:before { content: "\2B07"; }     /* downwards arrow */
         .icon-upload:before { content: "\2191"; }       /* upwards arrow */
+        .icon-multiplication:before { content: "\00D7"; }         /* multiplication sign */
         .icon-plus:before { content: "\002b"; }         /* plus sign */
         .icon-minus:before { content: "\2212"; }        /* minus sign */
         .icon-left:before { content: "\2190"; }         /* leftwards arrow */
@@ -2775,14 +2852,29 @@ Overall generic styles for the package manager projecty </Description>
         .icon-dividers:before { content: "\1F5C2"; }     /* CARD INDEX DIVIDERS */
         .icon-new:before { content: "\1F195"; }          /* SQUARED NEW */
         .icon-refresh:before { content: "\1F504"; }      /* REFRESH */
-        .icon-open-book:before { content: "\1F4D6"; }    /* REFRESH */
+        .icon-open-book:before { content: "\1F4D6"; }    /* open book */
         .icon-plus:before { content: "\2795"; }          /* PLUS SIGN */
         .icon-calendar:before { content: "\1F4C5"; }     /* CALENDAR */
         .icon-email:before { content: "\1F4E7"; }        /* EMAIL */
         .icon-pause:before { content: "\23F8"; }        /* Pause Button */
-        .icon-barchart:before { content: "\1F4CA"; }        /* Bar Chart */
-        .icon-bag:before { content: "\1F4BC"; }        /* Bookmark */
-        .icon-clipboard:before { content: "\1F4CB"; }        /* Clipboard */
+        .icon-barchart:before { content: "\1F4CA"; }    /* Bar Chart */
+        .icon-bag:before { content: "\1F4BC"; }    /* BRIEFCASE / BAG */
+        .icon-clipboard:before { content: "\1F4CB"; }   /* Clipboard */
+        .icon-run:before {                              /* RUN BUTTON */
+            content: "\25B6"; 
+            background-color: #1c73ffff; /* Sets the background color to blue */
+            padding: 3px 6px; /* Adds space around the icon */
+            border-radius: 4px; /* Rounds the corners for a softer look */
+            color: white; /* Makes the arrow white for contrast against the blue background */
+            font-size: 0.65em;
+        }
+        .icon-right-arrow:before { content: "\25B6"; } /* ARROW TOGGLE */
+        .icon-hourglass:before { content: "\23F3"; } /* hourglass with sand */
+        .icon-select-all:before { content: "\2705"; } /* checkbox icon  */
+        .icon-blackcircle:before { 
+            content: "\26AB"; 
+            font-size: 0.65em;
+        } /* black circle  */
     </style>>
 
     // Specific CSS for the Sidebar
@@ -3036,7 +3128,7 @@ This class provides the main functionality for the Package Manager UI.
 It provides methods for rendering the main page, initializing the sidebar content, and handling window load events.  
 The class is responsible for setting up the UI components and providing the necessary functionality for the Package Manager UI.</Description>
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,45586.140029603</TimeChanged>
+<TimeChanged>67449,55975.13109419</TimeChanged>
 <TimeCreated>67443,59562.175750499</TimeCreated>
 
 <Method name="OnPage">
@@ -3315,7 +3407,7 @@ This method returns the endpoint to call to execute an internal call (from a CSP
 
 <Class name="PackageManager.UI.Screens.ContentViewerSection.CSS">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67443,59562.191085347</TimeChanged>
+<TimeChanged>67451,30211.04098736</TimeChanged>
 <TimeCreated>67443,59562.191085347</TimeCreated>
 
 <UDLText name="T">
@@ -4102,6 +4194,83 @@ Wrapper for content viewer section css styles</Description>
             outline: none;
             border-color: #0e639c;
         }    
+
+        .tree-select-children-btn {
+            background: none;
+            border: none;
+            padding: 4px 6px;
+            margin-left: 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+        }
+
+        .tree-select-children-btn:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            transform: scale(1.1);
+        }
+
+        .tree-select-children-btn:active {
+            background-color: #bbdefb;
+            transform: scale(0.95);
+        }
+
+        /* For folders that are expanded, show different visual state */
+        .tree-item.folder.expanded .tree-select-children-btn {
+            background-color: #f0f8ff;
+        }
+
+        /* Focus states for accessibility */
+        .tree-select-children-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* Different states based on selection */
+        .tree-item.has-selected-children .tree-select-children-btn {
+            color: #1976d2;
+            background-color: #e3f2fd;
+        }
+
+        /* Animation for button press */
+        @keyframes selectPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .tree-select-children-btn.selecting {
+            animation: selectPulse 0.3s ease-in-out;
+        }
+
+        /* Responsive behavior for mobile */
+        @media (max-width: 768px) {
+            .tree-select-children-btn {
+                min-width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+        }
+
+        .tree-select-children-btn.icon-select-all-modern::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M8 12l4 4 4-4'/%3E%3Cpath d='M8 6l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+
     </style>>
     Return sc
 ]]></Implementation>
@@ -4135,7 +4304,7 @@ CSS for Add Classes Modal </Description>
             left: 50%;
             transform: translate(-50%, -50%);
             width: 90%;
-            max-width: 1200px;
+            max-width: 1300px;
             height: 85%;
             max-height: 800px;
             background: white;
@@ -4451,19 +4620,115 @@ CSS for Add Classes Modal </Description>
             }
         }
 
-        /* ADDITION: Fix toggle arrow rotation for expanded items */
+        /* Fix toggle arrow rotation for expanded items */
         .add-classes-tree-item.expanded .add-classes-tree-toggle {
             transform: rotate(90deg);
         }
 
-        /* ADDITION: Ensure nested collapsed items stay hidden */
+        /* Ensure nested collapsed items stay hidden */
         .add-classes-tree-item:not(.expanded) .add-classes-tree-children {
             display: none !important;
         }
 
-        /* ADDITION: Reset rotation for nested non-expanded items */
+        /* Reset rotation for nested non-expanded items */
         .add-classes-tree-item:not(.expanded) .add-classes-tree-toggle {
             transform: rotate(0deg);
+        }
+
+        .add-classes-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .add-classes-checkbox-label {
+            cursor: pointer;
+            font-weight: 500;
+            color: #333;
+            user-select: none;
+        }
+
+        /* Select all children button styling */
+        .add-classes-select-children-btn {
+            background: none;
+            border: none;
+            padding: 4px 6px;
+            margin-left: 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+        }
+
+        .add-classes-select-children-btn:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            transform: scale(1.1);
+        }
+
+        .add-classes-select-children-btn:active {
+            background-color: #bbdefb;
+            transform: scale(0.95);
+        }
+
+        /* Modern approach with SVG-like symbols */
+        .add-classes-select-children-btn.icon-select-all-modern::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M8 12l4 4 4-4'/%3E%3Cpath d='M8 6l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+
+        /* For folders that are expanded, show different visual state */
+        .add-classes-tree-item.folder.expanded .add-classes-select-children-btn {
+            background-color: #f0f8ff;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 768px) {
+            .add-classes-select-children-btn {
+                min-width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+        }
+
+        /* Tooltip enhancement */
+        .add-classes-select-children-btn[title] {
+            position: relative;
+        }
+
+        /* Focus states for accessibility */
+        .add-classes-select-children-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* Different states based on selection */
+        .add-classes-tree-item.has-selected-children .add-classes-select-children-btn {
+            color: #1976d2;
+            background-color: #e3f2fd;
+        }
+
+        /* Animation for button press */
+        @keyframes selectPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .add-classes-select-children-btn.selecting {
+            animation: selectPulse 0.3s ease-in-out;
         }
     </style>>
     Return sc
@@ -4474,7 +4739,7 @@ CSS for Add Classes Modal </Description>
 
 <Class name="PackageManager.UI.Screens.ContentViewerSection.HTML">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,46179.364103871</TimeChanged>
+<TimeChanged>67451,32019.268350682</TimeChanged>
 <TimeCreated>67443,59562.191291865</TimeCreated>
 
 <UDLText name="T">
@@ -4690,6 +4955,14 @@ CSS for Add Classes Modal </Description>
                                 </select>
                             </div>
                             <div class='add-classes-control-group'>
+                                <label></label>
+                                <div class='add-classes-checkbox-group'>
+                                    <input type='checkbox' id='excludeSystemClasses' class='add-classes-checkbox'>
+                                    <label for='excludeSystemClasses' class='add-classes-checkbox-label' title='Exclude Intersystems IRIS default classes starting with the following prefixes: #($$$systemClassesToExclude)#'>
+                                        Exclude System Classes</label>
+                                </div>
+                            </div>
+                            <div class='add-classes-control-group'>
                                 <label for='packageSearchInput'>Look Into:</label>
                                 <input type='text' id='packageSearchInput' class='add-classes-search-input' placeholder='Look into package...'>
                             </div>
@@ -4731,7 +5004,7 @@ CSS for Add Classes Modal </Description>
 
 <Class name="PackageManager.UI.Screens.ContentViewerSection.JavaScript">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,47913.268581154</TimeChanged>
+<TimeChanged>67451,31575.37520274</TimeChanged>
 <TimeCreated>67443,59562.19714692</TimeCreated>
 
 <UDLText name="T">
@@ -5110,6 +5383,11 @@ to interact with the Content Viewer and Project List Section page UI components.
 
             PackageManagerAPI.getProjectContent(idToLoad)
                 .then(function(json) {
+                    // Raise an alert if the project is empty
+                    if (Object.keys(json).length === 0) {
+                        throw new Error("The project is empty.");
+                    }                    
+
                     // Store the original data for filtering
                     window.originalProjectData = json;
                     window.currentProjectData = json;
@@ -5132,6 +5410,38 @@ to interact with the Content Viewer and Project List Section page UI components.
 
         // Global array to track selected items persistently
         window.persistentTreeSelectedItems = [];
+        window.projectPackageSelections = []; // Track packages selected as packages
+        window.projectClassSelections = []; // Track individual classes selected
+
+        // Get all leaf paths under a node
+        function getAllProjectLeafPaths(nodeData, basePath) {
+            const leafPaths = [];
+            
+            function traverse(obj, currentPath) {
+                for (const key in obj) {
+                    // skip unwanted key
+                    if (key === "*project-item") continue;
+
+                    const value = obj[key];
+                    if (!value) continue;
+                    
+                    const fullPath = currentPath ? `${currentPath}.${key}` : key;
+                    
+                    if (isLeafNode(value)) {
+                        leafPaths.push(fullPath);
+                    } else {
+                        traverse(value, fullPath);
+                    }
+                }
+            }
+            
+            traverse(nodeData, basePath);
+            return leafPaths;
+        }
+
+        function isLeafNode(node) {
+            return node && typeof node === 'object' && 'name' in node && 'type' in node;
+        }
 
         // This method renders the folder tree for the project content
         function renderFolderTree(data, containerId = "container") {
@@ -5146,10 +5456,6 @@ to interact with the Content Viewer and Project List Section page UI components.
             
             container.innerHTML = '';
 
-            function isLeafNode(node) {
-                return node && typeof node === 'object' && 'name' in node && 'type' in node;
-            }
-
             function createTreeItem(key, value, path = '') {
                 const fullPath = path ? `${path}.${key}` : key;
                 const li = document.createElement('li');
@@ -5161,8 +5467,7 @@ to interact with the Content Viewer and Project List Section page UI components.
 
                 // Folder toggle arrow
                 const toggle = document.createElement('span');
-                toggle.className = 'tree-toggle';
-                toggle.textContent = 'â¶';
+                toggle.className = 'tree-toggle icon-right-arrow';
                 itemContent.appendChild(toggle);
                 toggle.title = fullPath;
 
@@ -5175,56 +5480,22 @@ to interact with the Content Viewer and Project List Section page UI components.
                 checkbox.id = 'tree-checkbox-'+fullPath;
 
                 // Add leaf count as data attribute for folders
-                if (!isLeafNode(value)) {
-                    checkbox.setAttribute('data-leaf', 'false');
-                } else {
+                if (isLeafNode(value)) {
+                    // For leaf nodes (classes), checkbox selects the individual class
                     checkbox.setAttribute('data-leaf', 'true');
-                    if (checkbox.checked) {
-                        // Sync with persistent array
-                        if (!window.persistentTreeSelectedItems.includes(fullPath)) {
-                            window.persistentTreeSelectedItems.push(fullPath);
-                        }                        
-                    }
+                    checkbox.addEventListener('change', (e) => {
+                        e.stopPropagation();
+                        handleProjectClassSelection(fullPath, checkbox.checked);
+                    });
+                } else {
+                    // For folder nodes (packages), checkbox selects the package
+                    checkbox.setAttribute('data-leaf', 'false');
+                    checkbox.addEventListener('change', (e) => {
+                        e.stopPropagation();
+                        handleProjectPackageSelection(fullPath, checkbox.checked, value);
+                    });
                 }
 
-                checkbox.addEventListener('change', (e) => {
-                    e.stopPropagation();
-                    
-                    if (checkbox.checked) {
-                        // If this is a folder, select all its children (visible and hidden)
-                        if (!isLeafNode(value)) {
-                            if (li.classList.contains('expanded')) {
-                                // If expanded, select visible children
-                                selectAllChildren(li, true);
-                            } else {
-                                // If collapsed, select all hidden children from data
-                                selectAllHiddenChildren(value, fullPath, true);
-                            }
-                        } 
-                        // if the object is a leaf, add it to the global selected items
-                        if (isLeafNode(value) && !window.persistentTreeSelectedItems.includes(fullPath)) {
-                            window.persistentTreeSelectedItems.push(fullPath);                   
-                        }                       
-                    } else {
-                        // If this is a folder, unselect all its children (visible and hidden)
-                        if (!isLeafNode(value)) {
-                            if (li.classList.contains('expanded')) {
-                                // If expanded, unselect visible children
-                                selectAllChildren(li, false);
-                            } else {
-                                // If collapsed, unselect all hidden children from data
-                                selectAllHiddenChildren(value, fullPath, false);
-                            }
-                        }
-                        // Remove from persistentSelectedItems if present
-                        const idx = window.persistentTreeSelectedItems.indexOf(fullPath);
-                        if (idx !== -1) {
-                            window.persistentTreeSelectedItems.splice(idx, 1);
-                        }
-                    }
-                    updateSelectedCount();
-                });                
-                
                 itemContent.appendChild(checkbox);
 
                 if (isLeafNode(value)) {
@@ -5250,19 +5521,40 @@ to interact with the Content Viewer and Project List Section page UI components.
                 } else {
                     // Folder node
                     li.classList.add('folder');
-                    
+                    let is_pkg = true
                     const icon = document.createElement('span');
                     // If the icon is related to the project name (not a folder) use a different icon
                     let curr_icon = 'icon-folder-open'
                     if (!path) {
                         curr_icon = 'icon-bag'
+                        checkbox.hidden=true
+                        is_pkg = false
                     } 
                     if (key === 'DIR') {
                         curr_icon = 'icon-folder'
+                        checkbox.hidden=true
+                        is_pkg = false
                     } 
                     if (key === 'PKG') {
                         curr_icon = 'icon-package'
+                        checkbox.hidden=true
+                        is_pkg = false
                     } 
+
+                    // Verify if the package is directly associated with the project (i.e. is a project item itself)
+                    if (is_pkg === true) {
+                        const prj_item_icon = document.createElement('span');
+                        if (value && value.hasOwnProperty("*project-item")) {
+                            // Show an icon to indicate that the package is directly associated with the project
+                            prj_item_icon.className = "icon-lightbulb";
+                            prj_item_icon.title = "This package is a project item. All classes in this package will be directly associated with the project. It is not possible to add or remove classes from a package that is a project item, but it is possible to add or remove the package itself.";
+                        } else {
+                            prj_item_icon.className = "icon-blackcircle";
+                            prj_item_icon.title = "This package is not a project item. It is possible that not all classes in this package are directly associated with the project. It is possible to add or remove classes from this package, but it is not possible to add or remove the package itself.";
+                        }
+                        itemContent.appendChild(prj_item_icon);
+                    }
+
                     icon.className = "tree-icon "+curr_icon;
                     itemContent.appendChild(icon);
 
@@ -5271,9 +5563,20 @@ to interact with the Content Viewer and Project List Section page UI components.
                     label.textContent = key;
                     itemContent.appendChild(label);
 
+                    // Add "select all children" icon button
+                    const selectChildrenBtn = document.createElement('button');
+                    selectChildrenBtn.className = 'tree-select-children-btn icon-select-all';
+                    selectChildrenBtn.title = 'Select all children as individual classes';
+                    selectChildrenBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleProjectSelectAllChildren(fullPath, value);
+                    });
+                    itemContent.appendChild(selectChildrenBtn);
+
                     // Click handler for folder expansion
                     itemContent.addEventListener('click', (e) => {
-                        if (e.target === checkbox) return;
+                        if (e.target === checkbox || e.target === selectChildrenBtn) return;
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -5282,10 +5585,6 @@ to interact with the Content Viewer and Project List Section page UI components.
                             li.classList.remove('expanded');
                         } else {
                             li.classList.add('expanded');
-                            // NEW: If folder gets expanded and is selected, select all its children
-                            //if (checkbox.checked) {
-                            //    selectAllChildren(li, true);
-                            //}
                         }
                     });
 
@@ -5294,6 +5593,9 @@ to interact with the Content Viewer and Project List Section page UI components.
                     childrenContainer.className = 'tree-children';
 
                     for (const childKey in value) {
+                        // skip unwanted key
+                        if (childKey === "*project-item") continue;
+
                         if (value[childKey]) {
                             const childItem = createTreeItem(childKey, value[childKey], fullPath);
                             childrenContainer.appendChild(childItem);
@@ -5307,11 +5609,105 @@ to interact with the Content Viewer and Project List Section page UI components.
                 return li;
             }
 
+            // Handle individual class selection
+            function handleProjectClassSelection(classPath, selected) {
+                if (selected) {
+                    if (!window.projectClassSelections.includes(classPath)) {
+                        window.projectClassSelections.push(classPath);
+                    }
+                    // Remove from persistent array if present (legacy compatibility)
+                    const legacyIdx = window.persistentTreeSelectedItems.indexOf(classPath);
+                    if (legacyIdx !== -1) {
+                        window.persistentTreeSelectedItems.splice(legacyIdx, 1);
+                    }
+                } else {
+                    const idx = window.projectClassSelections.indexOf(classPath);
+                    if (idx !== -1) {
+                        window.projectClassSelections.splice(idx, 1);
+                    }
+                }
+                updateSelectedCount();
+            }
+
+            // Handle package selection (selects the package as a whole)
+            function handleProjectPackageSelection(packagePath, selected, packageData) {
+                if (selected) {
+                    // Add package to package selections
+                    if (!window.projectPackageSelections.includes(packagePath)) {
+                        window.projectPackageSelections.push(packagePath);
+                    }
+                    
+                    // Remove any individual children from class selections since the package is selected
+                    const allChildren = getAllProjectLeafPaths(packageData, packagePath);
+                    allChildren.forEach(childPath => {
+                        const idx = window.projectClassSelections.indexOf(childPath);
+                        if (idx !== -1) {
+                            window.projectClassSelections.splice(idx, 1);
+                        }
+                        // Uncheck individual child checkboxes
+                        const childCheckbox = document.querySelector(`input[value="${childPath}"]`);
+                        if (childCheckbox) {
+                            childCheckbox.checked = false;
+                        }
+                    });
+                    
+                } else {
+                    // Remove package from package selections
+                    const idx = window.projectPackageSelections.indexOf(packagePath);
+                    if (idx !== -1) {
+                        window.projectPackageSelections.splice(idx, 1);
+                    }
+                }
+                updateSelectedCount();
+            }
+
+            // Handle "select all children" button click
+            function handleProjectSelectAllChildren(packagePath, packageData) {
+                const allChildren = getAllProjectLeafPaths(packageData, packagePath);
+                
+                // Remove package selection if it exists
+                const packageIdx = window.projectPackageSelections.indexOf(packagePath);
+                if (packageIdx !== -1) {
+                    window.projectPackageSelections.splice(packageIdx, 1);
+                    // Uncheck package checkbox
+                    const packageCheckbox = document.querySelector(`input[value="${packagePath}"]`);
+                    if (packageCheckbox) {
+                        packageCheckbox.checked = false;
+                    }
+                }
+                
+                // Add all children to individual selections
+                allChildren.forEach(childPath => {
+                    if (!window.projectClassSelections.includes(childPath)) {
+                        window.projectClassSelections.push(childPath);
+                    }
+                    // Check individual child checkboxes
+                    const childCheckbox = document.querySelector(`input[value="${childPath}"]`);
+                    if (childCheckbox) {
+                        childCheckbox.checked = true;
+                    }
+                });
+                
+                updateSelectedCount();
+            }
+
             function updateSelectedCount() {
-                let totalLeafCount = window.persistentTreeSelectedItems.length;                
+                const individualCount = window.projectClassSelections.length;
+                const packageCount = window.projectPackageSelections.length;
+                const totalDisplayCount = individualCount + packageCount;
+                
+                // Update legacy persistent array for backward compatibility
+                window.persistentTreeSelectedItems = combineAll(window.projectPackageSelections, window.projectClassSelections);
+                
                 const countElement = document.getElementById('selectedCount');
                 if (countElement) {
-                    countElement.textContent = `${totalLeafCount} Selected`;
+                    if (packageCount > 0) {
+                        countElement.textContent = `${totalDisplayCount} Selected (${packageCount} packages, ${individualCount} individual)`;
+                        countElement.title = window.persistentTreeSelectedItems.join(', ');
+                    } else {
+                        countElement.textContent = `${totalDisplayCount} Selected`;
+                        countElement.title = window.persistentTreeSelectedItems.join(', ');
+                    }
                 }
             }
 
@@ -5367,12 +5763,6 @@ to interact with the Content Viewer and Project List Section page UI components.
                         }                     
                         // Skip folder selections - only export explicitly selected leaf nodes
                     });
-
-                    /*
-                    console.log('=== SELECTED PROJECT ITEMS ===');
-                    console.log(`Total selections: ${selected.length}`);
-                    console.log(`Expanded to ${expandedSelection.length} leaf items:`);
-                    */
 
                     class_array = []
                     expandedSelection.forEach(item => {
@@ -5447,34 +5837,70 @@ to interact with the Content Viewer and Project List Section page UI components.
 
             // Function to ask API to remove the selected classes or packages from the project
             window.removeSelectedProjectItems = async function() {
-                const expandedSelection = [];
-                
-                if (window.persistentTreeSelectedItems.length == 0) {
+                if (window.projectPackageSelections.length === 0 && window.projectClassSelections.length === 0) {
                     alert("Please select at least an element to remove");
                     return;
                 }
 
-                const projectId = getCommonPrefix(window.persistentTreeSelectedItems)
+                // Check for conflicts between package and class selections
+                const conflicts = [];
+                
+                for (const pkg of window.projectPackageSelections) {
+                    for (const cls of window.projectClassSelections) {
+                        if (cls.startsWith(pkg + ".")) {
+                            conflicts.push({ package: pkg, class: cls });
+                        }
+                    }
+                }
+
+                if (conflicts.length > 0) {
+                    let conflictMessage = "Conflict detected: You cannot select both packages and their individual classes for removal.\n\nConflicts found:\n";
+                    conflicts.forEach(conflict => {
+                        conflictMessage += `â¢ Package "${conflict.package}" and class "${conflict.class}"\n`;
+                    });
+                    conflictMessage += "\nPlease select either packages or their individual classes, not both.";
+                    alert(conflictMessage);
+                    return;
+                }
+
+                const projectId = getCommonPrefix(combineAll(window.projectPackageSelections, window.projectClassSelections));
                 if (projectId === null) {
-                    alert("Please remove one item at time from a project.");
+                    alert("Please remove items from one project at a time.");
                     return;
                 }
 
-                if (!confirm("Do you really want to remove " + window.persistentTreeSelectedItems.length + " elements from project '" + projectId + "'?")) {
+                const totalItems = window.projectPackageSelections.length + window.projectClassSelections.length;
+                if (!confirm("Do you really want to remove " + totalItems + " elements from project '" + projectId + "'?")) {
                     return;
                 }
 
-                window.persistentTreeSelectedItems.forEach(path => {
-                    const item = findItemByPath(window.currentProjectData, path);
+                const expandedSelection = [];
+                
+                // Process package selections
+                window.projectPackageSelections.forEach(packagePath => {
+                    //const packageData = findItemByPath(window.currentProjectData, packagePath);
+                    if (packageData && !isLeafNode(packageData)) {
+                        expandedSelection.push({
+                            path: packagePath
+                        });
+                        //const leafItems = getAllLeafNodes(packageData, packagePath);
+                        //leafItems.forEach(leafItem => {
+                        //    expandedSelection.push(leafItem);
+                        //});
+                    }
+                });
+
+                // Process individual class selections
+                window.projectClassSelections.forEach(classPath => {
+                    const item = findItemByPath(window.currentProjectData, classPath);
                     if (item && isLeafNode(item)) {
                         expandedSelection.push({
-                            path: path,
+                            path: classPath,
                             name: item.name,
                             type: item.type,
                             isLeaf: true
                         });
-                    }                     
-                    // Skip folder selections - only export explicitly selected leaf nodes
+                    }
                 });
 
                 class_array = []
@@ -5491,11 +5917,22 @@ to interact with the Content Viewer and Project List Section page UI components.
                         // Package items should be sent to the API separated by a point
                         item.path = item_parts.join('.')
                     }
-                    const item_fullname = item.path+'.'+item.type.toLowerCase();
+                    let item_type = '';
+                    if (item && item.hasOwnProperty("type")) {
+                        item_type = item.type.toLowerCase()
+                    } 
+                    const item_fullname = item_type==='' ? item.path : item.path+'.'+item_type;
                     // Push the current item within the array
-                    class_array.push({
-                        "name": item_fullname
-                    })
+                    if (item_type==='') {
+                        class_array.push({
+                            "name": item_fullname,
+                            "type": 'PKG' // specify the type as 'PKG' for the packages
+                        })
+                    } else {
+                        class_array.push({
+                            "name": item_fullname
+                        })
+                    }
                 });
     
                 const classes_to_remove = { "elements": class_array }
@@ -5504,14 +5941,15 @@ to interact with the Content Viewer and Project List Section page UI components.
                         alert("Elements have been successfully removed from the project");
                         // Reload table to show the updated project content
                         showSelectedProjectContent(false, projectId);
+                        // Initialize the arrays of the selected items
+                        window.projectPackageSelections = [];
+                        window.projectClassSelections = [];
+                        window.persistentTreeSelectedItems = [];
+                        updateSelectedCount();
                     })
                     .catch(function(err) {
-                        alert(`Failed to add items to project: ${err.message}`);
+                        alert(`Failed to remove items from project: ${err.message}`);
                     });        
-
-                // Initialize the array of the selected items
-                window.persistentTreeSelectedItems = [];
-                updateSelectedCount();
             };
 
             // Get project name from item node name
@@ -5531,51 +5969,6 @@ to interact with the Content Viewer and Project List Section page UI components.
                 }
             }
 
-            // Helper function to select/unselect all children of a folder
-            function selectAllChildren(folderElement, select) {
-                const childrenContainer = folderElement.querySelector('.tree-children');
-                if (!childrenContainer) return;
-                
-                // Find all checkboxes in the children container
-                const childCheckboxes = childrenContainer.querySelectorAll('input[type="checkbox"]');
-                
-                childCheckboxes.forEach(childCheckbox => {
-                    const childPath = childCheckbox.value;
-                    
-                    if (select) {
-                        childCheckbox.checked = true;
-                        
-                        // If this child is also a folder and is expanded, recursively select its children
-                        const childItem = childCheckbox.closest('.tree-item');
-                        if (childItem && childItem.classList.contains('folder') && childItem.classList.contains('expanded')) {
-                            selectAllChildren(childItem, true);
-                        } else {
-                            // if the child is not a folder, so if it is a leaf, add it to the global array
-                            if (!window.persistentTreeSelectedItems.includes(childPath)) {
-                                window.persistentTreeSelectedItems.push(childPath);                   
-                            }                       
-                        }
-                    } else {
-                        childCheckbox.checked = false;
-                        
-                        // If this child is also a folder, recursively unselect its children
-                        const childItem = childCheckbox.closest('.tree-item');
-                        if (childItem && childItem.classList.contains('folder')) {
-                            selectAllChildren(childItem, false);
-                        } else {
-                            // if the child is not a folder, so if it is a leaf, remove it to the global array
-                            if (window.persistentTreeSelectedItems.includes(childPath)) {
-                                // Remove from persistentSelectedItems if present
-                                const idx = window.persistentTreeSelectedItems.indexOf(childPath);
-                                if (idx !== -1) {
-                                    window.persistentTreeSelectedItems.splice(idx, 1);
-                                }
-                            }                       
-                        }
-                    }
-                });
-            }
-
             // Helper functions for selection
             function findItemByPath(data, path) {
                 const pathParts = path.split('.');
@@ -5592,56 +5985,15 @@ to interact with the Content Viewer and Project List Section page UI components.
                 return current;
             }
 
-            // Function to select/unselect all hidden children from data structure
-            function selectAllHiddenChildren(nodeData, basePath, select) {
-                if (!nodeData || typeof nodeData !== 'object') return;
-                
-                function traverseAndSelect(obj, currentPath) {
-                    for (const key in obj) {
-                        const value = obj[key];
-                        if (!value) continue;
-                        
-                        const fullPath = currentPath ? `${currentPath}.${key}` : key;
-                        
-                        if (isLeafNode(value)) {
-                            // This is a leaf node - add/remove from selection
-                            if (select) {
-                                if (!window.persistentTreeSelectedItems.includes(fullPath)) {
-                                    window.persistentTreeSelectedItems.push(fullPath);
-                                }
-                                // Also check the checkbox if it exists in the DOM
-                                const checkbox = document.querySelector(`input[value="${fullPath}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = true;
-                                }
-                            } else {
-                                const idx = window.persistentTreeSelectedItems.indexOf(fullPath);
-                                if (idx !== -1) {
-                                    window.persistentTreeSelectedItems.splice(idx, 1);
-                                }
-                                // Also uncheck the checkbox if it exists in the DOM
-                                const checkbox = document.querySelector(`input[value="${fullPath}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = false;
-                                }
-                            }
-                        } else {
-                            // This is a folder - recursively traverse
-                            traverseAndSelect(value, fullPath);
-                        }
-                    }
-                }
-                
-                // Start traversing from the node's children
-                traverseAndSelect(nodeData, basePath);
-            }
-
             // Function to get all leaf nodes from a given node 
             function getAllLeafNodes(node, basePath = '') {
                 const leafNodes = [];
                 
                 function traverse(obj, currentPath) {
                     for (const key in obj) {
+                        // skip unwanted key
+                        if (key === "*project-item") continue;
+
                         const value = obj[key];
                         if (!value) continue;
                         
@@ -5677,39 +6029,38 @@ to interact with the Content Viewer and Project List Section page UI components.
                     const filteredData = filterProjectData(window.originalProjectData, searchTerm);
                     renderFolderTree(filteredData, containerId);
                     setTimeout(() => { window.expandAllTree(); }, 100);
-                }
-                
-                // Restore selections after re-rendering
-                setTimeout(() => {
-                    restoreSelectionsFromPersistent();
-                }, 200);
+                }                
             };
 
-            // Helper function to restore selections from persistent array
-            function restoreSelectionsFromPersistent() {
+            // Restore selections from state
+            function restoreProjectSelectionsFromState() {
                 const container = document.getElementById(containerId || "container");
                 if (!container) return;
                                 
-                // Restore each selection from persistent array
-                window.persistentTreeSelectedItems.forEach(path => {
-                    // Try multiple selectors to find the checkbox
-                    let checkbox = container.querySelector(`#tree-checkbox-${CSS.escape(path)}`);
-                    if (!checkbox) {
-                        checkbox = container.querySelector(`input[value="${path}"]`);
-                    }
-                    
+                // Restore package selections
+                window.projectPackageSelections.forEach(path => {
+                    const checkbox = container.querySelector(`input[value="${path}"]`);
                     if (checkbox) {
                         checkbox.checked = true;
                     }
                 });
                 
-                // Update the selection counter
+                // Restore individual class selections
+                window.projectClassSelections.forEach(path => {
+                    const checkbox = container.querySelector(`input[value="${path}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+                
                 updateSelectedCount();
             }
 
-            // Update the clear selection function to also clear persistent array
+            // Update the clear selection function to also clear new arrays
             window.clearTreeSelection = function() {
                 window.persistentTreeSelectedItems = []; // Clear persistent array too
+                window.projectPackageSelections = [];
+                window.projectClassSelections = [];
                 const container = document.getElementById(containerId || "container");
                 if (container) {
                     container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -5721,6 +6072,9 @@ to interact with the Content Viewer and Project List Section page UI components.
 
             // Function to filter project data based on search term
             function filterProjectData(data, searchTerm) {
+                // Set to track visited nodes and prevent infinite recursion
+                const visitedNodes = new WeakSet();
+
                 function nodeMatches(node, key) {
                     if (isLeafNode(node)) {
                         return node.name.toLowerCase().includes(searchTerm) || 
@@ -5732,6 +6086,14 @@ to interact with the Content Viewer and Project List Section page UI components.
                 }
 
                 function findMatchingPaths(node, key, currentPath = []) {
+                    // Prevent infinite recursion by checking if we've already visited this node
+                    if (visitedNodes.has(node)) {
+                        return [];
+                    }
+
+                    // Mark this node as visited
+                    visitedNodes.add(node);
+
                     const fullPath = currentPath.concat([key]);
                     const matches = [];
 
@@ -5743,9 +6105,14 @@ to interact with the Content Viewer and Project List Section page UI components.
                         });
                     }
 
-                    if (!isLeafNode(node)) {
+                    if (!isLeafNode(node) && typeof node === 'object' && node !== null) {
                         for (const childKey in node) {
-                            if (node[childKey]) {
+                            // Skip unwanted keys and null/undefined values
+                            if (childKey === "*project-item" || !node[childKey]) {
+                                continue;
+                            }
+
+                            if (typeof node[childKey] === 'object' && node[childKey] !== null) {
                                 const childMatches = findMatchingPaths(node[childKey], childKey, fullPath);
                                 pushAll(matches, childMatches);
                             }
@@ -5780,7 +6147,7 @@ to interact with the Content Viewer and Project List Section page UI components.
 
                 const allMatches = [];
                 for (const key in data) {
-                    if (data[key]) {
+                    if (data[key] && typeof data[key] === 'object') {
                         const matches = findMatchingPaths(data[key], key);
                         pushAll(allMatches, matches);
                     }
@@ -5792,6 +6159,9 @@ to interact with the Content Viewer and Project List Section page UI components.
                     if (match.isDirectMatch && !isLeafNode(match.node)) {
                         let current = filteredTree;
                         for (let i = 0; i < match.path.length - 1; i++) {
+                            if (!current[match.path[i]]) {
+                                current[match.path[i]] = {};
+                            }
                             current = current[match.path[i]];
                         }
                         const lastSegment = match.path[match.path.length - 1];
@@ -5844,8 +6214,38 @@ Add Classes Modal JavaScript </Description>
         let currentAddProjectName = '';
         let originalNamespaceData = null;
         let currentNamespaceData = null;
+        let packageSelections = []; // Track packages selected as packages
+        let childrenSelections = []; // Track individual children selected
 
         window.persistentNamespaceSelectedItems = [];
+
+        function isLeafNodeNamespace(node) {
+            return node && typeof node === 'object' && 'name' in node && 'type' in node;
+        }
+
+        // Get all leaf paths under a node
+        function getAllLeafPaths(nodeData, basePath) {
+            const leafPaths = [];
+            
+            function traverse(obj, currentPath) {
+                
+                for (const key in obj) {
+                    const value = obj[key];
+                    if (!value) continue;
+                    
+                    const fullPath = currentPath ? `${currentPath}.${key}` : key;
+                    
+                    if (isLeafNodeNamespace(value)) {
+                        leafPaths.push(fullPath);
+                    } else {
+                        traverse(value, fullPath);
+                    }
+                }
+            }
+            
+            traverse(nodeData, basePath);
+            return leafPaths;
+        }
 
         // Main function to open the Add Classes modal
         function addClasses(element) {
@@ -5871,7 +6271,12 @@ Add Classes Modal JavaScript </Description>
             document.getElementById('packageSearchInput').value = '';
             document.getElementById('namespaceSearchInput').value = '';
             document.getElementById('namespaceContainer').innerHTML = '<div class="add-classes-loading-message">Select a file type and click "Load Content" to begin</div>';
+            
+            // Reset all selection arrays
+            packageSelections = [];
+            childrenSelections = [];
             window.persistentNamespaceSelectedItems = [];
+            
             updateNamespaceSelectedCount();
             originalNamespaceData = null;
             currentNamespaceData = null;
@@ -5881,12 +6286,13 @@ Add Classes Modal JavaScript </Description>
         async function loadNamespaceContent() {
             let fileType = document.getElementById('fileTypeSelector').value;
             const container = document.getElementById('namespaceContainer');
+            const exclude_system_classes = document.getElementById('excludeSystemClasses').checked;
             const lookInto = document.getElementById('packageSearchInput').value;
             const lookIntoKey = 'PackageName';
 
-            container.innerHTML = '<div class="add-classes-loading-message">â³Loading namespace content...</div>';
+            container.innerHTML = '<div class="add-classes-loading-message icon-hourglass">Loading namespace content...</div>';
                             
-            PackageManagerAPI.getNamespaceContent(fileType,lookInto)
+            PackageManagerAPI.getNamespaceContent(fileType,lookInto,exclude_system_classes)
                 .then(function(data) {
                     // Store the data
                     originalNamespaceData = data;
@@ -5908,6 +6314,7 @@ Add Classes Modal JavaScript </Description>
         }
 
         // Render the namespace tree 
+        // Modified render function with separate selection logic
         function renderNamespaceTree(data, containerId) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -5915,243 +6322,165 @@ Add Classes Modal JavaScript </Description>
             container.innerHTML = '';
             currentNamespaceData = data;
 
-            function isLeafNodeNamespace(node) {
-                return node && typeof node === 'object' && 'name' in node && 'type' in node;
-            }
-
             function createNamespaceTreeItem(key, value, path = '') {
-                const fullPath = path ? `${path}.${key}` : key;
-                const li = document.createElement('li');
-                li.className = 'add-classes-tree-item';
-                li.title = fullPath;
+                try {
+                    const fullPath = path ? `${path}.${key}` : key;
+                    const li = document.createElement('li');
+                    li.className = 'add-classes-tree-item';
+                    li.title = fullPath;
 
-                const itemContent = document.createElement('div');
-                itemContent.className = 'add-classes-tree-item-content';
+                    const itemContent = document.createElement('div');
+                    itemContent.className = 'add-classes-tree-item-content';
 
-                // Folder toggle arrow
-                const toggle = document.createElement('span');
-                toggle.className = 'add-classes-tree-toggle';
-                toggle.textContent = 'â¶';
-                itemContent.appendChild(toggle);
-                toggle.title = fullPath;
+                    // Folder toggle arrow
+                    const toggle = document.createElement('span');
+                    toggle.className = 'add-classes-tree-toggle icon-right-arrow';
+                    itemContent.appendChild(toggle);
+                    toggle.title = fullPath;
 
-                // Checkbox
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'add-classes-tree-checkbox';
-                checkbox.value = fullPath;
-                checkbox.id = 'namespace-checkbox-' + fullPath;
+                    const formats_array = ['csp', 'cls', 'inc', 'mac', 'other'];
 
-                // Add leaf detection for proper handling
-                if (!isLeafNodeNamespace(value)) {
-                    checkbox.setAttribute('data-leaf', 'false');
-                } else {
-                    checkbox.setAttribute('data-leaf', 'true');
-                }
+                    // Checkbox for package/class selection
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'add-classes-tree-checkbox';
+                    checkbox.value = fullPath;
+                    checkbox.id = 'namespace-checkbox-' + fullPath;
 
-                checkbox.addEventListener('change', (e) => {
-                    e.stopPropagation();
-                    
-                    if (checkbox.checked) {
-                        // If this is a folder, select all its children (visible and hidden)
-                        if (!isLeafNodeNamespace(value)) {
-                            if (li.classList.contains('expanded')) {
-                                // If expanded, select visible children
-                                selectAllNamespaceChildren(li, true);
-                            } else {
-                                // If collapsed, select all hidden children from data
-                                selectAllNamespaceHiddenChildren(value, fullPath, true);
-                            }
-                        } 
-                        // If the object is a leaf, add it to the global selected items
-                        if (isLeafNodeNamespace(value) && !window.persistentNamespaceSelectedItems.includes(fullPath)) {
-                            window.persistentNamespaceSelectedItems.push(fullPath);                   
-                        }                       
+                    if (formats_array.includes(fullPath.toLowerCase())) {
+                        // Hide the checkbox for non-file types   
+                        checkbox.style.display = 'none';   
+                        checkbox.disabled = true;
+                    }
+
+                    if (isLeafNodeNamespace(value)) {
+                        // For leaf nodes (classes), checkbox selects the individual class
+                        checkbox.setAttribute('data-leaf', 'true');
+                        checkbox.addEventListener('change', (e) => {
+                            e.stopPropagation();
+                            handleClassSelection(fullPath, checkbox.checked);
+                        });
                     } else {
-                        // If this is a folder, unselect all its children (visible and hidden)
-                        if (!isLeafNodeNamespace(value)) {
-                            if (li.classList.contains('expanded')) {
-                                // If expanded, unselect visible children
-                                selectAllNamespaceChildren(li, false);
-                            } else {
-                                // If collapsed, unselect all hidden children from data
-                                selectAllNamespaceHiddenChildren(value, fullPath, false);
+                        // For folder nodes (packages), checkbox selects the package
+                        checkbox.setAttribute('data-leaf', 'false');
+                        checkbox.addEventListener('change', (e) => {
+                            e.stopPropagation();
+                            handlePackageSelection(fullPath, checkbox.checked, value);
+                        });
+                    }
+                    
+                    itemContent.appendChild(checkbox);
+
+                    if (isLeafNodeNamespace(value)) {
+                        // File node
+                        li.classList.add('file');
+                        toggle.style.visibility = 'hidden';
+                        
+                        const icon = document.createElement('span');
+                        icon.className = 'add-classes-tree-icon '+getIcon(value.type);
+                        itemContent.appendChild(icon);
+
+                        const label = document.createElement('span');
+                        label.className = 'add-classes-tree-label';
+                        label.textContent = value.name;
+                        itemContent.appendChild(label);
+
+                        const type = document.createElement('span');
+                        type.className = 'add-classes-tree-type';
+
+                        let typeValue;
+                        if (typeof value.type === 'object' && value.type !== null && 'type' in value.type) {
+                            typeValue = value.type.type;
+                        } else {
+                            typeValue = value.type;
+                        }
+
+                        const validTypes = [
+                                'csp', 'cls', 'inc', 'mac','js','json'
+                                ,'abs','dtl','dfi','css','png','html'
+                                ,'pkg','dir','ico','jpg'
+                        ];
+
+                        if (typeValue) {
+                            type.textContent = typeValue.toLowerCase();
+                            if (!validTypes.includes(typeValue.toLowerCase())) {
+                                type.textContent = 'Other';
                             }
-                        }
-                        // Remove from persistentSelectedItems if present
-                        const idx = window.persistentNamespaceSelectedItems.indexOf(fullPath);
-                        if (idx !== -1) {
-                            window.persistentNamespaceSelectedItems.splice(idx, 1);
-                        }
-                    }
-                    updateNamespaceSelectedCount();
-                });
-                
-                itemContent.appendChild(checkbox);
-
-                if (isLeafNodeNamespace(value)) {
-                    // File node
-                    li.classList.add('file');
-                    toggle.style.visibility = 'hidden';
-                    
-                    const icon = document.createElement('span');
-                    icon.className = 'add-classes-tree-icon '+getIcon(value.type);
-                    itemContent.appendChild(icon);
-
-                    const label = document.createElement('span');
-                    label.className = 'add-classes-tree-label';
-                    label.textContent = value.name;
-                    itemContent.appendChild(label);
-
-                    const type = document.createElement('span');
-                    type.className = 'add-classes-tree-type';
-                    type.textContent = value.type.toLowerCase();
-                    itemContent.appendChild(type);
-
-                    li.appendChild(itemContent);
-                } else {
-                    // Folder node
-                    li.classList.add('folder');
-                    
-                    const icon = document.createElement('span');
-                    let icon_emoji = 'icon-folder'
-                    if (key == 'CSP') {
-                        icon_emoji = 'ð§©'
-                    } else if (key == 'CLS') {
-                        icon_emoji = 'icon-cls'
-                    } else if (key == 'INC') {
-                        icon_emoji = 'icon-inc'
-                    } else if (key == 'MAC') {
-                        icon_emoji = 'icon-mac'
-                    } else if (key == 'Other') {
-                        icon_emoji = 'icon-settings'
-                    }
-                    icon.className = 'add-classes-tree-icon '+icon_emoji;
-                    itemContent.appendChild(icon);
-
-                    const label = document.createElement('span');
-                    label.className = 'add-classes-tree-label';
-                    label.textContent = key;
-                    itemContent.appendChild(label);
-
-                    // FIXED: Click handler for folder expansion (like working version)
-                    itemContent.addEventListener('click', (e) => {
-                        if (e.target === checkbox) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const wasExpanded = li.classList.contains('expanded');
-                        if (wasExpanded) {
-                            li.classList.remove('expanded');
                         } else {
-                            li.classList.add('expanded');
+                            type.textContent = 'Other';
                         }
-                    });
 
-                    // Create children
-                    const childrenContainer = document.createElement('ul');
-                    childrenContainer.className = 'add-classes-tree-children';
-
-                    for (const childKey in value) {
-                        if (value[childKey]) {
-                            const childItem = createNamespaceTreeItem(childKey, value[childKey], fullPath);
-                            childrenContainer.appendChild(childItem);
-                        }
-                    }
-
-                    li.appendChild(itemContent);
-                    li.appendChild(childrenContainer);
-                }
-
-                return li;
-            }
-
-            // Helper function to select/unselect all children
-            function selectAllNamespaceChildren(folderElement, select) {
-                const childrenContainer = folderElement.querySelector('.add-classes-tree-children');
-                if (!childrenContainer) return;
-                
-                // Find all checkboxes in the children container
-                const childCheckboxes = childrenContainer.querySelectorAll('input[type="checkbox"]');
-                
-                childCheckboxes.forEach(childCheckbox => {
-                    const childPath = childCheckbox.value;
-                    
-                    if (select) {
-                        childCheckbox.checked = true;
-                        
-                        // If this child is also a folder and is expanded, recursively select its children
-                        const childItem = childCheckbox.closest('.add-classes-tree-item');
-                        if (childItem && childItem.classList.contains('folder') && childItem.classList.contains('expanded')) {
-                            selectAllNamespaceChildren(childItem, true);
-                        } else {
-                            // If the child is not a folder, so if it is a leaf, add it to the global array
-                            if (!window.persistentNamespaceSelectedItems.includes(childPath)) {
-                                window.persistentNamespaceSelectedItems.push(childPath);                   
-                            }                       
-                        }
+                        itemContent.appendChild(type);
+                        li.appendChild(itemContent);
                     } else {
-                        childCheckbox.checked = false;
+                        // Folder node
+                        li.classList.add('folder');
                         
-                        // If this child is also a folder, recursively unselect its children
-                        const childItem = childCheckbox.closest('.add-classes-tree-item');
-                        if (childItem && childItem.classList.contains('folder')) {
-                            selectAllNamespaceChildren(childItem, false);
-                        } else {
-                            // If the child is not a folder, so if it is a leaf, remove it from the global array
-                            if (window.persistentNamespaceSelectedItems.includes(childPath)) {
-                                const idx = window.persistentNamespaceSelectedItems.indexOf(childPath);
-                                if (idx !== -1) {
-                                    window.persistentNamespaceSelectedItems.splice(idx, 1);
-                                }
-                            }                       
+                        const icon = document.createElement('span');
+                        let icon_emoji = 'icon-folder'
+                        if (key == 'CSP') {
+                            icon_emoji = 'icon-csp'
+                        } else if (key == 'CLS') {
+                            icon_emoji = 'icon-cls'
+                        } else if (key == 'INC') {
+                            icon_emoji = 'icon-inc'
+                        } else if (key == 'MAC') {
+                            icon_emoji = 'icon-mac'
+                        } else if (key == 'Other') {
+                            icon_emoji = 'icon-settings'
                         }
-                    }
-                });
-            }
+                        icon.className = 'add-classes-tree-icon '+icon_emoji;
+                        itemContent.appendChild(icon);
 
-            // Function to select/unselect all hidden children from data structure
-            function selectAllNamespaceHiddenChildren(nodeData, basePath, select) {
-                if (!nodeData || typeof nodeData !== 'object') return;
-                
-                function traverseAndSelect(obj, currentPath) {
-                    for (const key in obj) {
-                        const value = obj[key];
-                        if (!value) continue;
-                        
-                        const fullPath = currentPath ? `${currentPath}.${key}` : key;
-                        
-                        if (isLeafNodeNamespace(value)) {
-                            // This is a leaf node - add/remove from selection
-                            if (select) {
-                                if (!window.persistentNamespaceSelectedItems.includes(fullPath)) {
-                                    window.persistentNamespaceSelectedItems.push(fullPath);
-                                }
-                                // Also check the checkbox if it exists in the DOM
-                                const checkbox = document.querySelector(`input[value="${fullPath}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = true;
-                                }
+                        const label = document.createElement('span');
+                        label.className = 'add-classes-tree-label';
+                        label.textContent = key;
+                        itemContent.appendChild(label);
+
+                        // Add "select all children" icon button
+                        const selectChildrenBtn = document.createElement('button');
+                        selectChildrenBtn.className = 'add-classes-select-children-btn icon-select-all';
+                        selectChildrenBtn.title = 'Select all children as individual classes';
+                        selectChildrenBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectAllChildren(fullPath, value);
+                        });
+                        itemContent.appendChild(selectChildrenBtn);
+
+                        // Click handler for folder expansion
+                        itemContent.addEventListener('click', (e) => {
+                            if (e.target === checkbox || e.target === selectChildrenBtn) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const wasExpanded = li.classList.contains('expanded');
+                            if (wasExpanded) {
+                                li.classList.remove('expanded');
                             } else {
-                                const idx = window.persistentNamespaceSelectedItems.indexOf(fullPath);
-                                if (idx !== -1) {
-                                    window.persistentNamespaceSelectedItems.splice(idx, 1);
-                                }
-                                // Also uncheck the checkbox if it exists in the DOM
-                                const checkbox = document.querySelector(`input[value="${fullPath}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = false;
-                                }
+                                li.classList.add('expanded');
                             }
-                        } else {
-                            // This is a folder - recursively traverse
-                            traverseAndSelect(value, fullPath);
+                        });
+
+                        // Create children
+                        const childrenContainer = document.createElement('ul');
+                        childrenContainer.className = 'add-classes-tree-children';
+
+                        for (const childKey in value) {
+                            if (value[childKey]) {
+                                const childItem = createNamespaceTreeItem(childKey, value[childKey], fullPath);
+                                childrenContainer.appendChild(childItem);
+                            }
                         }
+
+                        li.appendChild(itemContent);
+                        li.appendChild(childrenContainer);
                     }
+                    return li;
+                } catch (error) {
+                    console.error('createNamespaceTreeItem error at path ' + path + ' - value: ' + value + ' - error: ' + error);
+                    return null;
                 }
-                
-                // Start traversing from the node's children
-                traverseAndSelect(nodeData, basePath);
             }
 
             // Render the tree
@@ -6172,13 +6501,114 @@ Add Classes Modal JavaScript </Description>
             container.appendChild(ul);
             updateNamespaceSelectedCount();
 
-            // Restore selections after rendering (like working version)
+            // Restore selections after rendering
             setTimeout(() => {
-                restoreNamespaceSelectionsFromPersistent();
+                restoreSelectionsFromState();
             }, 200);
         }
 
-        // Helper function to restore selections from persistent array (like working version)
+        // Handle individual class selection
+        function handleClassSelection(classPath, selected) {
+            if (selected) {
+                if (!childrenSelections.includes(classPath)) {
+                    childrenSelections.push(classPath);
+                }
+            } else {
+                const idx = childrenSelections.indexOf(classPath);
+                if (idx !== -1) {
+                    childrenSelections.splice(idx, 1);
+                }
+            }
+            updateNamespaceSelectedCount();
+        }
+
+        // Handle package selection (selects the package as a whole)
+        function handlePackageSelection(packagePath, selected, packageData) {
+            if (selected) {
+                // Add package to package selections
+                if (!packageSelections.includes(packagePath)) {
+                    packageSelections.push(packagePath);
+                }
+                
+                // Remove any individual children from childrenSelections since the package is selected
+                const allChildren = getAllLeafPaths(packageData, packagePath);
+                allChildren.forEach(childPath => {
+                    const idx = childrenSelections.indexOf(childPath);
+                    if (idx !== -1) {
+                        childrenSelections.splice(idx, 1);
+                    }
+                    // Uncheck individual child checkboxes
+                    const childCheckbox = document.querySelector(`input[value="${childPath}"]`);
+                    if (childCheckbox) {
+                        childCheckbox.checked = false;
+                    }
+                });
+                
+            } else {
+                // Remove package from package selections
+                const idx = packageSelections.indexOf(packagePath);
+                if (idx !== -1) {
+                    packageSelections.splice(idx, 1);
+                }
+            }
+            updateNamespaceSelectedCount();
+        }
+
+        // Handle "select all children" button click
+        function handleSelectAllChildren(packagePath, packageData) {
+            const allChildren = getAllLeafPaths(packageData, packagePath);
+            
+            // Remove package selection if it exists
+            const packageIdx = packageSelections.indexOf(packagePath);
+            if (packageIdx !== -1) {
+                packageSelections.splice(packageIdx, 1);
+                // Uncheck package checkbox
+                const packageCheckbox = document.querySelector(`input[value="${packagePath}"]`);
+                if (packageCheckbox) {
+                    packageCheckbox.checked = false;
+                }
+            }
+            
+            // Add all children to individual selections
+            allChildren.forEach(childPath => {
+                if (!childrenSelections.includes(childPath)) {
+                    childrenSelections.push(childPath);
+                }
+                // Check individual child checkboxes
+                const childCheckbox = document.querySelector(`input[value="${childPath}"]`);
+                if (childCheckbox) {
+                    childCheckbox.checked = true;
+                }
+            });
+            
+            updateNamespaceSelectedCount();
+        }
+
+        // Restore selections from state
+        function restoreSelectionsFromState() {
+            const container = document.getElementById('namespaceContainer');
+            if (!container) return;
+                                
+            // Restore package selections
+            packageSelections.forEach(path => {
+                const checkbox = container.querySelector(`input[value="${path}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+            
+            // Restore individual class selections
+            childrenSelections.forEach(path => {
+                const checkbox = container.querySelector(`input[value="${path}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+            
+            updateNamespaceSelectedCount();
+        }
+
+        // Helper function to restore selections from persistent array
         function restoreNamespaceSelectionsFromPersistent() {
             const container = document.getElementById('namespaceContainer');
             if (!container) return;
@@ -6196,15 +6626,26 @@ Add Classes Modal JavaScript </Description>
                 }
             });
             
-            // Update the selection counter
+            // Update the selection counter after restoring
             updateNamespaceSelectedCount();
         }
 
         function updateNamespaceSelectedCount() {
-            const count = window.persistentNamespaceSelectedItems.length;
+            const individualCount = childrenSelections.length;
+            const packageCount = packageSelections.length;
+            const totalDisplayCount = individualCount + packageCount;
+            
+            const selectedItems = combineAll(window.projectPackageSelections, window.projectClassSelections);
+
             const countElement = document.getElementById('namespaceSelectedCount');
             if (countElement) {
-                countElement.textContent = `${count} Selected`;
+                if (packageCount > 0) {
+                    countElement.textContent = `${totalDisplayCount} Selected (${packageCount} packages, ${individualCount} individual)`;
+                    countElement.title = selectedItems.join(', ');
+                } else {
+                    countElement.textContent = `${totalDisplayCount} Selected`;
+                    countElement.title = selectedItems.join(', ');
+                }
             }
         }
 
@@ -6232,7 +6673,10 @@ Add Classes Modal JavaScript </Description>
         }
 
         function clearNamespaceSelection() {
-            window.persistentNamespaceSelectedItems = []; // Clear persistent array too
+            packageSelections = [];
+            childrenSelections = [];
+            window.persistentNamespaceSelectedItems = [];
+            
             const container = document.getElementById('namespaceContainer');
             if (container) {
                 container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -6349,59 +6793,108 @@ Add Classes Modal JavaScript </Description>
             return filteredTree;
         }
 
-        // Add selected items to project
+        // Modified addSelectedToProject function
         async function addSelectedToProject() {
-            const selected = window.persistentNamespaceSelectedItems;
             const projId = document.getElementById('modalProjectName').innerHTML;
 
-            if (selected.length === 0) {
-                alert("Please select at least one element to add to the project");
+            if (packageSelections.length === 0 && childrenSelections.length === 0) {
+                alert("Please select at least one package or class to add to the project");
                 return;
             }
 
-            const expandedSelection = [];
+            const classArray = [];
             
-            // Process selected items
-            selected.forEach(path => {
-                const item = findNamespaceItemByPath(currentNamespaceData, path);
-                if (item && isLeafNodeForAdd(item)) {
-                    expandedSelection.push({
-                        path: path,
-                        name: item.name,
-                        type: item.type,
-                        isLeaf: true
+            // Add packages
+            packageSelections.forEach(packagePath => {
+                let pathParts = packagePath.split(".");
+                const itemType = pathParts[0];
+                
+                if (itemType === 'CSP') { 
+                    const packagePathFormatted = pathParts.slice(1).join('/');
+                    classArray.push({
+                        "name": packagePathFormatted,
+                        "type": "pkg"
+                    });
+                } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
+                    const packagePathFormatted = pathParts.slice(1).join('.');
+                    classArray.push({
+                        "name": packagePathFormatted,
+                        "type": "pkg"
+                    });
+                } else if (itemType === 'Other') {
+                    const packagePathFormatted = pathParts.slice(1).join('.');
+                    classArray.push({
+                        "name": packagePathFormatted,
+                        "type": "pkg"
                     });
                 }
             });
-
-            // Build the request payload
-            const classArray = [];
-            expandedSelection.forEach(item => {
-                let itemParts = item.path.split(".");
-                // Always remove the first element (it is just a placeholder)
-                const itemType = itemParts[0];
-                itemParts.slice(1);
-                if (itemType === 'CSP') { 
-                    item.path = itemParts.slice(1).join('/');
-                } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
-                    item.path = itemParts.slice(1).join('.');
-                } else if (itemType === 'Other') {
-                    item.path = itemParts.slice(1).join('.');
-                    item.type = '';
+            
+            // Add individual classes
+            childrenSelections.forEach(classPath => {
+                const item = findNamespaceItemByPath(currentNamespaceData, classPath);
+                if (item && isLeafNodeForAdd(item)) {
+                    let itemParts = classPath.split(".");
+                    const itemType = itemParts[0];
+                    
+                    if (itemType === 'CSP') { 
+                        const itemPath = itemParts.slice(1).join('/');
+                        const itemFullname = itemPath + '.' + item.type.toLowerCase();
+                        classArray.push({
+                            "name": itemFullname,
+                            "type": item.type.toLowerCase()
+                        });
+                    } else if (['CLS', 'INC', 'MAC'].includes(itemType)) {
+                        const itemPath = itemParts.slice(1).join('.');
+                        const itemFullname = itemPath + '.' + item.type.toLowerCase();
+                        classArray.push({
+                            "name": itemFullname,
+                            "type": item.type.toLowerCase()
+                        });
+                    } else if (itemType === 'Other') {
+                        const itemPath = itemParts.slice(1).join('.');
+                        const itemFullname = (item.type === '') ? itemPath : (itemPath + '.' + item.type.toLowerCase()); 
+                        classArray.push({
+                            "name": itemFullname,
+                            "type": item.type.toLowerCase()
+                        });
+                    }
                 }
-                const itemFullname = (item.type === '') ?  item.path : (item.path + '.' + item.type.toLowerCase()); 
-                classArray.push({
-                    "name": itemFullname
-                });
             });
+
+            // --- Check for parent/child overlap
+            const pkgs = classArray.filter(e => e.type === "pkg").map(e => e.name);
+            const classes = classArray.filter(e => e.type !== "pkg").map(e => e.name);
+
+            for (const pkg of pkgs) {
+                for (const cls of classes) {
+                    if (cls.startsWith(pkg + ".")) {
+                        alert(`Conflict detected: Package "${pkg}" and one of its classes "${cls}" are both selected.\nPlease select either the package or its children, not both.`);
+                        return; // stop execution
+                    } 
+                }
+            }
 
             const add_request = {
                 "projectName": currentAddProjectName,
                 "elements": classArray
             }
-            PackageManagerAPI.addClassesToProject(projId,add_request)
+            
+            PackageManagerAPI.addClassesToProject(projId, add_request)
                 .then(function(response) {
-                    alert(`Successfully added ${classArray.length} items to project "${currentAddProjectName}"`);
+                    const packageCount = packageSelections.length;
+                    const classCount = childrenSelections.length;
+                    let message;
+                    
+                    if (packageCount > 0 && classCount > 0) {
+                        message = `Successfully added ${packageCount} packages and ${classCount} individual classes to project "${currentAddProjectName}"`;
+                    } else if (packageCount > 0) {
+                        message = `Successfully added ${packageCount} packages to project "${currentAddProjectName}"`;
+                    } else {
+                        message = `Successfully added ${classCount} individual classes to project "${currentAddProjectName}"`;
+                    }
+                    
+                    alert(message);
                 })
                 .catch(function(err) {
                     console.error('Error adding items to project:', err.message);
@@ -6528,7 +7021,7 @@ Add Classes Modal JavaScript </Description>
             // Show loading state
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="plus-icon">â³</span> Creating...';
+            submitBtn.innerHTML = '<span class="plus-icon icon-hourglass"></span> Creating...';
             submitBtn.disabled = true;
             
             const now = new Date();
@@ -7503,7 +7996,7 @@ Styles for the task file/project selector modal which let the user associate the
 
 <Class name="PackageManager.UI.Screens.ExportTaskSection.HTML">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,48063.772614821</TimeChanged>
+<TimeChanged>67445,26650.514799933</TimeChanged>
 <TimeCreated>67443,59562.195572631</TimeCreated>
 
 <UDLText name="T">
@@ -7594,7 +8087,7 @@ Styles for the task file/project selector modal which let the user associate the
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
                             <h3><span class="icon-bag"></span> Create New Task</h3>
-                            <button type="button" class="create-task-close" onclick="closeCreateTaskModal()">Ã</button>
+                            <button type="button" class="create-task-close icon-multiplication" onclick="closeCreateTaskModal()"></button>
                         </div>
                         <div class="create-task-modal-content">
                             <form id="createTaskForm">
@@ -7792,7 +8285,7 @@ Styles for the task file/project selector modal which let the user associate the
                         <!-- HEADER + FORM -->
                         <div class="create-task-modal-header">
                             <h3><span class="icon-bag"></span> Edit Task</h3>
-                            <button type="button" class="create-task-close" onclick="closeEditTaskModal()">Ã</button>
+                            <button type="button" class="create-task-close icon-multiplication" onclick="closeEditTaskModal()"></button>
                         </div>
                         <div class="create-task-modal-content">
                             <form id="EditTaskForm">
@@ -8112,7 +8605,7 @@ Styles for the task file/project selector modal which let the user associate the
 
 <Class name="PackageManager.UI.Screens.ExportTaskSection.JavaScript">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,48156.712751421</TimeChanged>
+<TimeChanged>67451,30211.046845992</TimeChanged>
 <TimeCreated>67443,59562.207595076</TimeCreated>
 
 <UDLText name="T">
@@ -8367,9 +8860,7 @@ to interact with the task table UI component.
                         <td>
                             <div class="actions">
                                 <button type="button" class="btn-icon icon-edit" onclick="editTask('${escapeHtml(task.ID)}')" title="Edit Task"></button>
-                                <button type="button" class="btn-icon" onclick="runTask('${escapeHtml(task.ID)}')" title="Run Task">
-                                    â¶ï¸
-                                </button>
+                                <button type="button" class="btn-icon icon-run" onclick="runTask('${escapeHtml(task.ID)}')" title="Run Task"></button>
                                 <button type="button" class="btn-icon icon-delete" onclick="deleteTask('${escapeHtml(task.ID)}')" title="Delete Task"></button>
                             </div>
                         </td>
@@ -9402,10 +9893,11 @@ to interact with the task table UI component.
             const btn = document.getElementById("taskFileSelectorLoadProjectsBtn");
             const originalText = btn.innerHTML;
 
-            btn.innerHTML = "â³ Loading...";
+            
+            btn.innerHTML = "Loading...";
             btn.disabled = true;
 
-            document.getElementById("taskFileSelectorAvailableFiles").innerHTML = `<div class="empty-state"><div class="empty-icon">â³</div><div>Loading projects...</div></div>`;
+            document.getElementById("taskFileSelectorAvailableFiles").innerHTML = `<div class="empty-state"><div class="empty-icon icon-hourglass"></div><div>Loading projects...</div></div>`;
 
             setTimeout(async () => {
 
@@ -9464,7 +9956,7 @@ to interact with the task table UI component.
                         </div>
                         <div class="task-file-selector-file-actions">
                             ${type === "associated"
-                                ? `<button class="task-file-selector-btn-remove" onclick="event.stopPropagation(); taskFileSelectorQuickRemove('${projectId}')">â Remove</button>`
+                                ? `<button class="task-file-selector-btn-remove" onclick="event.stopPropagation(); taskFileSelectorQuickRemove('${projectId}')"><span class="icon-multiplication"></span> Remove</button>`
                                 : `<button class="task-file-selector-btn-add" onclick="event.stopPropagation(); taskFileSelectorQuickAdd('${projectId}')"><span class="icon-success"></span> Add</button>`
                             }
                         </div>
@@ -10732,7 +11224,7 @@ to interact with the Export Task Section page UI components.</Description>
 
 <Class name="PackageManager.UI.Screens.ReleaseSection.JavaScript">
 <Super>PackageManager.UI.Screens.Abstract</Super>
-<TimeChanged>67444,47972.309268779</TimeChanged>
+<TimeChanged>67445,26471.25078125</TimeChanged>
 <TimeCreated>67443,59562.226768332</TimeCreated>
 
 <UDLText name="T">
@@ -10819,8 +11311,8 @@ Render JavaScript code for the page</Description>
 
             // Toggle arrow
             const toggle = document.createElement('span');
-            toggle.className = 'exported-releases-tree-toggle';
-            toggle.textContent = 'â¶';
+            toggle.className = 'exported-releases-tree-toggle icon-right-arrow';
+            //toggle.textContent = 'â¶';
             content.appendChild(toggle);
 
             // Project checkbox (selects all releases in project)
@@ -11073,7 +11565,7 @@ Render JavaScript code for the page</Description>
             let errorCount = 0;
 
             try {
-                downloadBtn.textContent = 'â³ Downloading...';
+                downloadBtn.textContent = 'Downloading...';
                 downloadBtn.disabled = true;
 
                 showMessageExportedRelease(`Starting download of ${selectedReleases.length} file(s)...`, 'info');
@@ -11087,7 +11579,7 @@ Render JavaScript code for the page</Description>
                         downloadCount++;
                         
                         // Update progress
-                        downloadBtn.textContent = `â³ ${downloadCount}/${selectedReleases.length}`;
+                        downloadBtn.textContent = `${downloadCount}/${selectedReleases.length}`;
                         
                         // Small delay between downloads to prevent overwhelming the server
                         await new Promise(resolve => setTimeout(resolve, 100));
@@ -11435,7 +11927,7 @@ The class is designed to be used in the context of the InterSystems IRIS platfor
 for working with CSP directories, file systems, and JSON data.</Description>
 <Final>1</Final>
 <IncludeCode>PackageManager.PackageManager</IncludeCode>
-<TimeChanged>67443,59562.236351065</TimeChanged>
+<TimeChanged>67451,33007.055412278</TimeChanged>
 <TimeCreated>67443,59562.236351065</TimeCreated>
 
 <Method name="DirExists">
@@ -11505,31 +11997,26 @@ This print the current IRIS instance URL, Server and Port</Description>
 ]]></Implementation>
 </Method>
 
-<UDLText name="T">
-<Content><![CDATA[
-/**
- * Creates a nested object structure within the provided result object.
- * 
- * @param {string} item - The base name of the object to create.
- * @param {string} type - The type of object to create (e.g. "csp" or other).
- * @param {string} currProject - The current project name.
- * @param {object} result - The object to create the nested structure within.
- * @param {string} [Separator="."] - The separator to use when splitting the item name.
- * @param {string} [CSPExtension=""] - An optional extension to use for CSP files.
- * 
- * @returns {status} - The status of the operation.
- * 
- * @description
- * This method creates a nested object structure within the provided result object.
- * It extracts the base name from the item parameter, and then creates a nested object
- * structure based on the type and project name. If the type is "csp", it uses a
- * specific root node, otherwise it uses a different root node. It then creates or
- * gets the nested container and sets the metadata for the leaf node.
- */
-]]></Content>
-</UDLText>
-
 <Method name="CreateNestedObject">
+<Description>
+
+Creates a nested object structure within the provided result object.
+
+@param {string} item - The base name of the object to create.
+@param {string} type - The type of object to create (e.g. "csp" or other).
+@param {string} currProject - The current project name.
+@param {object} result - The object to create the nested structure within.
+@param {string} [Separator="."] - The separator to use when splitting the item name.
+@param {string} [CSPExtension=""] - An optional extension to use for CSP files.
+
+@returns {status} - The status of the operation.
+
+@description
+This method creates a nested object structure within the provided result object.
+It extracts the base name from the item parameter, and then creates a nested object
+structure based on the type and project name. If the type is "csp", it uses a
+specific root node, otherwise it uses a different root node. It then creates or
+gets the nested container and sets the metadata for the leaf node.</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec><![CDATA[item:%String,type:%String,currProject:%String,&result:%DynamicObject,Separator:%String=".",CSPExtension:%String=""]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
@@ -11626,9 +12113,7 @@ Example output:
         If '$ISOBJECT(result) Set result = {}
 
         // if the directory contains both slashes and backslashes, replace them with the separator
-        If directory [ "/" {
-            Set directory = $REPLACE(directory, "/", separator) 
-        }
+        Set directory = ..AdaptPathToOS(directory, .separator)
 
         // Ensure project root exists in result
         If '$ISOBJECT(result.%Get(currProject)) {
