@@ -488,7 +488,8 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                 // Collect basic task data
                 const taskName = document.getElementById('task_name').value.trim();
                 const taskDesc = document.getElementById('task_desc').value.trim();
-            
+                const exportDir = document.getElementById('export_path').value.trim();
+
                 // Validate required fields
                 if (!taskName) {
                     alert('Task name is required');
@@ -615,6 +616,7 @@ ClassMethod CreateTaskModalJavaScript() As %Status
                 const formData = {
                     task_name: taskName,
                     task_desc: taskDesc,
+                    export_dir: exportDir,
                     username: username,
                     schedule: scheduleData,
                     purge_config: purgeConfig,
@@ -803,7 +805,8 @@ ClassMethod EditTaskModalJavaScript() As %Status
                     // Basic task information
                     const taskNameElement = document.getElementById('edit-task_name');
                     const taskDescElement = document.getElementById('edit-task_desc');
-                    
+                    const ExportPathElement = document.getElementById('edit-export_path');
+
                     if (taskNameElement) {
                         taskNameElement.value = taskData.Name || '';
                         //console.log('Set task name to:', taskData.Name);
@@ -818,6 +821,12 @@ ClassMethod EditTaskModalJavaScript() As %Status
                         console.error('edit-task_desc element not found');
                     }
                     
+                    if (ExportPathElement) {
+                        ExportPathElement.value = taskData?.Settings?.ExportPath || '';
+                    } else {
+                        console.error('edit-export_path element not found');
+                    }
+
                     // Read-only status fields (if they exist)
                     const statusElement = document.getElementById('edit-task_status');
                     if (statusElement) {
@@ -1030,6 +1039,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                 const taskName = document.getElementById('edit-task_name').value.trim();
                 const taskDesc = document.getElementById('edit-task_desc').value.trim();
                 const taskSuspended = document.getElementById('edit-task_suspended').value;
+                const ExportPath = document.getElementById('edit-export_path').value;
 
                 // Validate required fields
                 if (!taskName) {
@@ -1162,6 +1172,7 @@ ClassMethod EditTaskModalJavaScript() As %Status
                     task_name: taskName,
                     task_desc: taskDesc,
                     task_suspended: taskSuspended,
+                    export_dir: ExportPath,
                     schedule: scheduleData,
                     purge_config: purgeConfig,
                     email_notifications: emailNotificationsEdit

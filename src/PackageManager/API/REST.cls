@@ -31,6 +31,7 @@ XData UrlMap
     <Route Url="/task/updateclasses/:taskId" Method="POST" Call="PackageManager.API.Task.Interface:UpdateAssociatedClasses"/>
     <Route Url="/task/releases/" Method="GET" Call="PackageManager.API.Task.Interface:GetReleases"/>
     <Route Url="/task/release/download" Method="POST" Call="PackageManager.API.Task.Interface:DownloadRelease"/>
+    <Route Url="/task/release/folder" Method="GET" Call="PackageManager.API.Task.Interface:GetExportedReleaseFolder"/>
     <!-- Ping to test API reachability -->
     <Route Url="/api/ping" Method="GET" Call="Ping"/>
     <!-- Swagger specs -->

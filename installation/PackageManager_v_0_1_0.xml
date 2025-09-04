@@ -21,7 +21,7 @@
         Set elements = json."elements"
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$tmpFilePath)
+        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#TMPPATH)
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(path,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
@@ -294,7 +294,7 @@ The description of this API entry should be in this section.
         #; Set out = {}
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$tmpFilePath)
+        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#TMPPATH)
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(path,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 
@@ -1472,7 +1472,7 @@ This method gets all the exported files for a given task</Description>
 
         // Define base path and initialize stack for directories
         Kill FILES
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .separator)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH, .separator)
         // if the directory contains both slashes and backslashes, replace them with the separator
         If basePath [ "/" {
             Set directory = $REPLACE(basePath, "/", separator) 
@@ -1901,7 +1901,7 @@ It checks if the project exists, creates a file name, and exports the project to
         }
 
         // Check if the export directory exists, create it if not
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .osSeparator)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH, .osSeparator)
         Set prjFilePath = basePath_ProjectId_osSeparator
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
@@ -1968,7 +1968,7 @@ This method accepts the following arguments:
     Set sc = $$$OK
     Try {    
         // Check if the export directory exists, do not create it if not
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .separator)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH, .separator)
         Set prjFilePath = basePath_ProjectId_separator
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,0,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }

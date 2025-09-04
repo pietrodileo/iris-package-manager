@@ -28,6 +28,7 @@ ClassMethod renderExportTask() As %Status
                         </div>
                         <div class='header-controls'>
                             <button class='new-project-btn' onclick='openCreateTaskModal()'><span class='plus-icon'>+</span> Create New Task</button>
+                            <span class='icon-info' title='Default export path is: #(##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH))#'></span>
                         </div>
                     </div>
 
@@ -87,6 +88,13 @@ ClassMethod renderCreateTaskModal() As %Status
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">Description</label>
                                         <input type="text" id="task_desc" class="create-task-form-input" placeholder="Enter task description">
+                                    </div>
+                                    <div class="create-task-form-group">
+                                        <label class="create-task-form-label">Export Path</label>
+                                        <input type="text" id="export_path" class="create-task-form-input" placeholder="Enter export directory (will be created if not exists)">
+                                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                                            If empty, default export path will be used: #(##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH))#
+                                        </small>
                                     </div>
                                 </div>
 
@@ -307,6 +315,13 @@ ClassMethod renderEditTaskModal() As %Status
                                     <div class="create-task-form-group">
                                         <label class="create-task-form-label">Description</label>
                                         <input type="text" id="edit-task_desc" class="create-task-form-input" placeholder="Enter task description">
+                                    </div>
+                                    <div class="create-task-form-group">
+                                        <label class="create-task-form-label">Export Path</label>
+                                        <input type="text" id="edit-export_path" class="create-task-form-input" placeholder="Enter export directory (will be created if not exists)">
+                                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                                            If empty, default export path will be used: #(##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH))#
+                                        </small>
                                     </div>
                                 </div>
 

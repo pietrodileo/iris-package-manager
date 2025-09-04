@@ -249,7 +249,12 @@ ClassMethod Styles() As %Status
         .icon-folder-open:before { content: "\1f4c2"; }  /* open file folder */
         .icon-books:before { content: "\1f4da"; }        /* books */
         .icon-outbox:before { content: "\1f4e4"; }       /* outbox tray */
-        .icon-info-circle:before { content: "\24d8"; }   /* circled information */
+        .icon-info-circle:before { 
+            content: "\24d8"; 
+            background-color: #1c73ffff; /* Sets the background color to blue */
+            padding: 3px 6px; /* Adds space around the icon */
+            border-radius: 4px; /* Rounds the corners for a softer look */
+        }   /* circled information */
         .icon-question:before { content: "\2753"; }      /* question mark ornament */
         .icon-exclamation:before { content: "\2757"; }   /* exclamation mark symbol */
         .icon-lightbulb:before { content: "\1f4a1"; }    /* light bulb */

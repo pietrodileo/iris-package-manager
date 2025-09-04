@@ -194,6 +194,7 @@ Once the Docker container is running, you can access the application through you
    ![021](./pic/021.png "021")
 
 * **Task Name & Description**: Give your task a name, like "Daily Export", and a description to explain its purpose.
+* **Export Path**: Set your export path for the current task. If empty, the default path will be used. The latter can be set using the `PackageManager.Config` class. Please note that the **Exported Releases** section will show only files saved at the default path.
 * **Schedule Configuration**: Choose how often you want the task to run. Options include Daily, Weekly, or Only Once. You can specify the frequency (e.g., Every 1 day) and a Run time.
   ![022](./pic/022.png "022")
 * It's important to note that tasks, when run from the InterSystems IRIS Task Manager, will inherit the privileges and identity of the user who created them in the Package Manager (visible in the sidebar).

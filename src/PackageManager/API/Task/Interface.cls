@@ -14,6 +14,11 @@ ClassMethod CreateTask() As %Status
         Set json = {}.%FromJSON(body)
         Set TaskDesc = json."task_desc"
         Set TaskName = json."task_name"
+        Set ExportDirectory = json."export_dir"
+        // Use the default export path if not provided
+        If ExportDirectory="" {
+            Set ExportDirectory = ##class(PackageManager.Config).#EXPPATH
+        }
         Set endDate = $SELECT(json."schedule"."endDate"="":"", 1:$ZDATEH(json."schedule"."endDate",3))
         Set runTime = $ZTIMEH(json."schedule"."runTime", 1)
         Set startDate = $ZDATEH(json."schedule"."startDate",3)
@@ -141,6 +146,7 @@ ClassMethod CreateTask() As %Status
         Set SettingsString = "" 
         Set SettingsString = ..InsertTaskSetting("TaskID",taskId,.SettingsString)
         Set SettingsString = ..InsertTaskSetting("EnablePurge",enablePurge,.SettingsString)
+        Set SettingsString = ..InsertTaskSetting("ExportDirectory",ExportDirectory,.SettingsString)
         If retentionDays '= "" Set SettingsString = ..InsertTaskSetting("PurgeAfterNDays",retentionDays,.SettingsString)
         If minFilesKeep '= "" Set SettingsString = ..InsertTaskSetting("MinimumNumberOfFilesToKeep",minFilesKeep,.SettingsString)
         set task.Settings=$LISTFROMSTRING(SettingsString,",") 
@@ -243,7 +249,7 @@ ClassMethod DeleteTask(taskId As %String) As %Status
     Set sc = $$$OK
     Try {
         If taskId = "" {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskId è un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskId Ã¨ un campo obbligatorio")) 
         }
         Set sc = ##class(%SYS.Task).%DeleteId(taskId)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -259,7 +265,7 @@ ClassMethod RunTask(taskId As %String) As %Status
     Set sc = $$$OK
     Try {
         If taskId = "" {
-            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskId è un campo obbligatorio")) 
+            Throw ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError,"TaskId Ã¨ un campo obbligatorio")) 
         }
         Set Task = ##class(%SYS.Task).%OpenId(taskId)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc) 
@@ -332,7 +338,8 @@ ClassMethod GetTaskInfo(taskId As %String) As %Status
             "TaskID": (..GetTaskSetting("TaskID",Task.Settings)),
             "EnablePurge": (..GetTaskSetting("EnablePurge",Task.Settings)),
             "PurgeAfterNDays": (..GetTaskSetting("PurgeAfterNDays",Task.Settings)),
-            "MinimumNumberOfFilesToKeep": (..GetTaskSetting("MinimumNumberOfFilesToKeep",Task.Settings))
+            "MinimumNumberOfFilesToKeep": (..GetTaskSetting("MinimumNumberOfFilesToKeep",Task.Settings)),
+            "ExportPath": (..GetTaskSetting("ExportDirectory",Task.Settings))
         }
         #; Set out.EmailOnCompletion = $LISTTOSTRING(Task.EmailOnCompletion,",") 
         #; Set out.EmailOnError = Task.EmailOnError
@@ -364,6 +371,7 @@ ClassMethod UpdateTask(taskId As %String) As %Status
         Set json = {}.%FromJSON(body)
         Set TaskDesc = json."task_desc"
         Set TaskName = json."task_name"
+        Set ExportDirectory = json."export_dir"
         Set TaskSuspended = json."task_suspended"
         Set endDate = $SELECT(json."schedule"."endDate"="":"", 1:$ZDATEH(json."schedule"."endDate",3))
         Set runTime = $ZTIMEH(json."schedule"."runTime", 1)
@@ -501,6 +509,8 @@ ClassMethod UpdateTask(taskId As %String) As %Status
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If minFilesKeep '= "" Set sc = ..ModifyTaskSetting("MinimumNumberOfFilesToKeep",minFilesKeep,.SettingsString)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
+        If ExportDirectory '= "" Set sc = ..ModifyTaskSetting("ExportDirectory",ExportDirectory,.SettingsString)
+        If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         set task.Settings=SettingsString
 
         Set sc = task.%Save()
@@ -588,7 +598,6 @@ ClassMethod GetReleases() As %Status
 {
     Set sc = $$$OK
     Try {
-        Set ^CacheTemp("zpdl") = "qui alle "_$ZDT($H,3)
         Set sc = ##class(PackageManager.API.Task.Interface).GetExportedReleases(.result)
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
         Do ..WriteResponse(.result, sc) 
@@ -609,7 +618,7 @@ ClassMethod GetExportedReleases(ByRef result As %DynamicObject = "", verbose As 
 
         // Define base path and initialize stack for directories
         Kill FILES
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .separator)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH, .separator)
         // if the directory contains both slashes and backslashes, replace them with the separator
         If basePath [ "/" {
             Set directory = $REPLACE(basePath, "/", separator) 
@@ -782,6 +791,22 @@ ClassMethod ModifyTaskSetting(Key As %String, newValue As %String, ByRef Setting
             Set $LIST(Settings, valueIdx) = newValue
         }
     } Catch ex {
+        Set sc=ex.AsStatus()
+    }
+    Return sc
+}
+
+/// This method returns the folder where are the exported files
+ClassMethod GetExportedReleaseFolder() As %Status
+{
+    Set sc = $$$OK
+    Try {
+        Set result = {
+            "path": (##class(PackageManager.Config).#EXPPATH)
+        }
+        Do ..WriteResponse(.result, sc) 
+    }
+    Catch ex {
         Set sc=ex.AsStatus()
     }
     Return sc

@@ -26,6 +26,7 @@ ClassMethod renderExportedRelease() As %Status
                             <button id="collapseBtn" onclick="collapseAllReleases()"><span class="icon-folder"></span> Collapse All</button>
                             <button id="clearBtn" onclick="clearReleaseSelection()"><span class="icon-cancel"></span> Clear Selection</button>
                             <button id="downloadBtn" onclick="downloadSelectedReleases()" disabled><span class="icon-download"> Download Selected</button>
+                            <span class='icon-info' title='Shows exported releases at default path: #(##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH))#'></span>
                         </div>
                     </div>
                     

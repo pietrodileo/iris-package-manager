@@ -83,7 +83,7 @@ ClassMethod ExportProject(ProjectId As %String) As %Status
         #; Set out = {}
 
         // Check if the TEMPFILEPATH directory exists, create it if not
-        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$tmpFilePath)
+        Set path = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#TMPPATH)
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(path,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
         If 'exists { 

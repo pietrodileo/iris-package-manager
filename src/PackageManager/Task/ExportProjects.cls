@@ -21,6 +21,10 @@ Property PurgeAfterNDays As %Integer [ InitialExpression = 60 ];
 /// even if they are older than the retention period.
 Property MinimumNumberOfFilesToKeep As %Integer [ InitialExpression = 5 ];
 
+/// The path where the exported files will be stored.
+/// If empty, the default path will be used (##class(PackageManager.Config).#EXPPATH)
+Property ExportDirectory As %String;
+
 Parameter releasePrefix = "taskId_";
 
 Parameter exportFormat = ".xml";
@@ -39,6 +43,8 @@ Method OnTask() As %Status
 	Set sc = $$$OK
 	Try {
 		Set Today = $zdate($h,4)		
+        // set the export path or use the default
+        Set ExportDirectory = $SELECT(..ExportDirectory'="":..ExportDirectory,1:##class(PackageManager.Config).#EXPPATH) 
 		Set sql = "SELECT ProjectId FROM PackageManager_Task.ProjectToExport "
             _" WHERE Active = 1 "
             _" AND TaskID = ? "
@@ -50,7 +56,7 @@ Method OnTask() As %Status
         Set tResult = tStatement.%Execute(..TaskID) 
         While tResult.%Next() {
             Set ProjectId = tResult.%Get("ProjectId")
-            Set sc = ..ExportProject(ProjectId, ..TaskID) 
+            Set sc = ..ExportProject(ProjectId, ..TaskID, ExportDirectory) 
             If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
 
             // If the export has been completed successfully, eventually purge old files
@@ -67,7 +73,7 @@ Method OnTask() As %Status
 
 /// This method exports a project by its ID.
 /// It checks if the project exists, creates a file name, and exports the project to a file.
-ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
+ClassMethod ExportProject(ProjectId As %String, TaskID As %String, ExportDirectory As %String) As %Status
 {
     Set sc = $$$OK
     Try {
@@ -81,7 +87,11 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         }
 
         // Check if the export directory exists, create it if not
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .osSeparator)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS(ExportDirectory, .osSeparator)
+        // Check if the last char is a separator, if not add it
+        If $EXTRACT(basePath,$LENGTH(basePath)) '= osSeparator {
+            Set basePath = basePath_osSeparator
+        }
         Set prjFilePath = basePath_ProjectId_osSeparator
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,1,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
@@ -120,6 +130,7 @@ ClassMethod ExportProject(ProjectId As %String, TaskID As %String) As %Status
         If $$$ISERR(sc) Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
     } Catch ex {
         Set sc=ex.AsStatus()
+        w $SYSTEM.Status.GetErrorText(sc),!
     }
     Return sc
 }
@@ -143,7 +154,7 @@ ClassMethod PurgeOldFiles(ProjectId As %String, TaskID As %String, PurgeAfterNDa
     Set sc = $$$OK
     Try {    
         // Check if the export directory exists, do not create it if not
-        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS($$$exportTaskFilePath, .separator)
+        Set basePath = ##class(PackageManager.Utility.Utils).AdaptPathToOS(##class(PackageManager.Config).#EXPPATH, .separator)
         Set prjFilePath = basePath_ProjectId_separator
         Set sc = ##class(PackageManager.Utility.Utils).DirExists(prjFilePath,0,.exists)
         If $$$ISERR(sc) { Throw ##class(%Exception.StatusException).CreateFromStatus(sc) }
